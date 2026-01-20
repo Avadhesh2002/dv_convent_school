@@ -98,6 +98,6 @@ export const bottomNavConfig = {
     { title: 'Home', path: '/admin/dashboard', icon: LayoutDashboard },
     { title: 'Students', path: '/admin/students', icon: Users },
     { title: 'Teachers', path: '/admin/teachers', icon: GraduationCap },
-    { title: 'More', path: '#', icon: Settings }, // Will trigger the sidebar drawer
+    { title: 'Settings', path: '/admin/settings', icon: Settings },
   ]
 };
