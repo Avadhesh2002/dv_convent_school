@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, ShieldCheck, Mail, Lock, LogOut, Phone, Edit3, Fingerprint } from 'lucide-react'; // Added Fingerprint icon
+import { User, ShieldCheck, Mail, Lock, LogOut, Phone, Edit3, Fingerprint, Info, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useForm } from 'react-hook-form';
 import API from '../../api/axios';
@@ -17,7 +17,23 @@ const AdminProfile = () => {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  // FORM 1: Identity Form
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors } 
+  } = useForm();
+
+  // FORM 2: Password Form (Separated to prevent validation conflicts)
+  const { 
+    register: registerPass, 
+    handleSubmit: handleSubmitPass, 
+    reset: resetPass, 
+    watch: watchPass, 
+    formState: { errors: errorsPass } 
+  } = useForm();
+
+  const newPassword = watchPass("newPassword");
 
   // THE MASTER UPDATE LOGIC
   const onUpdateIdentity = async (data) => {
@@ -28,13 +44,32 @@ const AdminProfile = () => {
       console.log("Step 2: Backend response received:", res.data);
 
       if (res.data && res.data.user) {
-          updateUser(res.data.user); // THIS UPDATES THE UI IMMEDIATELY
+          updateUser(res.data.user); 
           setToast({ message: "Identity updated successfully!", type: "success" });
           setIsEditModalOpen(false); 
       }
     } catch (err) {
       console.error("Step 3: Error caught:", err);
       const msg = err.response?.data?.message || "Failed to update";
+      setToast({ message: msg, type: "error" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onChangePassword = async (data) => {
+    console.log("Password Logic Triggered", data);
+    setSubmitting(true);
+    try {
+      await API.put('/users/change-password', {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword
+      });
+      setToast({ message: "Password updated successfully!", type: "success" });
+      setIsPasswordModalOpen(false);
+      resetPass(); // Use the separated reset
+    } catch (err) {
+      const msg = err.response?.data?.message || "Password change failed";
       setToast({ message: msg, type: "error" });
     } finally {
       setSubmitting(false);
@@ -54,7 +89,7 @@ const AdminProfile = () => {
         <span className="px-3 py-1 bg-primary text-white text-[10px] font-bold uppercase rounded-full">Administrator</span>
       </div>
 
-      {/* IDENTITY DETAILS CARD (CORRECTED SECTION BELOW) */}
+      {/* IDENTITY DETAILS CARD */}
       <Card 
         title="Identity" 
         icon={User} 
@@ -66,23 +101,34 @@ const AdminProfile = () => {
         }
       >
         <div className="divide-y divide-gray-50">
-          {/* 1. Full Name Display */}
           <InfoRow label="Full Name" value={user.name} icon={User} />
-          
-          {/* 2. Official Email (Matches backend 'email' key) */}
           <InfoRow label="Official Email" value={user.email || 'Not Set'} icon={Mail} />
-          
-          {/* 3. Contact Number (Matches backend 'phone' key) */}
           <InfoRow label="Contact Number" value={user.phone || 'Not Set'} icon={Phone} />
-
-          {/* 4. Login Username (Matches backend 'username' key) */}
           <InfoRow label="Login Username" value={user.username || 'admin'} icon={Fingerprint} />
         </div>
       </Card>
 
-      <Button fullWidth variant="danger" onClick={logout}>Logout</Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button 
+            variant="outline" 
+            fullWidth 
+            icon={Lock} 
+            onClick={() => setIsPasswordModalOpen(true)}
+          >
+            Update Password
+          </Button>
 
-      {/* --- THE EDIT MODAL --- */}
+          <Button 
+            variant="danger" 
+            fullWidth 
+            icon={LogOut} 
+            onClick={logout}
+          >
+            Logout Account
+          </Button>
+      </div>
+
+      {/* --- THE EDIT IDENTITY MODAL --- */}
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Admin Details">
         <form onSubmit={handleSubmit(onUpdateIdentity)} className="space-y-4">
           <Input 
@@ -109,6 +155,47 @@ const AdminProfile = () => {
           </div>
         </form>
       </Modal>
+
+      {/* --- THE PASSWORD MODAL --- */}
+      <Modal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} title="Update Admin Password">
+      <form onSubmit={handleSubmitPass(onChangePassword)} className="space-y-4">
+        <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex gap-3 mb-2">
+            <Info size={18} className="text-warning shrink-0" />
+            <p className="text-[10px] font-bold text-amber-700 uppercase leading-tight">
+              To verify it's you, please provide your current login password.
+            </p>
+        </div>
+
+        <Input 
+          label="Current Password" 
+          type="password" 
+          {...registerPass("currentPassword", { required: "Current password is required" })} 
+          error={errorsPass.currentPassword?.message} 
+        />
+        <Input 
+          label="New Password" 
+          type="password" 
+          {...registerPass("newPassword", { 
+              required: "Required", 
+              minLength: { value: 6, message: "Min 6 characters required" } 
+          })} 
+          error={errorsPass.newPassword?.message} 
+        />
+        <Input 
+          label="Confirm New Password" 
+          type="password" 
+          {...registerPass("confirmPassword", { 
+            validate: (val) => val === newPassword || "Passwords do not match" 
+          })} 
+          error={errorsPass.confirmPassword?.message} 
+        />
+
+        <div className="flex gap-3 pt-2">
+          <Button variant="ghost" fullWidth onClick={() => setIsPasswordModalOpen(false)}>Cancel</Button>
+          <Button type="submit" fullWidth isLoading={submitting} icon={CheckCircle}>Confirm Change</Button>
+        </div>
+      </form>
+    </Modal>
     </div>
   );
 };
@@ -116,7 +203,9 @@ const AdminProfile = () => {
 // HELPER COMPONENT
 const InfoRow = ({ label, value, icon: Icon }) => (
   <div className="flex items-center gap-4 p-4">
-    {Icon && <Icon className="text-gray-300" size={20} />}
+    <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-300">
+      <Icon size={20} />
+    </div>
     <div>
       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">{label}</p>
       <p className="text-sm font-black text-gray-800">{value}</p>
