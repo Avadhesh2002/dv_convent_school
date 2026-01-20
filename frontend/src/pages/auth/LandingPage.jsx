@@ -49,13 +49,15 @@ const LandingPage = () => {
           <div className="max-w-3xl mx-auto space-y-6">
       
       {/* LINE 1: LOGO + SCHOOL NAME (Balanced Horizontal Layout) */}
-      <div className="flex items-center justify-center gap-4 md:gap-5">
+      <div className="flex items-center justify-center gap-3 w-full px-2">
         <img 
           src={logo}
           alt="School Logo" 
-          className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-lg"
+          className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain drop-shadow-lg shrink-0"
         />
-        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight">
+        
+        {/* Title: Scaled down text size and forced into one line */}
+        <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tighter leading-none whitespace-nowrap">
           {settings.schoolName || "DV Convent School"}
         </h1>
       </div>
