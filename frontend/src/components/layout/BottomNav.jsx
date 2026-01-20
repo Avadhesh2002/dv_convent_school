@@ -11,23 +11,26 @@ const BottomNav = ({ role = 'student' }) => {
         <NavLink 
           key={index} 
           to={item.path}
-          className="flex-1" // Ensures equal spacing for touch targets
+          end 
+          className="flex-1"
         >
           {({ isActive }) => (
-            <div className={`flex flex-col items-center justify-center gap-1 transition-colors ${isActive ? 'text-primary' : 'text-gray-400'}`}>
+            <div className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+              isActive ? 'text-primary' : 'text-gray-400'
+            }`}>
               
-              {/* Icon Logic: isActive is now defined here */}
               <div className={`p-1 rounded-lg transition-all ${isActive ? 'scale-110' : ''}`}>
                 <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
               </div>
               
-              {/* Label Logic */}
               <span className="text-[10px] font-bold uppercase tracking-tight">
                 {item.title}
               </span>
 
               {/* Active Indicator Dot */}
-              <div className={`w-1 h-1 rounded-full transition-all ${isActive ? 'bg-primary' : 'bg-transparent'}`} />
+              <div className={`w-1.5 h-1.5 rounded-full transition-all ${
+                isActive ? 'bg-primary shadow-[0_0_8px_rgba(79,70,229,0.6)]' : 'bg-transparent'
+              }`} />
             </div>
           )}
         </NavLink>
