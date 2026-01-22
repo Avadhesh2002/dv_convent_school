@@ -15,7 +15,14 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://dvgss.in",
+    "https://www.dvgss.in"
+  ],
+  credentials: true
+}));
+
 app.use(express.json({ limit: '10mb' })); 
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
