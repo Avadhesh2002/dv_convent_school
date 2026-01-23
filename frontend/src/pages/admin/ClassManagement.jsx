@@ -71,37 +71,46 @@ const ClassManagement = () => {
     }
   };
 
-  const onCreateClass = async (data) => {
-        const duplicate = classes.find(c => 
-        c.className === data.className && 
-        c.academicYear === settings.currentAcademicYear
-    );
+const onCreateClass = async (data) => {
+    // ✅ STEP 1: Check for duplicate class names (no year check needed)
+    const duplicate = classes.find(c => c.className === data.className);
+    
     if (duplicate) {
-      setToast({ message: `Error: ${data.className} is already created.`, type: "error" });
-      return;
+        setToast({ message: `Error: Class ${data.className} already exists.`, type: "error" });
+        return;
     }
     
-    if (!payload.classTeacher || payload.classTeacher === "") {
-      delete payload.classTeacher;
-    }
     setSubmitting(true);
+    
     try {
-      const payload = { ...data, academicYear: settings.currentAcademicYear };
-      if (!payload.classTeacher || payload.classTeacher === "") {
-        delete payload.classTeacher;
-      }
-
-      await API.post('/admin/classes', payload);
-      setToast({ message: `Class ${data.className} created successfully!`, type: "success" });
-      setIsModalOpen(false);
-      reset();
-      fetchData(); 
+        // ✅ STEP 2: Build the payload FIRST (before using it)
+        const payload = { 
+            className: data.className,
+            capacity: data.capacity
+        };
+        
+        // ✅ STEP 3: Only add classTeacher if it's actually selected
+        if (data.classTeacher && data.classTeacher !== "") {
+            payload.classTeacher = data.classTeacher;
+        }
+        
+        // ✅ STEP 4: Send to backend (no academicYear needed)
+        await API.post('/admin/classes', payload);
+        
+        setToast({ message: `Class ${data.className} created successfully!`, type: "success" });
+        setIsModalOpen(false);
+        reset();
+        fetchData(); // Refresh the class list
+        
     } catch (err) {
-      setToast({ message: err.response?.data?.message || "Failed to create class", type: "error" });
+        setToast({ 
+            message: err.response?.data?.message || "Failed to create class", 
+            type: "error" 
+        });
     } finally {
-      setSubmitting(false);
+        setSubmitting(false);
     }
-  };
+};
 
   const handleDeleteClass = async (id, name) => {
   // Security Handshake: Always confirm before deleting!
