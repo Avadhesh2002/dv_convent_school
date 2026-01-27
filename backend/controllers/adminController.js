@@ -6,6 +6,7 @@ const Notification = require('../models/Notification');
 
 
 const PROMOTION_MAP = {
+    'Nursery': 'LKG',  
     'LKG': 'UKG',
     'UKG': '1',
     '1': '2',
