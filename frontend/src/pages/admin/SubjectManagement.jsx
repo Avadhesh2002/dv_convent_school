@@ -20,7 +20,7 @@ const SubjectManagement = () => {
   const [editingSubject, setEditingSubject] = useState(null);
 
   // Form State for classes checkboxes
-  const availableClasses = ['LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'];
+  const availableClasses = ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'];
   const [selectedMapping, setSelectedMapping] = useState([]);
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
