@@ -244,7 +244,7 @@ const StudentDirectory = () => {
             onChange={(e) => setFilters({ ...filters, studentClass: e.target.value, page: 1 })}
           >
             <option value="">All Classes</option>
-            {['LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'].map(c => (
+            {['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'].map(c => (
               <option key={c} value={c}>Class {c}</option>
             ))}
           </select>
@@ -624,7 +624,7 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
             <div className="space-y-1">
               <label className="text-xs font-bold text-secondary uppercase">Assign Class</label>
               <select name="class" defaultValue={student.class} className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-primary">
-                {['LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'].map(c => (
+                {['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'].map(c => (
                   <option key={c} value={c}>Class {c}</option>
                 ))}
               </select>
@@ -742,7 +742,7 @@ const PdfExportModal = ({
               onChange={(e) => setPdfClass(e.target.value)}
             >
               <option value="">Choose Class...</option>
-              {['LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'].map(c => 
+              {['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'].map(c => 
                 <option key={c} value={c}>Class {c}</option>
               )}
             </select>
