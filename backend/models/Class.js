@@ -5,9 +5,9 @@ const classSchema = new mongoose.Schema({
         type: String, 
         required: true, 
         unique: true, // ✅ ONLY className is unique
-        enum: ['LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'] 
+        enum: ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8']
     },
-    capacity: { type: Number, default: 40 },
+    capacity: { type: Number, default: 500 },
     classTeacher: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Teacher' 
