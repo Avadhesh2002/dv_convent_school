@@ -6,7 +6,7 @@ const subjectSchema = new mongoose.Schema({
     // Which classes can take this subject?
         applicableClasses: [{ 
         type: String, 
-        enum: ['LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'] 
+        enum: ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8']
     }],
     maxMarks: { type: Number, default: 100 }
 }, { timestamps: true });
