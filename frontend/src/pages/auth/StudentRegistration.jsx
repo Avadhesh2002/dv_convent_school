@@ -170,7 +170,7 @@ const StudentRegistration = () => {
                     className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-primary transition-colors" 
                     {...register("class", { required: true })}
                   >
-                    {['LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'].map(c => 
+                     {['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'].map(c =>
                       <option key={c} value={c}>Class {c}</option>
                     )}
                   </select>
