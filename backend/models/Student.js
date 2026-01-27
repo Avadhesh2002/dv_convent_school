@@ -6,7 +6,11 @@ const studentSchema = new mongoose.Schema({
     name: { type: String, required: [true, "Name is mandatory"] },
     dateOfBirth: { type: Date, required: [true, "DOB is mandatory"] },
     gender: { type: String, enum: ['Male', 'Female', 'Other'], required: [true, "Gender is mandatory"]},
-    class: { type: String, required: [true, "Fill the class"] },
+    class: { 
+    type: String, 
+    required: [true, "Fill the class"],
+    enum: ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'] // Added Nursery
+},
     address: { type: String, required: [true, "Address is mandatory"] },
 
     // Parent/Guardian Detailed Info
