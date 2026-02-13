@@ -1,65 +1,108 @@
 const Student = require('../models/Student');
 const Notification = require('../models/Notification');
 
-// @desc    Register a new student (Public)
-// @route   POST /api/students/register
-// @access  Public
 const registerStudent = async (req, res) => {
     try {
         const {
-            name, dateOfBirth, gender, class: studentClass, address, // Removed section
-            fatherName, fatherMobile, motherName, motherMobile, parentEmail,fatherQualification,aadharNumber,
-            siblingName, profileImage , admissionType, documents
+            name, dateOfBirth, gender, class: studentClass, address,
+            pincode,              // ✅ NEW
+            category,             // ✅ NEW
+            fatherName, fatherMobile, motherName, motherMobile, 
+            guardianName,         // ✅ NEW
+            guardianMobile,       // ✅ NEW
+            parentEmail,
+            profileImage, aadharNumber, fatherQualification, siblingName,
+            admissionType, documents, academicYear
         } = req.body;
 
-        // Validation: Remove 'section' from this check
-        if (!name || !dateOfBirth || !gender || !studentClass || !fatherName || !fatherMobile) {
-            return res.status(400).json({ message: "Please fill all required fields" });
+        // ✅ UPDATED VALIDATION: Basic required fields
+        if (!name || !dateOfBirth || !gender || !studentClass || !address || !pincode || !category || !parentEmail) {
+            return res.status(400).json({ 
+                message: "Please fill all required fields: Name, DOB, Gender, Class, Address, Pincode, Category, and Email" 
+            });
         }
 
-        // 2. Check if student already applied (Using name and father's mobile as a unique pair)
-        const existingStudent = await Student.findOne({ name, fatherMobile });
-        if (existingStudent) {
-            return res.status(400).json({ message: "An application with this name and father's mobile already exists." });
+        // ✅ NEW VALIDATION: Either parents OR guardian must be provided
+        const hasParents = fatherName || motherName;
+        const hasGuardian = guardianName;
+
+        if (!hasParents && !hasGuardian) {
+            return res.status(400).json({ 
+                message: "Please provide either parent information or guardian information" 
+            });
         }
 
-        // 3. Create the student in 'pending' status
-        const student = await Student.create({
-            name,
-            dateOfBirth,
-            gender,
-            class: studentClass,
+        // ✅ VALIDATE PINCODE: Must be 6 digits
+        if (!/^\d{6}$/.test(pincode)) {
+            return res.status(400).json({ 
+                message: "Pincode must be exactly 6 digits" 
+            });
+        }
+
+        // ✅ VALIDATE CATEGORY: Must be valid enum value
+        const validCategories = ['General', 'OBC', 'SC', 'ST', 'Minority', 'Other'];
+        if (!validCategories.includes(category)) {
+            return res.status(400).json({ 
+                message: "Invalid category. Must be one of: General, OBC, SC, ST, Minority, Other" 
+            });
+        }
+
+        // ✅ CREATE STUDENT WITH ALL NEW FIELDS
+        const newStudent = await Student.create({
+            name, 
+            dateOfBirth, 
+            gender, 
+            class: studentClass, 
             address,
-            fatherName,
-            fatherMobile,
-            motherName,
-            motherMobile,
+            pincode,              // ✅ NEW
+            category,             // ✅ NEW
+            fatherName: fatherName || "",           // Optional
+            fatherMobile: fatherMobile || "",       // Optional
+            motherName: motherName || "",           // Optional
+            motherMobile: motherMobile || "",       // Optional
+            guardianName: guardianName || "",       // ✅ NEW - Optional
+            guardianMobile: guardianMobile || "",   // ✅ NEW - Optional
             parentEmail,
-            profileImage,
-            fatherQualification, 
-            aadharNumber, 
-            siblingName,
-            admissionType,
-            documents,
-            accountStatus: 'pending' // Forced by default, but good to be explicit
+            profileImage: profileImage || "",
+            aadharNumber: aadharNumber || "",
+            fatherQualification: fatherQualification || "",
+            siblingName: siblingName || "",
+            admissionType: admissionType || 'Old',
+            documents: documents || {},
+            academicYear: academicYear || "",
+            accountStatus: 'pending'
         });
 
-        if (student) {
-            // TRIGGER: Notify Admin about the new application
-            await Notification.create({
-                recipientRole: 'admin',
-                title: 'New Admission',
-                message: `New Application: ${student.name} has applied for Class ${student.class}.`,
-                link: '/admin/students/pending'
-            });
+        await Notification.create({
+        recipientRole: 'admin',
+        title: 'New Admission',
+        message: `New Application: ${newStudent.name} has applied for Class ${newStudent.class}.`,
+        link: '/admin/students/pending'
+    });
 
-            res.status(201).json({
-                message: "Application submitted successfully! Please wait for Admin approval.",
-                applicationId: student._id
+
+        res.status(201).json({ 
+            message: "Application submitted successfully! Awaiting admin approval.", 
+            student: newStudent 
+        });
+
+
+    } catch (error) {
+        console.error("❌ Registration Error:", error);
+        
+        // ✅ HANDLE MONGOOSE VALIDATION ERRORS
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({ 
+                message: "Validation failed", 
+                errors: messages 
             });
         }
-    } catch (error) {
-        res.status(500).json({ message: "Server Error", error: error.message });
+
+        res.status(500).json({ 
+            message: "Registration failed due to server error", 
+            error: error.message 
+        });
     }
 };
 

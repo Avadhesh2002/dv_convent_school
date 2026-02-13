@@ -43,26 +43,29 @@ const studentLogin = async (req, res) => {
         const isMatch = await bcrypt.compare(password, student.password);
         if (isMatch) {
             // --- CHANGE THIS SECTION ---
-            res.json({
-                _id: student._id,
-                name: student.name,
-                role: 'student',
-                class: student.class,
-                // Add all the missing fields here:
-                dateOfBirth: student.dateOfBirth,
-                gender: student.gender,
-                address: student.address,
-                fatherName: student.fatherName,
-                fatherMobile: student.fatherMobile,
-                motherName: student.motherName,
-                motherMobile: student.motherMobile,
-                parentEmail: student.parentEmail,
-                UID: student.UID,
-                admissionDate: student.admissionDate,
-                academicHistory: student.academicHistory, 
-                profileImage: student.profileImage,
-                token: generateToken(student._id, 'student')
-            });
+        res.json({
+            _id: student._id,
+            name: student.name,
+            role: 'student',
+            class: student.class,
+            dateOfBirth: student.dateOfBirth,
+            gender: student.gender,
+            address: student.address,
+            pincode: student.pincode,              
+            category: student.category,            
+            guardianName: student.guardianName,  
+            guardianMobile: student.guardianMobile,  
+            fatherName: student.fatherName,
+            fatherMobile: student.fatherMobile,
+            motherName: student.motherName,
+            motherMobile: student.motherMobile,
+            parentEmail: student.parentEmail,
+            UID: student.UID,
+            admissionDate: student.admissionDate,
+            academicHistory: student.academicHistory, 
+            profileImage: student.profileImage,
+            token: generateToken(student._id, 'student')
+        });
             // ---------------------------
         } else {
             res.status(401).json({ message: "Invalid UID or password" });

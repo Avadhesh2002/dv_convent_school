@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookMarked, Plus, History, Calendar, Trash2, Camera, Send, AlertCircle } from 'lucide-react';
+import { BookMarked, Plus, History, Calendar, Trash2, Camera, Send, AlertCircle, ExternalLink  } from 'lucide-react';
 import API from '../../api/axios';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -221,8 +221,18 @@ const TeacherHomework = () => {
                     </div>
                     
                     <h3 className="font-black text-gray-900">{post.title}</h3>
+
                     <p className="text-sm text-secondary line-clamp-2 italic">"{post.description}"</p>
-                    
+                    {post.imageUrl && (
+                      <a 
+                        href={post.imageUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-primary text-[10px] font-black uppercase mt-2 bg-indigo-50 px-2 py-1 rounded hover:bg-primary hover:text-white transition-colors"
+                      >
+                        <ExternalLink size={12} /> Open Reference Link
+                      </a>
+                    )}
                     <div className="flex items-center gap-4 pt-2">
                       <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase">
                         <Calendar size={12} /> Due: {new Date(post.dueDate).toLocaleDateString()}

@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const studentSchema = new mongoose.Schema({
+    
+    // ============================
     // Student Basic Info
     name: { type: String, required: [true, "Name is mandatory"] },
     dateOfBirth: { type: Date, required: [true, "DOB is mandatory"] },
@@ -13,118 +15,235 @@ const studentSchema = new mongoose.Schema({
 },
     address: { type: String, required: [true, "Address is mandatory"] },
 
-    // Parent/Guardian Detailed Info
+    // ============================
+    name: {
+        type: String,
+        required: [true, "Name is mandatory"]
+    },
+
+
+    dateOfBirth: {
+        type: Date,
+        required: [true, "DOB is mandatory"]
+    },
+
+    gender: {
+        type: String,
+        enum: ['Male', 'Female', 'Other'],
+        required: [true, "Gender is mandatory"]
+    },
+
+    class: {
+        type: String,
+        required: [true, "Fill the class"],
+        enum: ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8']
+    },
+
+    address: {
+        type: String,
+        required: [true, "Address is mandatory"]
+    },
+
+    pincode: {
+        type: String,
+        required: [true, "Pincode is mandatory"],
+        validate: {
+            validator: function (v) {
+                return /^\d{6}$/.test(v);
+            },
+            message: props => `${props.value} is not a valid 6-digit pincode!`
+        }
+    },
+
+    category: {
+        type: String,
+        required: [true, "Category is mandatory"],
+        enum: ['General', 'OBC', 'SC', 'ST', 'Minority', 'Other']
+    },
+
+    // ============================
+    // Parent / Guardian Info
+    // ============================
     fatherName: { 
         type: String,
-        required: [true, "Father's name is mandatory"]
+        default: ""  
     },
+    
     fatherMobile: { 
-    type: String, 
-    required: [true, "Father's mobile No is mandatory"],
-    validate: {
-        validator: function(v) {
-            return /^\d{10}$/.test(v); // Ensures exactly 10 digits
-        },
-        message: props => `${props.value} is not a valid 10-digit phone number!`
-    }
-},
-    motherName: { type: String, required: [true, "Mother's name is mandatory"] },
+        type: String, 
+        default: "",  
+        validate: {
+            validator: function(v) {
+                return !v || /^\d{10}$/.test(v);
+            },
+            message: props => `${props.value} is not a valid 10-digit phone number!`
+        }
+    },
+    
+    motherName: { 
+        type: String, 
+        default: ""  
+    },
+    
     motherMobile: { 
-    type: String, 
-    required: [true, "Mother's mobile No is mandatory"],
-    validate: {
-        validator: function(v) {
-            return /^\d{10}$/.test(v);
-        },
-        message: props => `${props.value} is not a valid 10-digit phone number!`
-    }   
-},
+        type: String, 
+        default: "",  
+        validate: {
+            validator: function(v) {
+                return !v || /^\d{10}$/.test(v);
+            },
+            message: props => `${props.value} is not a valid 10-digit phone number!`
+        }   
+    },
+
+    guardianName: { 
+        type: String, 
+        default: "" 
+    },
+    
+    guardianMobile: { 
+        type: String, 
+        default: "",
+        validate: {
+            validator: function(v) {
+                return !v || /^\d{10}$/.test(v);
+            },
+            message: props => `${props.value} is not a valid 10-digit phone number!`
+        }
+    },
+
     parentEmail: {
         type: String,
         required: [true, "Guardian email is mandatory"],
         lowercase: true,
         trim: true
     },
-    
+
     profileImage: {
-    type: String, // This will store the Base64 string or Image URL
-    default: ""
+        type: String,
+        default: ""
     },
 
-    // Admin Controlled Fields (Empty at Registration)
-    UID: { type: String, unique: true, sparse: true }, 
-    password: { type: String },
-    admissionDate: { type: Date },
-    isPasswordChanged: { type: Boolean, default: false },
-    
-    // Status Logic
+    // ============================
+    // Admin Controlled Fields
+    // ============================
+    UID: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+
+    password: {
+        type: String
+    },
+
+    admissionDate: {
+        type: Date
+    },
+
+    isPasswordChanged: {
+        type: Boolean,
+        default: false
+    },
+
+    // ============================
+    // Academic History
+    // ============================
     academicHistory: [
         {
-            year: { type: String, required: true },  // e.g., "2024-25"
-            class: { type: String, required: true }, // e.g., "4"
-            status: { 
-                type: String, 
-                enum: ['Promoted', 'Repeated', 'Graduated'], 
-                default: 'Promoted' 
+            year: {
+                type: String,
+                required: true
+            },
+            class: {
+                type: String,
+                required: true
+            },
+            status: {
+                type: String,
+                enum: ['Promoted', 'Repeated', 'Graduated'],
+                default: 'Promoted'
             }
         }
     ],
-    accountStatus: { 
-    type: String, 
-    enum: ['pending', 'active', 'rejected', 'inactive', 'graduated'], // MUST include 'graduated'
-    default: 'pending' 
-},
 
-fatherQualification: { 
-    type: String, 
-    default: ""  
-},
-hasAadhar: { 
-    type: Boolean, 
-    default: false 
-},
-aadharNumber: { 
-    type: String, 
-    // No 'unique' constraint here because some might not have it
-    default: "" 
-},
-siblingName: { 
-    type: String, 
-    default: "" 
-},
+    accountStatus: {
+        type: String,
+        enum: ['pending', 'active', 'rejected', 'inactive', 'graduated'],
+        default: 'pending'
+    },
 
-admissionType: { 
-    type: String, 
-    enum: ['New', 'Old'], 
-    default: 'Old',
-    required: [true, "Admission type is mandatory"] 
-},
+    // ============================
+    // Additional Information
+    // ============================
+    fatherQualification: {
+        type: String,
+        default: ""
+    },
 
-documents: {
-    transferCertificate: { type: Boolean, default: false },
-    characterCertificate: { type: Boolean, default: false },
-    markSheet: { type: Boolean, default: false },
-    migrationCertificate: { type: Boolean, default: false },
-    casteCertificate: { type: Boolean, default: false },
-    birthCertificate: { type: Boolean, default: false },
-    fivePhotos: { type: Boolean, default: false },
-    aadharPhotoCopy: { type: Boolean, default: false },
-},
+    hasAadhar: {
+        type: Boolean,
+        default: false
+    },
 
-    role: { type: String, default: 'student' }
-}, { timestamps: true });
+    aadharNumber: {
+        type: String,
+        default: ""
+    },
 
-// Auto-hash password only if it exists and is modified
-studentSchema.pre('save', async function() {
-    // If there is no password (student is still pending), just move on
-    if (!this.password || !this.isModified('password')) {
-        return; 
+    siblingName: {
+        type: String,
+        default: ""
+    },
+
+    admissionType: {
+        type: String,
+        enum: ['New', 'Old'],
+        default: 'Old',
+        required: [true, "Admission type is mandatory"]
+    },
+
+    documents: {
+        transferCertificate: { type: Boolean, default: false },
+        characterCertificate: { type: Boolean, default: false },
+        markSheet: { type: Boolean, default: false },
+        migrationCertificate: { type: Boolean, default: false },
+        casteCertificate: { type: Boolean, default: false },
+        birthCertificate: { type: Boolean, default: false },
+        fivePhotos: { type: Boolean, default: false },
+        aadharPhotoCopy: { type: Boolean, default: false }
+    },
+
+    role: {
+        type: String,
+        default: 'student'
     }
-    
-    // Hash the password
+
+}, {
+    timestamps: true
+});
+
+
+studentSchema.pre('validate', async function() {
+    const hasAnyContact = 
+        this.fatherName || this.motherName || 
+        this.fatherMobile || this.motherMobile || 
+        this.guardianName || this.guardianMobile;
+
+    if (!hasAnyContact) {
+        this.invalidate('guardianName', 'Please provide at least one contact person (Father, Mother, or Guardian).');
+    }
+});
+
+studentSchema.pre('save', async function() {
+    if (!this.password || !this.isModified('password')) return;
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
 });
 
+<<<<<<< HEAD
 
 module.exports = mongoose.model('Student', studentSchema);
+=======
+module.exports = mongoose.model('Student', studentSchema);
+>>>>>>> 9bbba46 (Final State Fixed everything)

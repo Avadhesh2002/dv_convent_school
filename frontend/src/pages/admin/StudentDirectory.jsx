@@ -58,7 +58,9 @@ const StudentDirectory = () => {
     { id: 'fatherName', label: 'Father Name' },
     { id: 'fatherMobile', label: 'Father Mobile' },
     { id: 'aadharNumber', label: 'Aadhar Card' },
-    { id: 'address', label: 'Address' }
+    { id: 'address', label: 'Address' },
+    { id: 'category', label: 'Category' },
+    { id: 'pincode', label: 'Pincode' }
   ];
 
   // ============ DATA FETCHING ============
@@ -309,8 +311,12 @@ const StudentDirectory = () => {
                     </td>
                     <td className="px-6 py-4"><span className="text-xs font-bold text-gray-700">Class {s.class}</span></td>
                     <td className="px-6 py-4">
-                      <p className="text-xs font-bold text-gray-700">{s.fatherMobile}</p>
-                      <p className="text-[10px] text-secondary">{s.fatherName}</p>
+                      <p className="text-xs font-bold text-gray-700">
+                        {s.fatherMobile || s.guardianMobile || 'No contact'}
+                      </p>
+                      <p className="text-[10px] text-secondary">
+                        {s.fatherName || s.guardianName || ''}
+                      </p>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
@@ -508,6 +514,9 @@ const ViewStudentModal = ({ isOpen, onClose, student, documentLabels }) => {
             <InfoBox label="Gender" value={student.gender} />
             <InfoBox label="Aadhar Number" value={student.aadharNumber || 'Not Provided'} />
             <InfoBox label="Date of Birth" value={new Date(student.dateOfBirth).toLocaleDateString('en-GB')} />
+            <InfoBox label="Category" value={student.category || 'N/A'} />
+            <InfoBox label="Pincode" value={student.pincode || 'N/A'} />
+
           </div>
         </div>
 
@@ -515,12 +524,28 @@ const ViewStudentModal = ({ isOpen, onClose, student, documentLabels }) => {
         <div className="space-y-3">
           <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Parental Information</h4>
           <div className="grid grid-cols-2 gap-3">
-            <InfoBox label="Father's Name" value={student.fatherName} />
-            <InfoBox label="Father's Edu" value={student.fatherQualification} />
-            <InfoBox label="Father's Mobile" value={student.fatherMobile} />
-            <InfoBox label="Mother's Name" value={student.motherName} />
-            <InfoBox label="Mother's Mobile" value={student.motherMobile} />
-            <InfoBox label="Sibling Name" value={student.siblingName || 'None'} />
+            {(student.fatherName || student.motherName) ? (
+              <>
+                <InfoBox label="Father's Name" value={student.fatherName || 'N/A'} />
+                <InfoBox label="Father's Edu" value={student.fatherQualification || 'N/A'} />
+                <InfoBox label="Father's Mobile" value={student.fatherMobile || 'N/A'} />
+                <InfoBox label="Mother's Name" value={student.motherName || 'N/A'} />
+                <InfoBox label="Mother's Mobile" value={student.motherMobile || 'N/A'} />
+                <InfoBox label="Sibling Name" value={student.siblingName || 'None'} />
+                <InfoBox label="Guardian's Name" value="N/A" />
+                <InfoBox label="Guardian's Mobile" value="N/A" />
+              </>
+            ) : (
+              <>
+                <InfoBox label="Guardian's Name" value={student.guardianName || 'N/A'} />
+                <InfoBox label="Guardian's Mobile" value={student.guardianMobile || 'N/A'} />
+                <InfoBox label="Father's Name" value="N/A" />
+                <InfoBox label="Father's Mobile" value="N/A" />
+                <InfoBox label="Mother's Name" value="N/A" />
+                <InfoBox label="Mother's Mobile" value="N/A" />
+                <InfoBox label="Sibling Name" value={student.siblingName || 'None'} />
+              </>
+            )}
           </div>
         </div>
 

@@ -5,11 +5,18 @@ const FIELD_MAP = {
   name: "Name of Student",
   class: "Class",
   dateOfBirth: "Date of Birth",
-  fatherName: "Father's Name",
-  fatherMobile: "Contact No",
+  category: "Category",
+  fatherName: "Parent Name",
+  fatherMobile: "Parent Contact",
+  motherName: "Mother's Name",
+  motherMobile: "Mother's Mobile",
+  guardianName: "Guardian Name",
+  guardianMobile: "Guardian Mobile",
   aadharNumber: "Aadhar No",
-  address: "Address"
+  address: "Address",
+  pincode: "Pincode"
 };
+
 
 export const generateStudentListPDF = (students, reportTitle, selectedFields) => {
   try {
@@ -36,15 +43,46 @@ export const generateStudentListPDF = (students, reportTitle, selectedFields) =>
     // 2. DYNAMIC TABLE DATA
     const tableHeaders = ['S.No', ...selectedFields.map(key => FIELD_MAP[key])];
 
+    const resolveContact = (student) => {
+      if (student.fatherName || student.fatherMobile) {
+        return {
+          fatherName: student.fatherName || "---",
+          fatherMobile: student.fatherMobile || "---"
+        };
+      } else if (student.motherName || student.motherMobile) {
+        return {
+          fatherName: student.motherName || "---",   // reuse fatherName column
+          fatherMobile: student.motherMobile || "---" // reuse fatherMobile column
+        };
+      } else {
+        return {
+          fatherName: student.guardianName || "---",
+          fatherMobile: student.guardianMobile || "---"
+        };
+      }
+    };
+
     const tableRows = students.map((student, index) => {
+      const contact = resolveContact(student);
       const rowData = [index + 1];
+
       selectedFields.forEach(field => {
-        let value = student[field];
-        if (field === 'dateOfBirth' && value) {
-          value = new Date(value).toLocaleDateString('en-GB');
+        let value;
+
+        // For contact fields, use resolved value instead of raw field
+        if (field === 'fatherName') {
+          value = contact.fatherName;
+        } else if (field === 'fatherMobile') {
+          value = contact.fatherMobile;
+        } else if (field === 'dateOfBirth' && student[field]) {
+          value = new Date(student[field]).toLocaleDateString('en-GB');
+        } else {
+          value = student[field];
         }
+
         rowData.push(value || "---");
       });
+
       return rowData;
     });
 

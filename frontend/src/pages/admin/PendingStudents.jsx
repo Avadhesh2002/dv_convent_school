@@ -96,8 +96,12 @@ const PendingStudents = () => {
 
               <div className="space-y-2 mb-6">
                 <div className="flex items-center gap-2 text-sm text-secondary font-medium">
-                   <Phone size={14} /> {student.fatherMobile} ({student.fatherName})
+                   <Phone size={14} />
+                   <span>
+                    {student.fatherMobile || student.motherMobile || student.guardianMobile || 'No contact provided'}
+                  </span>
                 </div>
+                
                 <div className="flex items-center gap-2 text-xs text-gray-400">
                    <Clock size={14} /> Applied: {new Date(student.createdAt).toLocaleDateString()}
                 </div>

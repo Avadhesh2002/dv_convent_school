@@ -48,7 +48,7 @@ const TeacherDashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-gray-900 tracking-tight">
-            Hello, {user.name}! 🍎
+            Hello, {user.name.split(' ')[0]}! 👋
           </h2>
           <p className="text-sm text-secondary font-medium">You have {schedule.length} classes scheduled for today.</p>
         </div>

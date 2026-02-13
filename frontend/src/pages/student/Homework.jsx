@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookMarked, Calendar, CheckCircle2, Circle, AlertCircle, Image as ImageIcon } from 'lucide-react';
+import { BookMarked, Calendar, CheckCircle2, Circle, AlertCircle, Image as ImageIcon, ExternalLink } from 'lucide-react';
 import API from '../../api/axios';
 import Card from '../../components/common/Card';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -115,11 +115,16 @@ const StudentHomework = () => {
 
                     <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-2">
                       <p className="text-[10px] font-bold text-gray-400 uppercase">By {hw.teacherId?.name}</p>
-                      {hw.imageUrl && (
-                        <div className="flex items-center gap-1 text-primary text-xs font-bold cursor-pointer hover:underline">
-                          <ImageIcon size={14} /> View Snap
-                        </div>
-                      )}
+                        {hw.imageUrl && (
+                          <a 
+                            href={hw.imageUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-primary text-xs font-bold hover:underline"
+                          >
+                            <ExternalLink size={14} /> View Reference Link
+                          </a>
+                        )}
                     </div>
                   </div>
                 </div>

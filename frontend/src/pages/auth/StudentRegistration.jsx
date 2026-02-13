@@ -20,6 +20,15 @@ import Button from '../../components/common/Button';
 import Toast from '../../components/common/Toast';
 import { useSettings } from '../../context/SettingsContext';
 
+
+const formatAadhar = (value) => {
+  const digits = value.replace(/\D/g, ""); 
+  const trimmed = digits.substring(0, 12); 
+  const sections = trimmed.match(/.{1,4}/g); 
+  return sections ? sections.join("-") : trimmed;
+};
+
+
 const StudentRegistration = () => {
   const navigate = useNavigate();
   const { settings } = useSettings();
@@ -31,7 +40,7 @@ const StudentRegistration = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [isNewAdmission, setIsNewAdmission] = useState(false);
 
-  const { register, handleSubmit, setValue, trigger,  formState: { errors } } = useForm();
+  const { register, handleSubmit, setValue, trigger, watch, formState: { errors } } = useForm();
 
   // Documents CheckBox
   const CHECKLIST_DOCS = [
@@ -58,6 +67,11 @@ const StudentRegistration = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  const handleAadharInput = (e) => {
+  const formatted = formatAadhar(e.target.value);
+  setValue("aadharNumber", formatted);
+};
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -145,7 +159,7 @@ const StudentRegistration = () => {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-secondary uppercase">Gender *</label>
+                    <label className="text-xs font-bold text-secondary uppercase">Gender <span className="text-danger">*</span></label>
                     <select 
                       className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-primary transition-colors" 
                       {...register("gender", { required: true })}
@@ -165,7 +179,7 @@ const StudentRegistration = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-secondary uppercase">Applying for Class *</label>
+                  <label className="text-xs font-bold text-secondary uppercase">Applying for Class <span className="text-danger">*</span></label>
                   <select 
                     className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-primary transition-colors" 
                     {...register("class", { required: true })}
@@ -174,6 +188,23 @@ const StudentRegistration = () => {
                       <option key={c} value={c}>Class {c}</option>
                     )}
                   </select>
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-secondary uppercase">Category <span className="text-danger">*</span></label>
+                  <select 
+                    className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-primary transition-colors" 
+                    {...register("category", { required: "Category is required" })}
+                  >
+                    <option value="">Select Category</option>
+                    <option value="General">General</option>
+                    <option value="OBC">OBC</option>
+                    <option value="SC">SC</option>
+                    <option value="ST">ST</option>
+                    <option value="Minority">Minority</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  {errors.category && <p className="text-xs text-danger font-medium">{errors.category.message}</p>}
                 </div>
 
                 <Input 
@@ -185,12 +216,28 @@ const StudentRegistration = () => {
                   error={errors.address?.message}
                 />
 
+                {/* ========== NEW FIELD: PINCODE ========== */}
+                <Input 
+                  label="Pincode" 
+                  required 
+                  placeholder="Enter 6-digit pincode"
+                  maxLength={6}
+                  {...register("pincode", { 
+                    required: "Pincode is required",
+                    pattern: {
+                      value: /^\d{6}$/,
+                      message: "Pincode must be exactly 6 digits"
+                    }
+                  })} 
+                  error={errors.pincode?.message}
+                />
+
                 <Button 
                   type="button" 
                   fullWidth 
                   onClick={async () => {
                     // 1. List the fields in Step 1
-                    const fieldsStep1 = ["name", "gender", "dateOfBirth", "class", "address"];
+                    const fieldsStep1 = ["name", "gender", "dateOfBirth", "class", "category", "address", "pincode"];
                     
                     // 2. Trigger validation for these fields only
                     const isValid = await trigger(fieldsStep1);
@@ -204,10 +251,11 @@ const StudentRegistration = () => {
                 >
                   Continue to Parent Details
                 </Button>
+
               </>
             )}
 
-            {/* ========== STEP 2: PARENT INFORMATION ========== */}
+            {/* ========== STEP 2: PARENT/GUARDIAN INFORMATION ========== */}
             {currentStep === 2 && (
               <>
                 <div className="flex items-center gap-2 mb-6">
@@ -215,59 +263,95 @@ const StudentRegistration = () => {
                   <h3 className="font-black text-gray-900 uppercase text-sm tracking-wider">Parent Information</h3>
                 </div>
 
+                {/* Father's Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input 
                     label="Father's Name" 
-                    required 
-                    {...register("fatherName", { required: "Father's name is required" })} 
+                    placeholder="Enter father's full name"
+                    {...register("fatherName")} 
                     error={errors.fatherName?.message}
                   />
                   <Input 
                     label="Father's Mobile" 
                     icon={Phone} 
-                    required 
-                    type="tel" // Use tel for mobile keypad
-                    maxLength="10" // UI restriction
-                    placeholder="Enter 10 digit number"
-                    {...register("fatherMobile", { 
-                      required: "Contact number is required",
+                    maxLength={10}
+                    placeholder="10-digit mobile number"
+                    {...register("fatherMobile", {
                       pattern: {
-                        value: /^[0-9]{10}$/,
-                        message: "Mobile number must be exactly 10 digits"
-                      },
-                      minLength: { value: 10, message: "Exactly 10 digits required" },
-                      maxLength: { value: 10, message: "Exactly 10 digits required" }
-                    })} 
-                    error={errors.fatherMobile?.message}
-                  />
-                  <Input 
-                    label="Mother's Name" 
-                    required 
-                    {...register("motherName", { required: "Mother's name is required" })} 
-                    error={errors.motherName?.message}
-                  />
-                  <Input 
-                    label="Mother's Mobile" 
-                    icon={Phone} 
-                    required 
-                    type="tel" // Use tel for mobile keypad
-                    maxLength="10" // UI restriction
-                    placeholder="Enter 10 digit number"
-                    {...register("motherMobile", { 
-                      required: "Contact number is required",
-                      pattern: {
-                        value: /^[0-9]{10}$/,
-                        message: "Mobile number must be exactly 10 digits"
-                      },
-                      minLength: { value: 10, message: "Exactly 10 digits required" },
-                      maxLength: { value: 10, message: "Exactly 10 digits required" }
+                        value: /^\d{10}$/,
+                        message: "Must be 10 digits"
+                      }
                     })} 
                     error={errors.fatherMobile?.message}
                   />
                 </div>
 
+                {/* Mother's Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input 
+                    label="Mother's Name" 
+                    placeholder="Enter mother's full name"
+                    {...register("motherName")} 
+                    error={errors.motherName?.message}
+                  />
+                  <Input 
+                    label="Mother's Mobile" 
+                    icon={Phone} 
+                    maxLength={10}
+                    placeholder="10-digit mobile number"
+                    {...register("motherMobile", {
+                      pattern: {
+                        value: /^\d{10}$/,
+                        message: "Must be 10 digits"
+                      }
+                    })} 
+                    error={errors.motherMobile?.message}
+                  />
+                </div>
+
+                {/* SEPARATOR LINE WITH TEXT */}
+                <div className="flex items-center gap-3 my-6">
+                  <div className="h-px flex-1 bg-gray-200"></div>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    If No Parents Available
+                  </span>
+                  <div className="h-px flex-1 bg-gray-200"></div>
+                </div>
+
+                {/* Guardian Details - Same Style as Parents */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input 
+                    label="Guardian's Name (Optional)" 
+                    placeholder="Legal guardian's full name"
+                    {...register("guardianName")} 
+                    error={errors.guardianName?.message}
+                  />
+                  <Input 
+                    label="Guardian's Mobile (Optional)" 
+                    icon={Phone} 
+                    maxLength={10}
+                    placeholder="10-digit mobile number"
+                    {...register("guardianMobile", {
+                      pattern: {
+                        value: /^\d{10}$/,
+                        message: "Must be 10 digits"
+                      }
+                    })} 
+                    error={errors.guardianMobile?.message}
+                  />
+                </div>
+
+                {/* Helper Text */}
+                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                  <p className="text-xs text-blue-700 font-medium">
+                    ℹ️ Please provide either parent information OR guardian information. 
+                    At least one contact person is required.
+                  </p>
+                </div>
+
+                {/* Parent Email - Still Required */}
                 <Input 
-                  label="Parent Email" 
+                  label="Parent/Guardian Email" 
                   icon={Mail} 
                   type="email"
                   required={true}
@@ -299,6 +383,7 @@ const StudentRegistration = () => {
                   </div>
                 </div>
 
+                {/* Navigation Buttons */}
                 <div className="flex gap-3">
                   <Button 
                     type="button" 
@@ -313,13 +398,28 @@ const StudentRegistration = () => {
                     type="button" 
                     fullWidth 
                     onClick={async () => {
-                      // 1. List the fields in Step 2
-                      const fieldsStep2 = ["fatherName", "fatherMobile", "motherName", "motherMobile", "parentEmail"];
-                      
-                      // 2. Trigger validation
+                      // ✅ CUSTOM VALIDATION: Check if either parents OR guardian is provided
+                      const fatherNameValue = watch("fatherName");
+                      const motherNameValue = watch("motherName");
+                      const guardianNameValue = watch("guardianName");
+                      const parentEmailValue = watch("parentEmail");
+
+                      const hasParents = fatherNameValue || motherNameValue;
+                      const hasGuardian = guardianNameValue;
+
+                      // Validate: Must have either parents OR guardian
+                      if (!hasParents && !hasGuardian) {
+                        setToast({ 
+                          message: "Please provide either parent information or guardian information", 
+                          type: "error" 
+                        });
+                        return;
+                      }
+
+                      // Validate: Email is mandatory
+                      const fieldsStep2 = ["parentEmail"];
                       const isValid = await trigger(fieldsStep2);
                       
-                      // 3. Only move forward if valid
                       if (isValid) {
                         setCurrentStep(3);
                       }
@@ -328,7 +428,6 @@ const StudentRegistration = () => {
                   >
                     Final Step
                   </Button>
-
                 </div>
               </>
             )}
@@ -369,15 +468,32 @@ const StudentRegistration = () => {
 
                 {/* AADHAR - SIMPLIFIED */}
                 <div className="space-y-3 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                  <label className="text-xs font-bold text-primary uppercase">Aadhar Card Number (Optional)</label>
+                  <label className="text-xs font-bold text-primary uppercase ml-1">Aadhar Card Number (Optional)</label>
+                  
                   <input 
                     type="text" 
                     placeholder="XXXX-XXXX-XXXX" 
                     maxLength="14"
-                    className="w-full h-12 border-2 border-indigo-100 rounded-xl px-4 font-bold text-center tracking-wider outline-none focus:border-primary transition-colors"
-                    {...register("aadharNumber")}
+                    {...register("aadharNumber", { 
+                      // Logic: Only validate length IF the user starts typing
+                      validate: (val) => !val || val.length === 14 || "Aadhar must be 12 digits"
+                    })}
+                    onChange={handleAadharInput} // The formatting bridge
+                    className="w-full h-14 bg-white border-2 border-indigo-200 rounded-2xl px-4 font-black tracking-[0.2em] text-center text-lg focus:border-primary focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
                   />
-                  <p className="text-[10px] text-indigo-600 font-medium">Leave blank if not available</p>
+
+                  <div className="flex flex-col gap-1 px-1">
+                    <div className="flex justify-between items-center">
+                      <p className="text-[10px] text-indigo-400 font-bold italic">Format: 0000-0000-0000</p>
+                      {errors.aadharNumber && (
+                        <p className="text-[10px] text-danger font-bold uppercase tracking-tighter">
+                          {errors.aadharNumber.message}
+                        </p>
+                      )}
+                    </div>
+                    {/* YOUR PRESERVED LOGIC MESSAGE BELOW */}
+                    <p className="text-[10px] text-indigo-600 font-medium italic">Leave blank if not available</p>
+                  </div>
                 </div>
 
                 {/* NEW ADMISSION CHECKBOX */}

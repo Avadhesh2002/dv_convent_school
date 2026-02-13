@@ -83,15 +83,34 @@ const StudentProfile = () => {
             />
             <InfoRow label="Gender" value={user.gender || 'Not Provided'} icon={User} />
             <InfoRow label="Address" value={user.address || 'Not Provided'} icon={MapPin} />
+            <InfoRow label="Pincode" value={user.pincode || 'Not Provided'} icon={MapPin} />
+            <InfoRow label="Category" value={user.category || 'Not Provided'} icon={User} />
+
           </div>
         </Card>
 
-        {/* Parent Details */}
+        {/* Parent & Guardian Details */}
         <Card title="Parent & Contact" icon={Users} noPadding>
           <div className="divide-y divide-gray-50">
-            <InfoRow label="Father's Name" value={user.fatherName || 'Not Provided'} icon={User} />
-            <InfoRow label="Contact Number" value={user.fatherMobile || 'Not Provided'} icon={Phone} />
-            <InfoRow label="Mother's Name" value={user.motherName || 'Not Provided'} icon={User} />
+            {/* Show Parents if available */}
+            {(user.fatherName || user.motherName) && (
+              <>
+                <InfoRow label="Father's Name" value={user.fatherName || 'Not Provided'} icon={User} />
+                <InfoRow label="Father's Mobile" value={user.fatherMobile || 'Not Provided'} icon={Phone} />
+                <InfoRow label="Mother's Name" value={user.motherName || 'Not Provided'} icon={User} />
+                <InfoRow label="Mother's Mobile" value={user.motherMobile || 'Not Provided'} icon={Phone} />
+              </>
+            )}
+            
+            {/* Show Guardian if available */}
+            {user.guardianName && (
+              <>
+                <InfoRow label="Guardian's Name" value={user.guardianName} icon={User} />
+                <InfoRow label="Guardian's Mobile" value={user.guardianMobile || 'Not Provided'} icon={Phone} />
+              </>
+            )}
+            
+            {/* Email is always shown */}
             <InfoRow label="Email for Comms" value={user.parentEmail || 'Not Provided'} icon={Mail} />
           </div>
         </Card>

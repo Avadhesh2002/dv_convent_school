@@ -12,7 +12,6 @@ const classSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Teacher' 
     }
-    // ❌ REMOVE academicYear from here
 }, { timestamps: true });
 
 // NEW INDEX: One unique class per academic year (e.g., only one 'Class 5' for 2024-2025)
