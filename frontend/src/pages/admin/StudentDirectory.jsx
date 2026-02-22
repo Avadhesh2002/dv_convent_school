@@ -682,6 +682,30 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
         </div>
 
         <Input label="Residential Address" name="address" defaultValue={student.address} required icon={MapPin} />
+        <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-secondary uppercase">Category <span className="text-danger">*</span></label>
+          <select 
+            name="category" 
+            defaultValue={student.category} 
+            className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-primary"
+          >
+            <option value="General">General</option>
+            <option value="OBC">OBC</option>
+            <option value="SC">SC</option>
+            <option value="ST">ST</option>
+            <option value="Minority">Minority</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <Input 
+          label="Pincode" 
+          name="pincode" 
+          defaultValue={student.pincode} 
+          maxLength={6}
+          placeholder="6-digit pincode"
+        />
+      </div>
 
         <div className="pt-4">
           <Button type="submit" fullWidth isLoading={submitting}>Save All Changes</Button>
