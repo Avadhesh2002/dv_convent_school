@@ -46,42 +46,49 @@ const LandingPage = () => {
         {/* 2. Hero Header Section */}
         <div className="text-center mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
           
-          <div className="max-w-3xl mx-auto space-y-6">
-      
-      {/* LINE 1: LOGO + SCHOOL NAME (Balanced Horizontal Layout) */}
-      <div className="flex items-center justify-center gap-3 w-full px-2">
-        <img 
-          src={logo}
-          alt="School Logo" 
-          className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain drop-shadow-lg shrink-0"
-        />
-        
-        {/* Title: Scaled down text size and forced into one line */}
-        <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tighter leading-none whitespace-nowrap">
-          {settings.schoolName || "DV Convent School"}
-        </h1>
-      </div>
+<div className="max-w-3xl mx-auto space-y-4">
 
-      {/* LINE 2: HINDI SLOGAN (Refined Typography) */}
-      <h2 className="text-xl md:text-2xl font-semibold text-gray-700 tracking-wide">
-        {settings.schoolSlogan || "शिक्षार्थ आइए, सेवार्थ जाइए"}
-      </h2>
-
-      {/* VISUAL SEPARATOR (Subtle Divider) */}
-      <div className="flex items-center justify-center gap-3 py-4">
-        <div className="h-px w-16 bg-gradient-to-r from-transparent to-gray-300"></div>
-        <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-        <div className="h-px w-16 bg-gradient-to-l from-transparent to-gray-300"></div>
-      </div>
-
-      {/* LINE 3: WELCOME MESSAGE (Clear & Direct) */}
-      <div className="max-w-md mx-auto">
-        <p className="text-gray-600 font-medium text-sm md:text-base leading-relaxed">
-          Welcome to our School Management System.<br />
-          Please select your role to continue.
-        </p>
-      </div>
+  {/* LINE 1: LOGO — Centered, Large, with golden glow ring matching the logo's orange border */}
+  <div className="flex justify-center">
+    <div className="relative">
+      {/* Outer glow ring — matches the orange/gold color of the school seal */}
+      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 blur-md opacity-30 scale-110" />
+      <img 
+        src={logo}
+        alt="DV Convent School Logo" 
+        className="relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 object-contain drop-shadow-xl rounded-full"
+      />
     </div>
+  </div>
+
+  {/* LINE 2: SCHOOL NAME — Bold, centered, below logo */}
+  <div className="text-center space-y-1">
+    <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight">
+      {settings.schoolName || "DV Convent School"}
+    </h1>
+
+    {/* LINE 3: HINDI SLOGAN */}
+    <h2 className="text-base sm:text-lg md:text-xl font-semibold text-orange-600 tracking-wide">
+      {settings.schoolSlogan || "शिक्षार्थ आइए, सेवार्थ जाइए"}
+    </h2>
+  </div>
+
+  {/* VISUAL SEPARATOR */}
+  <div className="flex items-center justify-center gap-3 py-2">
+    <div className="h-px w-16 bg-gradient-to-r from-transparent to-gray-300" />
+    <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+    <div className="h-px w-16 bg-gradient-to-l from-transparent to-gray-300" />
+  </div>
+
+  {/* LINE 4: WELCOME MESSAGE */}
+  <div className="max-w-md mx-auto text-center">
+    <p className="text-gray-600 font-medium text-sm md:text-base leading-relaxed">
+      Welcome to our School Management System.<br />
+      Please select your role to continue.
+    </p>
+  </div>
+
+</div>
   </div>
 
 
