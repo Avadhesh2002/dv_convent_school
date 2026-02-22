@@ -2,25 +2,14 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const studentSchema = new mongoose.Schema({
-    
+
     // ============================
     // Student Basic Info
-    name: { type: String, required: [true, "Name is mandatory"] },
-    dateOfBirth: { type: Date, required: [true, "DOB is mandatory"] },
-    gender: { type: String, enum: ['Male', 'Female', 'Other'], required: [true, "Gender is mandatory"]},
-    class: { 
-    type: String, 
-    required: [true, "Fill the class"],
-    enum: ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'] // Added Nursery
-},
-    address: { type: String, required: [true, "Address is mandatory"] },
-
     // ============================
     name: {
         type: String,
         required: [true, "Name is mandatory"]
     },
-
 
     dateOfBirth: {
         type: Date,
@@ -64,14 +53,14 @@ const studentSchema = new mongoose.Schema({
     // ============================
     // Parent / Guardian Info
     // ============================
-    fatherName: { 
+    fatherName: {
         type: String,
-        default: ""  
+        default: ""
     },
-    
-    fatherMobile: { 
-        type: String, 
-        default: "",  
+
+    fatherMobile: {
+        type: String,
+        default: "",
         validate: {
             validator: function(v) {
                 return !v || /^\d{10}$/.test(v);
@@ -79,30 +68,30 @@ const studentSchema = new mongoose.Schema({
             message: props => `${props.value} is not a valid 10-digit phone number!`
         }
     },
-    
-    motherName: { 
-        type: String, 
-        default: ""  
+
+    motherName: {
+        type: String,
+        default: ""
     },
-    
-    motherMobile: { 
-        type: String, 
-        default: "",  
+
+    motherMobile: {
+        type: String,
+        default: "",
         validate: {
             validator: function(v) {
                 return !v || /^\d{10}$/.test(v);
             },
             message: props => `${props.value} is not a valid 10-digit phone number!`
-        }   
+        }
     },
 
-    guardianName: { 
-        type: String, 
-        default: "" 
+    guardianName: {
+        type: String,
+        default: ""
     },
-    
-    guardianMobile: { 
-        type: String, 
+
+    guardianMobile: {
+        type: String,
         default: "",
         validate: {
             validator: function(v) {
@@ -151,14 +140,8 @@ const studentSchema = new mongoose.Schema({
     // ============================
     academicHistory: [
         {
-            year: {
-                type: String,
-                required: true
-            },
-            class: {
-                type: String,
-                required: true
-            },
+            year: { type: String, required: true },
+            class: { type: String, required: true },
             status: {
                 type: String,
                 enum: ['Promoted', 'Repeated', 'Graduated'],
@@ -219,15 +202,13 @@ const studentSchema = new mongoose.Schema({
         default: 'student'
     }
 
-}, {
-    timestamps: true
-});
+}, { timestamps: true });
 
 
 studentSchema.pre('validate', async function() {
-    const hasAnyContact = 
-        this.fatherName || this.motherName || 
-        this.fatherMobile || this.motherMobile || 
+    const hasAnyContact =
+        this.fatherName || this.motherName ||
+        this.fatherMobile || this.motherMobile ||
         this.guardianName || this.guardianMobile;
 
     if (!hasAnyContact) {
@@ -241,9 +222,4 @@ studentSchema.pre('save', async function() {
     this.password = await bcrypt.hash(this.password, salt);
 });
 
-<<<<<<< HEAD
-
 module.exports = mongoose.model('Student', studentSchema);
-=======
-module.exports = mongoose.model('Student', studentSchema);
->>>>>>> 9bbba46 (Final State Fixed everything)
