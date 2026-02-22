@@ -97,12 +97,14 @@ const StudentDirectory = () => {
   };
 
   // ============ CRUD OPERATIONS ============
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData);
-
+const handleUpdate = async (e) => {
+  e.preventDefault();
+  setSubmitting(true);
+  const formData = new FormData(e.target);
+  // Filter out empty strings so we never blank out existing DB values
+  const data = Object.fromEntries(
+    [...formData.entries()].filter(([, v]) => v !== '')
+  );
     try {
       await API.put(`/admin/students/${selectedStudent._id}`, data);
       setToast({ message: "Student records updated!", type: "success" });
