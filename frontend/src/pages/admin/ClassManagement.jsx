@@ -32,7 +32,7 @@ const ClassManagement = () => {
     try {
       const [classRes, teacherRes] = await Promise.all([
         API.get('/admin/classes'),
-        API.get('/admin/teachers?status=active')
+        API.get('/admin/teachers?status=active&limit=200&page=1')
       ]);
       setClasses(classRes.data);
       setTeachers(teacherRes.data.teachers);
