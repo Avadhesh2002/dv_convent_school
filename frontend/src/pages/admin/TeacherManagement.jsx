@@ -41,7 +41,7 @@ const TeacherManagement = () => {
   const fetchTeachers = async () => {
     setLoading(true);
     try {
-      const res = await API.get('/admin/teachers?status=active');
+      const res = await API.get('/admin/teachers?status=active&limit=200&page=1');
       setTeachers(res.data.teachers);
     } catch (err) {
       setToast({ message: "Failed to load staff roster", type: "error" });
