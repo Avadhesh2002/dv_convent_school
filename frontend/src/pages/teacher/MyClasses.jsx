@@ -40,7 +40,7 @@ const MyClasses = () => {
     setSearchTerm(""); // Reset search on new class
     try {
       // Hits the student search API filtered by class
-      const res = await API.get(`/admin/students?studentClass=${className}`);
+      const res = await API.get(`/admin/students?studentClass=${className}&limit=500&page=1`);
       setStudents(res.data.students);
     } catch (err) {
       console.error("Failed to load roster");
