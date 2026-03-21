@@ -29,6 +29,11 @@ const formatAadhar = (value) => {
 };
 
 
+const formatPEN = (value) => {
+  // Strip non-digits, allow max 12 digits
+  return value.replace(/\D/g, "").substring(0, 12);
+};
+
 const StudentRegistration = () => {
   const navigate = useNavigate();
   const { settings } = useSettings();
@@ -495,6 +500,37 @@ const StudentRegistration = () => {
                     <p className="text-[10px] text-indigo-600 font-medium italic">Leave blank if not available</p>
                   </div>
                 </div>
+
+              {/* PEN NUMBER - OPTIONAL */}
+              <div className="space-y-3 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                <label className="text-xs font-bold text-primary uppercase ml-1">PEN No. (Optional)</label>
+                
+                <input 
+                  type="text" 
+                  placeholder="XXXXXXXXXXX" 
+                  maxLength="12"
+                  {...register("penNumber", { 
+                    validate: (val) => !val || /^\d{11,12}$/.test(val) || "PEN must be 11 or 12 digits"
+                  })}
+                  onChange={(e) => {
+                    const cleaned = formatPEN(e.target.value);
+                    setValue("penNumber", cleaned);
+                  }}
+                  className="w-full h-14 bg-white border-2 border-indigo-200 rounded-2xl px-4 font-black tracking-[0.2em] text-center text-lg focus:border-primary focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
+                />
+
+                <div className="flex flex-col gap-1 px-1">
+                  <div className="flex justify-between items-center">
+                    <p className="text-[10px] text-indigo-400 font-bold italic">Format: 11 or 12 digit number</p>
+                    {errors.penNumber && (
+                      <p className="text-[10px] text-danger font-bold uppercase tracking-tighter">
+                        {errors.penNumber.message}
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-indigo-600 font-medium italic">Leave blank if not available</p>
+                </div>
+              </div>
 
                 {/* NEW ADMISSION CHECKBOX */}
                 <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border-2 border-amber-200">

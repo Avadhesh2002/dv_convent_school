@@ -11,7 +11,7 @@ const registerStudent = async (req, res) => {
             guardianName,         // ✅ NEW
             guardianMobile,       // ✅ NEW
             parentEmail,
-            profileImage, aadharNumber, fatherQualification, siblingName,
+            profileImage, aadharNumber, penNumber, fatherQualification, siblingName,
             admissionType, documents, academicYear
         } = req.body;
 
@@ -65,6 +65,7 @@ const registerStudent = async (req, res) => {
             parentEmail,
             profileImage: profileImage || "",
             aadharNumber: aadharNumber || "",
+            penNumber: penNumber || "", 
             fatherQualification: fatherQualification || "",
             siblingName: siblingName || "",
             admissionType: admissionType || 'Old',

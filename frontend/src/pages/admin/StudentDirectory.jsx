@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, UserX, Edit3, Key, Eye, FileText, ShieldCheck, ChevronLeft, ChevronRight, User, Phone, MapPin, Calendar, CheckCircle } from 'lucide-react';
+import { Search, Filter, UserX, Edit3, Key, Eye, FileText, ShieldCheck, ChevronLeft, ChevronRight, User, Phone, Camera , MapPin, Calendar, CheckCircle } from 'lucide-react';
 import API from '../../api/axios';
 import Card from '../../components/common/Card';
 import Input from '../../components/common/Input';
@@ -52,16 +52,19 @@ const StudentDirectory = () => {
     aadharPhotoCopy: 'Aadhar Photo Copy'
   };
 
-  const availableParams = [
+const availableParams = [
     { id: 'name', label: 'Student Name' },
     { id: 'dateOfBirth', label: 'Date of Birth' },
     { id: 'fatherName', label: 'Father Name' },
     { id: 'fatherMobile', label: 'Father Mobile' },
+    { id: 'motherName', label: 'Mother Name' },   
     { id: 'aadharNumber', label: 'Aadhar Card' },
+    { id: 'penNumber', label: 'PEN No.' },          
     { id: 'address', label: 'Address' },
     { id: 'category', label: 'Category' },
-    { id: 'pincode', label: 'Pincode' }
-  ];
+    { id: 'pincode', label: 'Pincode' },
+    { id: 'UID', label: 'UID' },                    
+];
 
   // ============ DATA FETCHING ============
   useEffect(() => {
@@ -514,7 +517,8 @@ const ViewStudentModal = ({ isOpen, onClose, student, documentLabels }) => {
             />
             <InfoBox label="Current Status" value={student.admissionType === 'New' ? 'Fresh Admission' : 'Promoted Student'} />
             <InfoBox label="Gender" value={student.gender} />
-            <InfoBox label="Aadhar Number" value={student.aadharNumber || 'Not Provided'} />
+            <InfoBox label="Aadhar Number" value={student.aadharNumber || 'N/A'} />
+            <InfoBox label="PEN No." value={student.penNumber || 'N/A'} />
             <InfoBox label="Date of Birth" value={new Date(student.dateOfBirth).toLocaleDateString('en-GB')} />
             <InfoBox label="Category" value={student.category || 'N/A'} />
             <InfoBox label="Pincode" value={student.pincode || 'N/A'} />
@@ -526,28 +530,14 @@ const ViewStudentModal = ({ isOpen, onClose, student, documentLabels }) => {
         <div className="space-y-3">
           <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Parental Information</h4>
           <div className="grid grid-cols-2 gap-3">
-            {(student.fatherName || student.motherName) ? (
-              <>
-                <InfoBox label="Father's Name" value={student.fatherName || 'N/A'} />
-                <InfoBox label="Father's Edu" value={student.fatherQualification || 'N/A'} />
-                <InfoBox label="Father's Mobile" value={student.fatherMobile || 'N/A'} />
-                <InfoBox label="Mother's Name" value={student.motherName || 'N/A'} />
-                <InfoBox label="Mother's Mobile" value={student.motherMobile || 'N/A'} />
-                <InfoBox label="Sibling Name" value={student.siblingName || 'None'} />
-                <InfoBox label="Guardian's Name" value="N/A" />
-                <InfoBox label="Guardian's Mobile" value="N/A" />
-              </>
-            ) : (
-              <>
-                <InfoBox label="Guardian's Name" value={student.guardianName || 'N/A'} />
-                <InfoBox label="Guardian's Mobile" value={student.guardianMobile || 'N/A'} />
-                <InfoBox label="Father's Name" value="N/A" />
-                <InfoBox label="Father's Mobile" value="N/A" />
-                <InfoBox label="Mother's Name" value="N/A" />
-                <InfoBox label="Mother's Mobile" value="N/A" />
-                <InfoBox label="Sibling Name" value={student.siblingName || 'None'} />
-              </>
-            )}
+            <InfoBox label="Father's Name" value={student.fatherName || 'N/A'} />
+            <InfoBox label="Father's Edu" value={student.fatherQualification || 'N/A'} />
+            <InfoBox label="Father's Mobile" value={student.fatherMobile || 'N/A'} />
+            <InfoBox label="Mother's Name" value={student.motherName || 'N/A'} />
+            <InfoBox label="Mother's Mobile" value={student.motherMobile || 'N/A'} />
+            <InfoBox label="Guardian's Name" value={student.guardianName || 'N/A'} />
+            <InfoBox label="Guardian's Mobile" value={student.guardianMobile || 'N/A'} />
+            <InfoBox label="Sibling Name" value={student.siblingName || 'N/A'} />
           </div>
         </div>
 
@@ -630,13 +620,57 @@ const ViewStudentModal = ({ isOpen, onClose, student, documentLabels }) => {
 
 // ============ EDIT MODAL COMPONENT ============
 const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) => {
+  const [imagePreview, setImagePreview] = React.useState(student?.profileImage || null);
+
+  // Reset preview when a different student is opened
+  React.useEffect(() => {
+    setImagePreview(student?.profileImage || null);
+  }, [student?._id]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2000000) return alert("File too large. Max 2MB.");
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
   if (!student) return null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Update Student Records">
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={(e) => {
+        // Inject the current imagePreview into the form submission
+        e._imagePreview = imagePreview;
+        onSubmit(e);
+      }} className="space-y-4">
+
+        {/* STUDENT PHOTO - Admin Editable */}
+        <div className="flex flex-col items-center p-5 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+          <div className="relative group">
+            <div className="w-24 h-28 bg-white border-2 border-gray-200 rounded-xl overflow-hidden flex items-center justify-center shadow-md">
+              {imagePreview ? (
+                <img src={imagePreview} alt="Student" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-center p-2">
+                  <span className="text-3xl font-black text-primary/30">{student.name?.charAt(0)}</span>
+                </div>
+              )}
+            </div>
+            <label className="absolute -bottom-2 -right-2 bg-primary text-white p-2 rounded-full cursor-pointer shadow-lg hover:bg-indigo-600 transition-colors">
+              <Camera size={16} />
+              <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+            </label>
+          </div>
+          <p className="text-[10px] text-secondary font-bold uppercase mt-3 tracking-wider">Admin: Click camera to update photo</p>
+          {/* Hidden input to carry image data through native form */}
+          <input type="hidden" name="profileImage" value={imagePreview || ''} />
+        </div>
+
         <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 mb-4">
           <p className="text-[10px] font-black text-primary uppercase mb-2">Basic Info</p>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Student Full Name" name="name" defaultValue={student.name} required />
             <div className="space-y-1">
@@ -708,6 +742,49 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
           placeholder="6-digit pincode"
         />
       </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-secondary uppercase">Category <span className="text-danger">*</span></label>
+            <select 
+              name="category" 
+              defaultValue={student.category} 
+              className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-primary"
+            >
+              <option value="General">General</option>
+              <option value="OBC">OBC</option>
+              <option value="SC">SC</option>
+              <option value="ST">ST</option>
+              <option value="Minority">Minority</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <Input 
+            label="Pincode" 
+            name="pincode" 
+            defaultValue={student.pincode} 
+            maxLength={6}
+            placeholder="6-digit pincode"
+          />
+        </div>
+
+        {/* Aadhar & PEN - Admin Correction Fields */}
+        <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+          <p className="text-[10px] font-black text-primary uppercase mb-3">Identity Numbers (Admin Editable)</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input 
+              label="Aadhar Card Number" 
+              name="aadharNumber" 
+              defaultValue={student.aadharNumber} 
+              placeholder="XXXX-XXXX-XXXX"
+              maxLength={14}
+            />
+            <Input 
+              label="PEN No. (Optional)" 
+              name="penNumber" 
+              defaultValue={student.penNumber} 
+              placeholder="11 or 12-digit PEN"
+              maxLength={12}
+            />
+          </div>
 
         <div className="pt-4">
           <Button type="submit" fullWidth isLoading={submitting}>Save All Changes</Button>

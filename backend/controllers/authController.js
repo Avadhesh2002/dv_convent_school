@@ -64,6 +64,8 @@ const studentLogin = async (req, res) => {
             admissionDate: student.admissionDate,
             academicHistory: student.academicHistory, 
             profileImage: student.profileImage,
+            aadharNumber: student.aadharNumber,    // ✅ ADD THIS
+            penNumber: student.penNumber,
             token: generateToken(student._id, 'student')
         });
             // ---------------------------

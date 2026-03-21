@@ -19,7 +19,6 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
-import EditableAvatar from '../shared/EditableAvatar';
 
 const StudentProfile = () => {
   const { user, logout } = useAuth();
@@ -56,7 +55,15 @@ const StudentProfile = () => {
       {/* Header ID Card */}
       <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col items-center text-center">
           <div className="mb-4">
-            <EditableAvatar currentImage={user.profileImage} />
+            <div className="w-24 h-24 md:w-32 md:h-32 bg-indigo-50 rounded-full border-4 border-white shadow-lg overflow-hidden flex items-center justify-center">
+              {user.profileImage ? (
+                <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-3xl font-black text-primary/30 uppercase">
+                  {user.name?.charAt(0)}
+                </span>
+              )}
+            </div>
           </div>
         <h2 className="text-xl font-black text-gray-900">{user.name}</h2>
         <div className="flex gap-2 mt-1">
@@ -85,6 +92,8 @@ const StudentProfile = () => {
             <InfoRow label="Address" value={user.address || 'Not Provided'} icon={MapPin} />
             <InfoRow label="Pincode" value={user.pincode || 'Not Provided'} icon={MapPin} />
             <InfoRow label="Category" value={user.category || 'Not Provided'} icon={User} />
+            <InfoRow label="Aadhar Number" value={user.aadharNumber || 'Not Provided'} icon={ShieldCheck} />
+            <InfoRow label="PEN No." value={user.penNumber || 'Not Provided'} icon={ShieldCheck} />
 
           </div>
         </Card>

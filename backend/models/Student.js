@@ -174,6 +174,17 @@ const studentSchema = new mongoose.Schema({
         default: ""
     },
 
+    penNumber: {
+    type: String,
+    default: "",
+    validate: {
+        validator: function(v) {
+            return !v || /^\d{11,12}$/.test(v);
+        },
+        message: props => `${props.value} is not a valid 11 or 12-digit PEN number!`
+    }
+},
+
     siblingName: {
         type: String,
         default: ""
