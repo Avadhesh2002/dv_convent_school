@@ -622,7 +622,6 @@ const ViewStudentModal = ({ isOpen, onClose, student, documentLabels }) => {
 const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) => {
   const [imagePreview, setImagePreview] = React.useState(student?.profileImage || null);
 
-  // Reset preview when a different student is opened
   React.useEffect(() => {
     setImagePreview(student?.profileImage || null);
   }, [student?._id]);
@@ -641,7 +640,6 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Update Student Records">
       <form onSubmit={(e) => {
-        // Inject the current imagePreview into the form submission
         e._imagePreview = imagePreview;
         onSubmit(e);
       }} className="space-y-4">
@@ -664,13 +662,12 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
             </label>
           </div>
           <p className="text-[10px] text-secondary font-bold uppercase mt-3 tracking-wider">Admin: Click camera to update photo</p>
-          {/* Hidden input to carry image data through native form */}
           <input type="hidden" name="profileImage" value={imagePreview || ''} />
         </div>
 
-        <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 mb-4">
+        {/* BASIC INFO */}
+        <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
           <p className="text-[10px] font-black text-primary uppercase mb-2">Basic Info</p>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Student Full Name" name="name" defaultValue={student.name} required />
             <div className="space-y-1">
@@ -693,6 +690,7 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
           </div>
         </div>
 
+        {/* PARENTAL INFO */}
         <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
           <p className="text-[10px] font-black text-secondary uppercase mb-2">Parental & Contact Information</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -703,9 +701,9 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
           </div>
           <div className="space-y-1 mt-4">
             <label className="text-xs font-bold text-secondary uppercase">Admission Status</label>
-            <select 
-              name="admissionType" 
-              defaultValue={student.admissionType} 
+            <select
+              name="admissionType"
+              defaultValue={student.admissionType}
               className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-primary"
             >
               <option value="New">Fresh Admission (New)</option>
@@ -717,36 +715,14 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
           </div>
         </div>
 
+        {/* ADDRESS + CATEGORY + PINCODE */}
         <Input label="Residential Address" name="address" defaultValue={student.address} required icon={MapPin} />
         <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <label className="text-xs font-bold text-secondary uppercase">Category <span className="text-danger">*</span></label>
-          <select 
-            name="category" 
-            defaultValue={student.category} 
-            className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-primary"
-          >
-            <option value="General">General</option>
-            <option value="OBC">OBC</option>
-            <option value="SC">SC</option>
-            <option value="ST">ST</option>
-            <option value="Minority">Minority</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <Input 
-          label="Pincode" 
-          name="pincode" 
-          defaultValue={student.pincode} 
-          maxLength={6}
-          placeholder="6-digit pincode"
-        />
-      </div>
           <div className="space-y-1">
             <label className="text-xs font-bold text-secondary uppercase">Category <span className="text-danger">*</span></label>
-            <select 
-              name="category" 
-              defaultValue={student.category} 
+            <select
+              name="category"
+              defaultValue={student.category}
               className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-primary"
             >
               <option value="General">General</option>
@@ -757,38 +733,40 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
               <option value="Other">Other</option>
             </select>
           </div>
-          <Input 
-            label="Pincode" 
-            name="pincode" 
-            defaultValue={student.pincode} 
+          <Input
+            label="Pincode"
+            name="pincode"
+            defaultValue={student.pincode}
             maxLength={6}
             placeholder="6-digit pincode"
           />
         </div>
 
-        {/* Aadhar & PEN - Admin Correction Fields */}
+        {/* IDENTITY NUMBERS */}
         <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
           <p className="text-[10px] font-black text-primary uppercase mb-3">Identity Numbers (Admin Editable)</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input 
-              label="Aadhar Card Number" 
-              name="aadharNumber" 
-              defaultValue={student.aadharNumber} 
+            <Input
+              label="Aadhar Card Number"
+              name="aadharNumber"
+              defaultValue={student.aadharNumber}
               placeholder="XXXX-XXXX-XXXX"
               maxLength={14}
             />
-            <Input 
-              label="PEN No. (Optional)" 
-              name="penNumber" 
-              defaultValue={student.penNumber} 
+            <Input
+              label="PEN No. (Optional)"
+              name="penNumber"
+              defaultValue={student.penNumber}
               placeholder="11 or 12-digit PEN"
               maxLength={12}
             />
           </div>
+        </div>
 
         <div className="pt-4">
           <Button type="submit" fullWidth isLoading={submitting}>Save All Changes</Button>
         </div>
+
       </form>
     </Modal>
   );
