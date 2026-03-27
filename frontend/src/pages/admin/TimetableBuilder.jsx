@@ -166,12 +166,21 @@ const TimetableBuilder = () => {
 
     setSubmitting(true);
     try {
-      await API.post('/timetable/save', {
+
+    const cleanedPeriods = periods.map(p => ({
+        ...p,
+        // For Break/Assembly/Other: send null instead of empty string to avoid backend cast error
+        subjectId: p.periodType === 'Class' ? (p.subjectId || null) : null,
+        teacherId: p.periodType === 'Class' ? (p.teacherId || null) : null,
+        // If endTime is placeholder "--:--", send empty string so backend handles it
+        endTime: (p.endTime === '--:--' || !p.endTime) ? '' : p.endTime,
+    }));
+    await API.post('/timetable/save', {
         classId: selectedClass,
         day: selectedDay,
-        periods: periods,
+        periods: cleanedPeriods,
         academicYear: settings.currentAcademicYear
-      });
+    });
       setToast({ message: `Timetable for ${selectedDay} saved successfully!`, type: "success" });
       fetchExistingSchedule(selectedClass, selectedDay); // Re-fetch to lock all rows
     } catch (err) {

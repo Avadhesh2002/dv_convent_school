@@ -71,10 +71,26 @@ const saveTimetable = async (req, res) => {
             }
         }
 
+        const sanitizedPeriods = periods.map(period => {
+        const sanitized = { ...period };
+
+        // If endTime is missing or placeholder, set it to startTime (non-breaking fallback)
+        if (!sanitized.endTime || sanitized.endTime === '--:--' || sanitized.endTime === '') {
+            sanitized.endTime = sanitized.startTime;
+        }
+
+        // Strip subjectId and teacherId for non-class periods to avoid ObjectId cast errors
+        if (sanitized.periodType !== 'Class') {
+            sanitized.subjectId = undefined;
+            sanitized.teacherId = undefined;
+        }
+
+        return sanitized;
+    });
         // 4. Save or Update (Upsert Logic)
         const timetable = await Timetable.findOneAndUpdate(
             { classId, day, academicYear },
-            { classId, day, periods, academicYear, createdBy: req.user._id },
+            { classId, day, periods: sanitizedPeriods, academicYear, createdBy: req.user._id },
             { upsert: true, new: true }
         );
 

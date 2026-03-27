@@ -12,7 +12,8 @@ const periodSchema = new mongoose.Schema({
     },
     endTime: {
         type: String, // format "08:45"
-        required: true
+        required: false,
+        default: null
     },
     subjectId: {
         type: mongoose.Schema.Types.ObjectId,
