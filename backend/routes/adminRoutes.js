@@ -31,7 +31,7 @@ router.put('/teachers/:id', protect, authorize('admin'), updateTeacher);
 router.delete('/teachers/:id', protect, authorize('admin'), deleteTeacher);
 
 // Student Management (Active Students)
-router.get('/students', protect, authorize('admin', 'teacher'), getAllStudents);
+router.get('/students', protect, authorize('admin'), getAllStudents);
 router.put('/students/:id', protect, authorize('admin'), updateStudent);
 router.delete('/students/:id', protect, authorize('admin'), deleteStudent);
 

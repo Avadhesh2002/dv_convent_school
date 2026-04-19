@@ -1,5 +1,6 @@
 const Student = require('../models/Student');
 const Notification = require('../models/Notification');
+const cloudinary = require('../config/cloudinary');
 
 const registerStudent = async (req, res) => {
     try {
@@ -11,7 +12,7 @@ const registerStudent = async (req, res) => {
             guardianName,         // ✅ NEW
             guardianMobile,       // ✅ NEW
             parentEmail,
-            profileImage, aadharNumber, penNumber, fatherQualification, siblingName,
+            profileImage: rawProfileImage, aadharNumber, penNumber, fatherQualification, siblingName,
             admissionType, documents, academicYear
         } = req.body;
 
@@ -47,7 +48,28 @@ const registerStudent = async (req, res) => {
             });
         }
 
-        // ✅ CREATE STUDENT WITH ALL NEW FIELDS
+        let profileImageUrl = "";
+        if (rawProfileImage && rawProfileImage.startsWith('data:image')) {
+            try {
+                const uploadResult = await cloudinary.uploader.upload(rawProfileImage, {
+                    folder: 'dv_convent_school/profiles',
+                    transformation: [
+                        { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+                        { quality: 'auto', fetch_format: 'auto' }
+                    ]
+                    // Note: No public_id here because student has no _id yet at this point.
+                    // Cloudinary will auto-generate a unique ID. After approval,
+                    // the student can re-upload via EditableAvatar which uses their _id.
+                });
+                profileImageUrl = uploadResult.secure_url;
+            } catch (uploadError) {
+                // If Cloudinary upload fails, registration still proceeds without image.
+                // Do not block a student from applying just because of a photo issue.
+                console.error("Registration photo upload failed:", uploadError.message);
+                profileImageUrl = "";
+            }
+        }
+
         const newStudent = await Student.create({
             name, 
             dateOfBirth, 
@@ -63,7 +85,7 @@ const registerStudent = async (req, res) => {
             guardianName: guardianName || "",       // ✅ NEW - Optional
             guardianMobile: guardianMobile || "",   // ✅ NEW - Optional
             parentEmail,
-            profileImage: profileImage || "",
+            profileImage: profileImageUrl,
             aadharNumber: aadharNumber || "",
             penNumber: penNumber || "", 
             fatherQualification: fatherQualification || "",

@@ -56,7 +56,7 @@ router.get('/roster/:examId/:subjectId/:classId', protect, authorize('teacher', 
         const students = await Student.find({ 
             class: targetClass.className, 
             accountStatus: 'active' 
-        }).select('name rollNumber').sort({ rollNumber: 1 });
+        }).select('name UID').sort({ name: 1 });
 
         // 3. Fetch Marks (The most critical part)
         // We find all marks for this specific exam and subject in this class
@@ -76,7 +76,7 @@ router.get('/roster/:examId/:subjectId/:classId', protect, authorize('teacher', 
             return {
                 _id: student._id,
                 name: student.name,
-                rollNumber: student.rollNumber,
+                UID: student.UID,
                 // If markRecord exists, extract marksObtained, else empty string
                 savedMarks: markRecord ? markRecord.marksObtained : '',
                 savedRemarks: markRecord ? markRecord.remarks : ''

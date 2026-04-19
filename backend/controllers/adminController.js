@@ -18,9 +18,6 @@ const PROMOTION_MAP = {
     '7': '8',
     '8': 'Graduated' 
 };
-
-
-
 const getPendingStudents = async (req, res) => {
     try {
         const pendingStudents = await Student.find({ accountStatus: 'pending' });
@@ -30,9 +27,6 @@ const getPendingStudents = async (req, res) => {
     }
 };
 
-// @desc    Approve a student and issue credentials
-// @route   PUT /api/admin/approve-student/:id
-// @access  Private (Admin) - Currently Open for Testing
 const approveStudent = async (req, res) => {
     try {
         const { UID, password } = req.body;

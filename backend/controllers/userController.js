@@ -3,6 +3,7 @@ const Admin = require('../models/Admin');
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
 const Notification = require('../models/Notification');
+const cloudinary = require('../config/cloudinary');
 
 const changePassword = async (req, res) => {
     try {
@@ -87,7 +88,7 @@ const markNotificationsRead = async (req, res) => {
 
 const updateProfilePicture = async (req, res) => {
     try {
-        const { image } = req.body; // The Base64 string from frontend
+        const { image } = req.body; // Still receives base64 from frontend
         const userId = req.user._id;
         const role = req.user.role;
 
@@ -95,18 +96,33 @@ const updateProfilePicture = async (req, res) => {
             return res.status(400).json({ message: "No image data provided" });
         }
 
+        // Step 1: Upload the base64 image to Cloudinary
+        // The folder name keeps school images organized in your Cloudinary dashboard
+        const uploadResult = await cloudinary.uploader.upload(image, {
+            folder: 'dv_convent_school/profiles',
+            transformation: [
+                { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+                { quality: 'auto', fetch_format: 'auto' }
+            ],
+            // Use userId as public_id so re-uploads overwrite the old image
+            public_id: `${role}_${userId}`,
+            overwrite: true
+        });
+
+        // Step 2: Store only the secure URL (80 chars) not the base64 (100-300KB)
+        const imageUrl = uploadResult.secure_url;
+
         let userModel;
-        // Determine which collection to update based on the role in the JWT
         if (role === 'admin') userModel = Admin;
         else if (role === 'teacher') userModel = Teacher;
         else if (role === 'student') userModel = Student;
 
-        // Update the specific user
+        // Step 3: Save the URL to MongoDB (tiny string, not giant base64)
         const updatedUser = await userModel.findByIdAndUpdate(
             userId,
-            { profileImage: image },
-            { new: true } // returns the updated document
-        ).select('-password'); // Security: Don't return the password
+            { profileImage: imageUrl },
+            { new: true }
+        ).select('-password');
 
         res.status(200).json({
             message: "Profile picture updated successfully",
@@ -114,9 +130,11 @@ const updateProfilePicture = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({ message: "Server Error", error: error.message });
+        console.error("PROFILE_PIC_ERROR:", error);
+        res.status(500).json({ message: "Upload failed", error: error.message });
     }
 };
+
 
 const updateUserInfo = async (req, res) => {
     try {
@@ -158,6 +176,7 @@ const updateUserInfo = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 

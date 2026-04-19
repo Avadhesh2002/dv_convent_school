@@ -29,7 +29,7 @@ const MyClasses = () => {
   }, []);
 
   // 2. Fetch Students for a specific Class
-  const toggleRoster = async (className, assignmentId) => {
+  const toggleRoster = async (classId, className, assignmentId) => {
     if (expandedClass === assignmentId) {
       setExpandedClass(null);
       return;
@@ -39,8 +39,9 @@ const MyClasses = () => {
     setLoadingStudents(true);
     setSearchTerm(""); // Reset search on new class
     try {
-      // Hits the student search API filtered by class
-      const res = await API.get(`/admin/students?studentClass=${className}&limit=500&page=1`);
+      const res = await API.get(`/teacher/class-roster/${classId}`, {
+        params: searchTerm ? { search: searchTerm } : {}
+      });
       setStudents(res.data.students);
     } catch (err) {
       console.error("Failed to load roster");
@@ -70,7 +71,7 @@ const MyClasses = () => {
             <div key={asgn._id} className="space-y-2">
               {/* 4. The Class Card */}
               <button 
-                onClick={() => toggleRoster(asgn.classId.className, asgn._id)}
+                onClick={() => toggleRoster(asgn.classId._id, asgn.classId.className, asgn._id)}
                 className={`w-full text-left transition-all ${expandedClass === asgn._id ? 'scale-[0.98]' : ''}`}
               >
                 <Card className={`group border-l-4 transition-colors ${expandedClass === asgn._id ? 'border-l-primary bg-indigo-50/30' : 'border-l-gray-200'}`}>

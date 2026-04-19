@@ -1,5 +1,7 @@
 const Class = require('../models/Class');
-const Settings = require('../models/Settings'); 
+const Settings = require('../models/Settings');
+const Student = require('../models/Student');
+ 
 
 // @desc    Create a new Class
 // @route   POST /api/admin/classes
@@ -61,6 +63,52 @@ const getManagedClasses = async (req, res) => {
         res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
+
+
+const getClassRoster = async (req, res) => {
+    try {
+        const { classId } = req.params;
+        const { search } = req.query;
+
+        // Step 1: Resolve classId to class name string
+        const targetClass = await Class.findById(classId);
+        if (!targetClass) {
+            return res.status(404).json({ message: "Class not found" });
+        }
+
+        // Step 2: Build lean query — only active students in this class
+        let query = {
+            class: targetClass.className,
+            accountStatus: 'active'
+        };
+
+        // Step 3: Optional search filter (name or UID only)
+        if (search && search.trim() !== '') {
+            query.$or = [
+                { name: { $regex: search.trim(), $options: 'i' } },
+                { UID: { $regex: search.trim(), $options: 'i' } }
+            ];
+        }
+
+        // Step 4: THE CRITICAL FIX — select ONLY the 5 fields needed
+        // profileImage is intentionally excluded — this is what caused 177s delay
+        const students = await Student.find(query)
+            .select('_id name UID accountStatus')
+            .sort({ name: 1 })
+            .lean(); // .lean() returns plain JS objects — faster than Mongoose documents
+
+        res.status(200).json({
+            className: targetClass.className,
+            count: students.length,
+            students
+        });
+
+    } catch (error) {
+        console.error("ROSTER_ERROR:", error);
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
 
 
 const updateClass = async (req, res) => {
@@ -144,5 +192,4 @@ const deleteClass = async (req, res) => {
     }
 };
 
-// Update your module.exports at the bottom
-module.exports = { createClass, getClasses, getManagedClasses, updateClass, deleteClass };
+module.exports = { createClass, getClasses, getManagedClasses, getClassRoster, updateClass, deleteClass };

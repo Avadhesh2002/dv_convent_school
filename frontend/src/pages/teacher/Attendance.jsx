@@ -76,9 +76,7 @@ const AttendanceMarking = () => {
 
   setLoading(true);
   try {
-    // NEW SIMPLE LOGIC:
-    const targetClass = assignments.find(c => c._id === classId);
-    const res = await API.get(`/admin/students?studentClass=${targetClass.className}&limit=500&page=1`);
+    const res = await API.get(`/teacher/class-roster/${classId}`);
       
       setRoster(res.data.students);
       

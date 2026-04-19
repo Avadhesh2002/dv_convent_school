@@ -15,11 +15,24 @@ connectDB();
 const app = express();
 
 // Middleware
+const allowedOrigins = [
+  "https://dvgss.in",
+  "https://www.dvgss.in"
+];
+
 app.use(cors({
-  origin: [
-    "https://dvgss.in",
-    "https://www.dvgss.in"
-  ],
+  origin: (origin, callback) => {
+    // Allow non-browser tools and same-origin requests with no Origin header
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true
 }));
 

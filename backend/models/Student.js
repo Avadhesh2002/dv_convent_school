@@ -233,4 +233,6 @@ studentSchema.pre('save', async function() {
     this.password = await bcrypt.hash(this.password, salt);
 });
 
+studentSchema.index({ class: 1, accountStatus: 1 });
+
 module.exports = mongoose.model('Student', studentSchema);
