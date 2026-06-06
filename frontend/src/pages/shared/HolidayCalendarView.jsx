@@ -75,7 +75,7 @@ const HolidayCalendarView = () => {
                     <span className="px-2 py-0.5 bg-indigo-50 text-primary text-[10px] font-black rounded border border-indigo-100">
                         {settings.currentAcademicYear}
                     </span>
-                    <span className="text-[10px] font-black text-gray-400 uppercase">ΓÇó {holidays.length} holidays ΓÇó {totalDays} days off</span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase">• {holidays.length} holidays • {totalDays} days off</span>
                 </div>
             </div>
 
@@ -89,8 +89,8 @@ const HolidayCalendarView = () => {
                     <p className="text-xl font-black">{nextHoliday.title}</p>
                     <p className="text-sm opacity-80 mt-0.5">
                         {fmt(nextHoliday.date)}
-                        {nextHoliday.endDate && ` ΓÇö ${fmt(nextHoliday.endDate)}`}
-                        {' ┬╖ '}
+                        {nextHoliday.endDate && ` — ${fmt(nextHoliday.endDate)}`}
+                        {' · '}
                         {new Date(nextHoliday.date).toLocaleString('en-IN', { weekday: 'long' })}
                     </p>
                     {nextHoliday.description && (
@@ -165,7 +165,7 @@ const HolidayCalendarView = () => {
                                                     <p className="font-black text-gray-900 mt-1 truncate">{h.title}</p>
                                                     {isMultiDay && (
                                                         <p className="text-[11px] text-gray-400 font-medium">
-                                                            {fmt(h.date)} ΓÇö {fmt(h.endDate)}
+                                                            {fmt(h.date)} — {fmt(h.endDate)}
                                                         </p>
                                                     )}
                                                     {h.description && (

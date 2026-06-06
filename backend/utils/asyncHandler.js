@@ -1,5 +1,5 @@
 /**
- * asyncHandler ΓÇö wraps async route handlers to automatically
+ * asyncHandler — wraps async route handlers to automatically
  * catch errors and forward them to Express's error middleware.
  *
  * Usage:

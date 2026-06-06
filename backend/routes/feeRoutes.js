@@ -15,7 +15,7 @@ router.post  ('/structure',        protect, authorize('admin'),           asyncH
 router.put   ('/structure/:id',    protect, authorize('admin'),           asyncHandler(updateFeeStructure));
 router.delete('/structure/:id',    protect, authorize('admin'),           asyncHandler(deleteFeeStructure));
 
-// Payments ΓÇö admin manual entry
+// Payments — admin manual entry
 router.post  ('/pay',              protect, authorize('admin'),           asyncHandler(collectFee));
 router.get   ('/payments',         protect, authorize('admin','teacher'), asyncHandler(getPayments));
 router.delete('/payments/:id',     protect, authorize('admin'),           asyncHandler(deletePayment));
@@ -29,7 +29,7 @@ router.get   ('/class-fee-status', protect, authorize('teacher'),         asyncH
 // Student ledger
 router.get   ('/student/:studentId', protect, authorize('admin','student','teacher'), asyncHandler(getStudentFeeDetails));
 
-// UPI Payment (free ΓÇö no gateway)
+// UPI Payment (free — no gateway)
 router.get   ('/upi/info',              protect, authorize('student'),           asyncHandler(getUpiInfo));
 router.post  ('/upi/submit',            protect, authorize('student'),           asyncHandler(submitUpiPayment));
 router.get   ('/upi/pending',           protect, authorize('admin'),             asyncHandler(getPendingUpiPayments));

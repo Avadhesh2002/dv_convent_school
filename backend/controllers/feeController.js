@@ -4,7 +4,7 @@ const Student      = require('../models/Student');
 const Class        = require('../models/Class');
 const BusRoute     = require('../models/BusRoute');
 
-// ΓöÇΓöÇΓöÇ FEE STRUCTURE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── FEE STRUCTURE ────────────────────────────────────────────────────────────
 const getFeeStructures = async (req, res) => {
     const filter = req.query.academicYear ? { academicYear: req.query.academicYear } : {};
     const list = await FeeStructure.find(filter).sort({ className: 1 });
@@ -37,7 +37,7 @@ const deleteFeeStructure = async (req, res) => {
     res.json({ message: 'Deleted' });
 };
 
-// ΓöÇΓöÇΓöÇ PAYMENTS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── PAYMENTS ─────────────────────────────────────────────────────────────────
 const collectFee = async (req, res) => {
     const { studentId, academicYear, month, months, monthAmounts, feeComponents, totalAmount, discount, fine,
             amountPaid, paymentMode, transactionId, remarks, paidBy } = req.body;
@@ -148,11 +148,11 @@ const getStudentFeeDetails = async (req, res) => {
         ? Math.max(0, structure.totalAnnual - totalPaid)
         : payments.reduce((s, p) => s + (p.totalAmount - p.discount + p.fine - p.amountPaid), 0);
 
-    // ΓöÇΓöÇ Per-month status ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    // ── Per-month status ──────────────────────────────────────────────────────
     // Academic year months in order: April ΓåÆ March
     const MONTHS = ['April','May','June','July','August','September','October','November','December','January','February','March'];
 
-    // Monthly fee amount from structure ΓÇö handle both old (monthly) and new (one-time per month) formats
+    // Monthly fee amount from structure — handle both old (monthly) and new (one-time per month) formats
     const monthlyFeeAmt = structure
         ? structure.feeComponents
             .filter(c => c.frequency === 'monthly')
@@ -178,7 +178,7 @@ const getStudentFeeDetails = async (req, res) => {
         });
     }
 
-    // ΓöÇΓöÇ Bus fee: add to every month if student has a bus route ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    // ── Bus fee: add to every month if student has a bus route ────────────────
     const busRoute = student.busRoute
         ? await BusRoute.findById(student.busRoute).select('routeName monthlyFee')
         : null;
@@ -266,7 +266,7 @@ const getDefaulters = async (req, res) => {
     const currentDay  = now.getDate();
     const currentIdx  = MONTHS.indexOf(currentMonthName);
 
-    // Months that are "due" ΓÇö past the 5th of that month
+    // Months that are "due" — past the 5th of that month
     const dueMonths = MONTHS.filter((m, i) => {
         if (i < currentIdx) return true;                    // past months
         if (i === currentIdx && currentDay > 5) return true; // current month after 5th
@@ -332,10 +332,10 @@ const getDefaulters = async (req, res) => {
     res.json(defaulters);
 };
 
-// ΓöÇΓöÇΓöÇ UPI PAYMENT (Free ΓÇö no gateway) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── UPI PAYMENT (Free — no gateway) ─────────────────────────────────────────
 const Settings = require('../models/Settings');
 
-// GET /api/fees/upi/info ΓÇö returns school UPI ID + QR for student portal
+// GET /api/fees/upi/info — returns school UPI ID + QR for student portal
 const getUpiInfo = async (req, res) => {
     const settings = await Settings.findOne({});
     res.json({
@@ -345,8 +345,8 @@ const getUpiInfo = async (req, res) => {
     });
 };
 
-// POST /api/fees/upi/submit ΓÇö student submits transaction ID after paying
-// Creates payment records with status 'pending_upi' ΓÇö admin must confirm
+// POST /api/fees/upi/submit — student submits transaction ID after paying
+// Creates payment records with status 'pending_upi' — admin must confirm
 const submitUpiPayment = async (req, res) => {
     const { studentId, academicYear, months, monthAmounts, transactionId, paidBy, totalAmount } = req.body;
     if (!studentId || !academicYear || !transactionId || !months?.length)
@@ -369,7 +369,7 @@ const submitUpiPayment = async (req, res) => {
             student: studentId, academicYear, month: m,
             totalAmount: amtForMonth, discount: 0, fine: 0, amountPaid: amtForMonth,
             paymentMode: 'UPI', transactionId,
-            remarks: `UPI payment ΓÇö pending admin confirmation`,
+            remarks: `UPI payment — pending admin confirmation`,
             paidBy: paidBy || student.name,
             collectedBy: studentId, collectedByModel: 'Student',
             status: 'pending_upi',
@@ -381,7 +381,7 @@ const submitUpiPayment = async (req, res) => {
     res.status(201).json({ success: true, payments: createdPayments, count: createdPayments.length, groupReceiptNo });
 };
 
-// GET /api/fees/upi/pending ΓÇö admin gets all pending UPI payments
+// GET /api/fees/upi/pending — admin gets all pending UPI payments
 const getPendingUpiPayments = async (req, res) => {
     const { academicYear } = req.query;
     const filter = { status: 'pending_upi' };
@@ -402,7 +402,7 @@ const getPendingUpiPayments = async (req, res) => {
     res.json(Object.values(groups));
 };
 
-// PUT /api/fees/upi/confirm/:groupReceiptNo ΓÇö admin confirms a UPI payment
+// PUT /api/fees/upi/confirm/:groupReceiptNo — admin confirms a UPI payment
 const confirmUpiPayment = async (req, res) => {
     const { groupReceiptNo } = req.params;
     const payments = await FeePayment.find({ groupReceiptNo, status: 'pending_upi' });
@@ -416,14 +416,14 @@ const confirmUpiPayment = async (req, res) => {
     res.json({ success: true, confirmed: payments.length });
 };
 
-// PUT /api/fees/upi/reject/:groupReceiptNo ΓÇö admin rejects a UPI payment
+// PUT /api/fees/upi/reject/:groupReceiptNo — admin rejects a UPI payment
 const rejectUpiPayment = async (req, res) => {
     const { groupReceiptNo } = req.params;
     await FeePayment.deleteMany({ groupReceiptNo, status: 'pending_upi' });
     res.json({ success: true, message: 'Payment rejected and removed' });
 };
 
-// GET /api/fees/class-fee-status ΓÇö class teacher sees month-wise fee status of their class
+// GET /api/fees/class-fee-status — class teacher sees month-wise fee status of their class
 
 const getClassFeeStatus = async (req, res) => {
     const { academicYear } = req.query;
@@ -494,12 +494,12 @@ const getClassFeeStatus = async (req, res) => {
     res.json({ className: cls.className, months: activeMonths, students: result });
 };
 
-// ΓöÇΓöÇΓöÇ DAILY COLLECTION REPORT ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── DAILY COLLECTION REPORT ─────────────────────────────────────────────────
 // GET /api/fees/daily?date=2025-04-12&academicYear=2025-26
 const getDailyCollection = async (req, res) => {
     const { date, academicYear } = req.query;
 
-    // Build date range ΓÇö default to today
+    // Build date range — default to today
     const target = date ? new Date(date) : new Date();
     const start  = new Date(target); start.setHours(0, 0, 0, 0);
     const end    = new Date(target); end.setHours(23, 59, 59, 999);

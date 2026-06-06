@@ -349,7 +349,7 @@ const getFinalResult = async (req, res) => {
                 if (termKey === 'term1') tObj.halfYearlyExam = m.marksObtained;
                 else                    tObj.yearlyExam     = m.marksObtained;
             } else {
-                // Legacy / unknown component ΓÇö treat as final exam column
+                // Legacy / unknown component — treat as final exam column
                 if (termKey === 'term1') tObj.halfYearlyExam = m.marksObtained;
                 else                    tObj.yearlyExam     = m.marksObtained;
             }
@@ -371,8 +371,8 @@ const getFinalResult = async (req, res) => {
                 return {
                     subjectName: sub.subjectName,
                     subjectCode: sub.subjectCode,
-                    term1: { ...sub.term1, grade: sub.term1.maxTotal > 0 ? gradeFromPct(t1pct) : 'ΓÇö' },
-                    term2: { ...sub.term2, grade: sub.term2.maxTotal > 0 ? gradeFromPct(t2pct) : 'ΓÇö' },
+                    term1: { ...sub.term1, grade: sub.term1.maxTotal > 0 ? gradeFromPct(t1pct) : '—' },
+                    term2: { ...sub.term2, grade: sub.term2.maxTotal > 0 ? gradeFromPct(t2pct) : '—' },
                 };
             });
 

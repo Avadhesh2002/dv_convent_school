@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 /**
- * useToast ΓÇö minimal hook for showing toast notifications.
+ * useToast — minimal hook for showing toast notifications.
  *
  * Usage:
  *   const { toast, showToast, hideToast } = useToast();

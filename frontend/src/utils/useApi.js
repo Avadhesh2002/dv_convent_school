@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 /**
- * useApi ΓÇö a minimal hook to handle async API calls with loading/error state.
+ * useApi — a minimal hook to handle async API calls with loading/error state.
  *
  * Usage:
  *   const { loading, error, execute } = useApi();

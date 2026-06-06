@@ -57,7 +57,7 @@ export function usePushNotifications(isAuthenticated) {
                 subscribed.current = true;
                 console.log('[Push] Subscribed successfully');
             } catch (err) {
-                // User denied permission or browser doesn't support ΓÇö fail silently
+                // User denied permission or browser doesn't support — fail silently
                 console.log('[Push] Not subscribed:', err.message);
             }
         };
