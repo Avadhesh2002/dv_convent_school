@@ -28,7 +28,7 @@ const roundRect = (ctx, x, y, w, h, r) => {
 };
 
 const ellipseText = (ctx, text, maxW) => {
-  if (!text) return 'ΓÇö';
+  if (!text) return '—';
   let t = String(text);
   while (ctx.measureText(t).width > maxW && t.length > 1) t = t.slice(0, -1);
   if (t.length < String(text).length) t = t.slice(0, -1) + 'ΓÇª';
@@ -38,7 +38,7 @@ const ellipseText = (ctx, text, maxW) => {
 // Word-wrap text into lines that fit maxW
 // Splits on spaces and after commas so comma-separated addresses also wrap
 const wrapText = (ctx, text, maxW) => {
-  if (!text) return ['ΓÇö'];
+  if (!text) return ['—'];
   // tokenize: split on spaces, but also break after commas
   const raw = String(text).replace(/,/g, ', ').replace(/\s+/g, ' ').trim();
   const words = raw.split(' ');
@@ -54,12 +54,12 @@ const wrapText = (ctx, text, maxW) => {
     }
   }
   if (line) lines.push(line);
-  return lines.length ? lines : ['ΓÇö'];
+  return lines.length ? lines : ['—'];
 };
 
 const fmtDate = (d) => d
   ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-  : 'ΓÇö';
+  : '—';
 
 // ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 // STUDENT CARD
@@ -67,7 +67,7 @@ const fmtDate = (d) => d
 const drawStudentCard = async (canvas, student, settings, assets, color = '#1565c0') => {
   const { logoImg, signImg, photoImg } = assets;
 
-  // ΓöÇΓöÇ Layout constants (same as preview) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ── Layout constants (same as preview) ───────────────────────────────────
   const hdrH   = s(72);
   const waveH  = s(10);
   const photoW = s(86), photoH = s(94);
@@ -76,21 +76,21 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
   const lx2    = s(12), vx = lx2 + s(62), valMaxW = CW - vx - lx2;
   const baseRH = s(14);   // single-line row height (matches preview padding: 3px top+bottom + 7px font Γëê 14)
   const lineH  = s(9);    // per extra line height inside a wrapped row
-  const ftH    = s(42);   // footer (class + sign area) ΓÇö increased to fit sign + label
+  const ftH    = s(42);   // footer (class + sign area) — increased to fit sign + label
   const noteH  = s(16);   // bottom strip
 
-  // ΓöÇΓöÇ Pre-measure rows to get dynamic height ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-  // We need a ctx to measure ΓÇö use a temp canvas
+  // ── Pre-measure rows to get dynamic height ────────────────────────────────
+  // We need a ctx to measure — use a temp canvas
   const tmp = document.createElement('canvas');
   tmp.width = CW; tmp.height = 10;
   const mctx = tmp.getContext('2d');
 
   const rows = [
-    ["Father's Name", student.fatherName || 'ΓÇö'],
-    ["Mother's Name", student.motherName || 'ΓÇö'],
+    ["Father's Name", student.fatherName || '—'],
+    ["Mother's Name", student.motherName || '—'],
     ['D.O.B.',        fmtDate(student.dateOfBirth)],
-    ['Contact No.',   student.fatherMobile || student.motherMobile || student.guardianMobile || 'ΓÇö'],
-    ['Add.',          student.address || 'ΓÇö'],
+    ['Contact No.',   student.fatherMobile || student.motherMobile || student.guardianMobile || '—'],
+    ['Add.',          student.address || '—'],
   ];
 
   mctx.font = `500 ${s(7)}px Arial`;
@@ -107,7 +107,7 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
   const rsYStart = uidY + uidH + s(5);
   const CH = rsYStart + totalRowsH + s(2) + ftH + noteH;
 
-  // ΓöÇΓöÇ Draw ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ── Draw ──────────────────────────────────────────────────────────────────
   canvas.width = CW; canvas.height = CH;
   const ctx = canvas.getContext('2d');
 
@@ -140,7 +140,7 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
   ctx.font = `400 ${s(6.5)}px Arial`; ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.fillText(ellipseText(ctx, settings.schoolAddress || 'Akodha, Rohi, Bhadohi - 221308', tw), tx + tw/2, tyStart + s(26));
   ctx.font = `800 ${s(7)}px Arial`; ctx.fillStyle = '#fff';
-  ctx.fillText(`Phone No.: ${settings.contactNumber || 'ΓÇö'}`, tx + tw/2, tyStart + s(37));
+  ctx.fillText(`Phone No.: ${settings.contactNumber || '—'}`, tx + tw/2, tyStart + s(37));
 
   // Wave divider
   const wg = ctx.createLinearGradient(0, hdrH, 0, hdrH + waveH);
@@ -166,7 +166,7 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
   ctx.fillText(ellipseText(ctx, student.name || '', CW - s(20)), CW/2, nameY);
 
   // UID pill
-  const uidTxt = `UID: ${student.UID || 'ΓÇö'}`;
+  const uidTxt = `UID: ${student.UID || '—'}`;
   ctx.font = `800 ${s(7.5)}px Arial`;
   const uidW = ctx.measureText(uidTxt).width + s(24);
   const uidX = (CW - uidW) / 2;
@@ -205,7 +205,7 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
 
   ctx.font = `800 ${s(10)}px Arial`; ctx.fillStyle = '#111827';
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.fillText(`Class : ${student.class || 'ΓÇö'}`, lx2, ftY + s(14));
+  ctx.fillText(`Class : ${student.class || '—'}`, lx2, ftY + s(14));
 
   if (signImg) {
     const sh = s(22), sw = sh * (signImg.width / signImg.height);
@@ -223,7 +223,7 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
   ctx.fillStyle = color; ctx.fillRect(0, noteY, CW, noteH);
   ctx.font = `500 ${s(5.5)}px Arial`; ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(`If found, please return to school  ΓÇó  Ph: ${settings.contactNumber || 'ΓÇö'}`, CW/2, noteY + noteH/2);
+  ctx.fillText(`If found, please return to school  •  Ph: ${settings.contactNumber || '—'}`, CW/2, noteY + noteH/2);
 
   ctx.restore();
 };
@@ -251,8 +251,8 @@ const drawTeacherCard = async (canvas, teacher, settings, assets) => {
 
   const rows = [
     ['Designation', teacher.designation || 'Teacher'],
-    ['Phone',       teacher.phone || 'ΓÇö'],
-    ['Address',     teacher.address || 'ΓÇö'],
+    ['Phone',       teacher.phone || '—'],
+    ['Address',     teacher.address || '—'],
   ];
 
   mctx.font = `500 ${s(7)}px Arial`;
@@ -300,7 +300,7 @@ const drawTeacherCard = async (canvas, teacher, settings, assets) => {
   ctx.font = `400 ${s(6.5)}px Arial`; ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.fillText(ellipseText(ctx, settings.schoolAddress || 'Akodha, Rohi, Bhadohi - 221308', tw), tx + tw/2, tyStart + s(26));
   ctx.font = `800 ${s(7)}px Arial`; ctx.fillStyle = '#fff';
-  ctx.fillText(`Phone No.: ${settings.contactNumber || 'ΓÇö'}`, tx + tw/2, tyStart + s(37));
+  ctx.fillText(`Phone No.: ${settings.contactNumber || '—'}`, tx + tw/2, tyStart + s(37));
 
   // White body
   ctx.fillStyle = '#ffffff';
@@ -328,7 +328,7 @@ const drawTeacherCard = async (canvas, teacher, settings, assets) => {
   ctx.fillText(ellipseText(ctx, teacher.name || '', CW - s(20)), CW/2, nameY);
 
   // Emp ID pill
-  const uidTxt = `ID: ${teacher.employeeCode || 'ΓÇö'}`;
+  const uidTxt = `ID: ${teacher.employeeCode || '—'}`;
   ctx.font = `800 ${s(7.5)}px Arial`;
   const uidW = ctx.measureText(uidTxt).width + s(24);
   const uidX = (CW - uidW) / 2;
@@ -387,7 +387,7 @@ const drawTeacherCard = async (canvas, teacher, settings, assets) => {
   ctx.restore();
 };
 
-// ΓöÇΓöÇΓöÇ Internals ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Internals ────────────────────────────────────────────────────────────────
 const itemToBlob = async (item, type, settings, sharedAssets, studentColor = '#1565c0') => {
   const apiBase  = import.meta.env?.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
   const photoSrc = item.profileImage

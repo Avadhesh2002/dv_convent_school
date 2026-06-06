@@ -11,10 +11,10 @@ import { downloadCards } from '../../utils/idCardDownload';
 const CARD_W = 220;
 const CARD_H = 360;
 
-// ΓöÇΓöÇΓöÇ StudentCard ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── StudentCard ──────────────────────────────────────────────────────────────
 const StudentCard = ({ student, settings, color = '#1565c0' }) => {
-  const dob     = student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'ΓÇö';
-  const contact = student.fatherMobile || student.motherMobile || student.guardianMobile || 'ΓÇö';
+  const dob     = student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+  const contact = student.fatherMobile || student.motherMobile || student.guardianMobile || '—';
   const apiBase = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
   const photo   = student.profileImage
     ? (student.profileImage.startsWith('data:') ? student.profileImage : `${apiBase}${student.profileImage}`)
@@ -27,14 +27,14 @@ const StudentCard = ({ student, settings, color = '#1565c0' }) => {
   const Row = ({ label, value }) => (
     <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', padding: '3px 0' }}>
       <span style={{ fontSize: 7, color: '#374151', fontWeight: 600, width: 62, flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 7, color: '#111827', fontWeight: 500, flex: 1, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{value || 'ΓÇö'}</span>
+      <span style={{ fontSize: 7, color: '#111827', fontWeight: 500, flex: 1, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{value || '—'}</span>
     </div>
   );
 
   return (
     <div style={{ width: CARD_W, minHeight: CARD_H, fontFamily: 'Arial, sans-serif', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 6px 24px rgba(0,0,0,0.18)', flexShrink: 0, background: '#fff' }}>
 
-      {/* ΓöÇΓöÇ Header ΓöÇΓöÇ */}
+      {/* ── Header ── */}
       <div style={{ background: `linear-gradient(180deg, ${colorDark} 0%, ${colorLight} 100%)`, padding: '8px 12px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 52, height: 52, borderRadius: '50%', border: '2px solid #fff', overflow: 'hidden', background: '#fff', flexShrink: 0 }}>
@@ -49,16 +49,16 @@ const StudentCard = ({ student, settings, color = '#1565c0' }) => {
               {settings.schoolAddress || 'Akodha, Rohi, Bhadohi - 221308'}
             </div>
             <div style={{ color: '#fff', fontWeight: 800, fontSize: 7, marginTop: 2 }}>
-              Phone No.: {settings.contactNumber || 'ΓÇö'}
+              Phone No.: {settings.contactNumber || '—'}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ Wave divider ΓöÇΓöÇ */}
+      {/* ── Wave divider ── */}
       <div style={{ height: 10, background: `linear-gradient(180deg, ${colorLight} 0%, #fff 100%)`, flexShrink: 0 }} />
 
-      {/* ΓöÇΓöÇ Photo centered ΓöÇΓöÇ */}
+      {/* ── Photo centered ── */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: -2, flexShrink: 0 }}>
         <div style={{ width: 86, height: 94, border: `2.5px solid ${colorDark}`, overflow: 'hidden', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {photo
@@ -67,27 +67,27 @@ const StudentCard = ({ student, settings, color = '#1565c0' }) => {
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ Student Name + UID ΓöÇΓöÇ */}
+      {/* ── Student Name + UID ── */}
       <div style={{ textAlign: 'center', padding: '5px 12px 3px' }}>
         <div style={{ color: '#111827', fontWeight: 700, fontSize: 13, letterSpacing: '0.2px' }}>{student.name}</div>
         <div style={{ display: 'inline-block', background: colorDark, color: '#fff', fontWeight: 800, fontSize: 7.5, padding: '2px 12px', borderRadius: 20, marginTop: 3, letterSpacing: '0.5px' }}>
-          UID: {student.UID || 'ΓÇö'}
+          UID: {student.UID || '—'}
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ Info table ΓöÇΓöÇ */}
+      {/* ── Info table ── */}
       <div style={{ padding: '2px 12px', flex: 1 }}>
-        <Row label="Father's Name" value={student.fatherName || 'ΓÇö'} />
-        <Row label="Mother's Name" value={student.motherName || 'ΓÇö'} />
+        <Row label="Father's Name" value={student.fatherName || '—'} />
+        <Row label="Mother's Name" value={student.motherName || '—'} />
         <Row label="D.O.B." value={dob} />
         <Row label="Contact No." value={contact} />
-        <Row label="Add." value={student.address || 'ΓÇö'} />
+        <Row label="Add." value={student.address || '—'} />
       </div>
 
-      {/* ΓöÇΓöÇ Footer: Class + Sign ΓöÇΓöÇ */}
+      {/* ── Footer: Class + Sign ── */}
       <div style={{ padding: '3px 12px 2px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: '1px solid #e5e7eb' }}>
         <div style={{ fontSize: 10, fontWeight: 800, color: '#111827' }}>
-          Class : {student.class || 'ΓÇö'}
+          Class : {student.class || '—'}
         </div>
         <div style={{ textAlign: 'center' }}>
           <img src={signImage} alt="sign" style={{ height: 22, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
@@ -95,17 +95,17 @@ const StudentCard = ({ student, settings, color = '#1565c0' }) => {
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ Bottom note ΓöÇΓöÇ */}
+      {/* ── Bottom note ── */}
       <div style={{ background: colorDark, padding: '3px 10px', textAlign: 'center', flexShrink: 0 }}>
         <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 5.5, fontWeight: 500, letterSpacing: '0.3px' }}>
-          If found, please return to school  ΓÇó  Ph: {settings.contactNumber || 'ΓÇö'}
+          If found, please return to school  •  Ph: {settings.contactNumber || '—'}
         </span>
       </div>
     </div>
   );
 };
 
-// ΓöÇΓöÇΓöÇ TeacherCard ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── TeacherCard ──────────────────────────────────────────────────────────────
 const TeacherCard = ({ teacher, settings }) => {
   const apiBase = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
   const photo   = teacher.profileImage
@@ -115,7 +115,7 @@ const TeacherCard = ({ teacher, settings }) => {
   return (
     <div style={{ width: CARD_W, minHeight: CARD_H, fontFamily: 'Arial, sans-serif', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 6px 24px rgba(0,0,0,0.2)', flexShrink: 0, background: '#fff' }}>
 
-      {/* ΓöÇΓöÇ Dark Red Header ΓöÇΓöÇ */}
+      {/* ── Dark Red Header ── */}
       <div style={{ background: 'linear-gradient(180deg, #8b1a1a 0%, #a52020 100%)', padding: '8px 12px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 52, height: 52, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.8)', overflow: 'hidden', background: '#fff', flexShrink: 0 }}>
@@ -130,13 +130,13 @@ const TeacherCard = ({ teacher, settings }) => {
               {settings.schoolAddress || 'Akodha, Rohi, Bhadohi - 221308'}
             </div>
             <div style={{ color: '#fff', fontWeight: 800, fontSize: 7, marginTop: 2 }}>
-              Phone No.: {settings.contactNumber || 'ΓÇö'}
+              Phone No.: {settings.contactNumber || '—'}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ White body ΓöÇΓöÇ */}
+      {/* ── White body ── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 12px 6px', background: '#fff' }}>
 
         {/* Photo */}
@@ -153,7 +153,7 @@ const TeacherCard = ({ teacher, settings }) => {
 
         {/* Emp ID pill */}
         <div style={{ display: 'inline-block', background: '#8b1a1a', color: '#fff', fontWeight: 800, fontSize: 7.5, padding: '2px 12px', borderRadius: 20, marginTop: 3, letterSpacing: '0.5px' }}>
-          ID: {teacher.employeeCode || 'ΓÇö'}
+          ID: {teacher.employeeCode || '—'}
         </div>
 
         {/* Info rows */}
@@ -165,7 +165,7 @@ const TeacherCard = ({ teacher, settings }) => {
           ].map(([lbl, val]) => (
             <div key={lbl} style={{ display: 'flex', borderBottom: '1px solid #f5e0e0', padding: '4px 0' }}>
               <span style={{ fontSize: 7, color: '#8b1a1a', fontWeight: 700, width: 58, flexShrink: 0 }}>{lbl}:</span>
-              <span style={{ fontSize: 7, color: '#111827', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{val || 'ΓÇö'}</span>
+              <span style={{ fontSize: 7, color: '#111827', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{val || '—'}</span>
             </div>
           ))}
         </div>
@@ -179,7 +179,7 @@ const TeacherCard = ({ teacher, settings }) => {
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ Red bottom strip ΓöÇΓöÇ */}
+      {/* ── Red bottom strip ── */}
       <div style={{ background: '#8b1a1a', padding: '3px 10px', textAlign: 'center', flexShrink: 0 }}>
         <span style={{ color: '#fff', fontWeight: 900, fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Staff ID Card</span>
       </div>
@@ -187,7 +187,7 @@ const TeacherCard = ({ teacher, settings }) => {
   );
 };
 
-// ΓöÇΓöÇΓöÇ Main Page ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Main Page ────────────────────────────────────────────────────────────────
 const IDCardGenerator = () => {
   const { settings } = useSettings();
   const [tab, setTab]               = useState('student');
@@ -256,7 +256,7 @@ const IDCardGenerator = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">ID Card Generator</h1>
-          <p className="text-xs text-gray-500 font-medium mt-0.5">CR-80 standard ΓÇó 54mm ├ù 85.6mm</p>
+          <p className="text-xs text-gray-500 font-medium mt-0.5">CR-80 standard • 54mm ├ù 85.6mm</p>
         </div>
         <button onClick={handleDownload} disabled={printing}
           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-colors shadow-sm">

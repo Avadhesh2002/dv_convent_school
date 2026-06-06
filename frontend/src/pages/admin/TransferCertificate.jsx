@@ -12,9 +12,9 @@ import Button from '../../components/common/Button';
 import Toast from '../../components/common/Toast';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
-// ΓöÇΓöÇ Helpers ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ── Helpers ──────────────────────────────────────────────────────────────────
 const fmtDate = (d) =>
-    d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'ΓÇö';
+    d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const REASON_OPTIONS = [
     "Parent's Request",
@@ -37,7 +37,7 @@ const REMARK_OPTIONS = [
 
 const CLASS_ORDER = ['Nursery','LKG','UKG','1','2','3','4','5','6','7','8'];
 
-// ΓöÇΓöÇ Sub-components ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function StudentCard({ student, onSelect, selected }) {
     const hasTc = !!student.tcIssuedAt;
@@ -59,10 +59,10 @@ function StudentCard({ student, onSelect, selected }) {
             <div className="flex-1 min-w-0">
                 <p className="font-bold text-gray-900 truncate">{student.name}</p>
                 <p className="text-xs text-secondary mt-0.5">
-                    Class {student.class} &nbsp;┬╖&nbsp; UID: {student.UID || 'ΓÇö'}
+                    Class {student.class} &nbsp;·&nbsp; UID: {student.UID || '—'}
                 </p>
                 <p className="text-xs text-secondary truncate">
-                    Father: {student.fatherName || 'ΓÇö'}
+                    Father: {student.fatherName || '—'}
                 </p>
             </div>
 
@@ -82,12 +82,12 @@ function InfoRow({ label, value }) {
     return (
         <div className="flex gap-2 py-1.5 border-b border-gray-50 last:border-0">
             <span className="text-xs font-bold text-secondary w-32 shrink-0">{label}</span>
-            <span className="text-xs text-gray-800 font-medium">{value || 'ΓÇö'}</span>
+            <span className="text-xs text-gray-800 font-medium">{value || '—'}</span>
         </div>
     );
 }
 
-// ΓöÇΓöÇ Main Component ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ── Main Component ────────────────────────────────────────────────────────────
 
 const TransferCertificate = () => {
     const { settings } = useSettings();
@@ -120,7 +120,7 @@ const TransferCertificate = () => {
     const [religion, setReligion]               = useState('');
     const [caste, setCaste]                     = useState('');
 
-    // ΓöÇΓöÇ Load students ΓöÇΓöÇ
+    // ── Load students ──
     const loadStudents = useCallback(async () => {
         setLoading(true);
         try {
@@ -141,7 +141,7 @@ const TransferCertificate = () => {
 
     useEffect(() => { loadStudents(); }, [loadStudents]);
 
-    // ΓöÇΓöÇ Filter logic ΓöÇΓöÇ
+    // ── Filter logic ──
     useEffect(() => {
         let list = [...students];
         if (search.trim()) {
@@ -157,7 +157,7 @@ const TransferCertificate = () => {
         setFiltered(list);
     }, [search, classFilter, showTcOnly, students]);
 
-    // ΓöÇΓöÇ Auto-generate TC number + pre-fill editable fields ΓöÇΓöÇ
+    // ── Auto-generate TC number + pre-fill editable fields ──
     useEffect(() => {
         if (selected) {
             const tc = selected.tcDetails;
@@ -177,7 +177,7 @@ const TransferCertificate = () => {
                 setReligion(tc.religion || '');
                 setCaste(tc.caste || '');
             } else {
-                // Fresh issue ΓÇö auto-generate defaults
+                // Fresh issue — auto-generate defaults
                 const year = new Date().getFullYear();
                 const seq  = String(Math.floor(Math.random() * 9000) + 1000);
                 setTcNumber(`TC/${year}/${seq}`);
@@ -201,11 +201,11 @@ const TransferCertificate = () => {
         }
     }, [selected]);
 
-    // ΓöÇΓöÇ Issue TC (marks in DB) ΓöÇΓöÇ
+    // ── Issue TC (marks in DB) ──
     const handleIssueTC = async () => {
         if (!selected) return;
         if (selected.tcIssuedAt) {
-            // Already issued ΓÇö just print duplicate
+            // Already issued — just print duplicate
             handlePrint(true);
             return;
         }
@@ -238,7 +238,7 @@ const TransferCertificate = () => {
         }
     };
 
-    // ΓöÇΓöÇ Print TC ΓöÇΓöÇ
+    // ── Print TC ──
     const handlePrint = (isDuplicate = false, studentOverride = null) => {
         const s = studentOverride || selected;
         if (!s) return;
@@ -291,7 +291,7 @@ const TransferCertificate = () => {
 
             <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
 
-                {/* ΓöÇΓöÇ LEFT: Student Selector ΓöÇΓöÇ */}
+                {/* ── LEFT: Student Selector ── */}
                 <div className="xl:col-span-2 space-y-4">
 
                     {/* Search & Filters */}
@@ -371,7 +371,7 @@ const TransferCertificate = () => {
                     </div>
                 </div>
 
-                {/* ΓöÇΓöÇ RIGHT: TC Form & Preview ΓöÇΓöÇ */}
+                {/* ── RIGHT: TC Form & Preview ── */}
                 <div className="xl:col-span-3 space-y-4">
                     {!selected ? (
                         <div className="flex flex-col items-center justify-center h-80 bg-white rounded-2xl border-2 border-dashed border-gray-200 text-center p-8">
@@ -548,7 +548,7 @@ const TransferCertificate = () => {
                                         <label className="text-xs font-bold text-secondary uppercase">Class at Time of Leaving</label>
                                         <input
                                             type="text"
-                                            value={`Class ${selected?.class || 'ΓÇö'}`}
+                                            value={`Class ${selected?.class || '—'}`}
                                             readOnly
                                             className="w-full px-3 py-2 text-sm bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
                                         />

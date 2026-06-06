@@ -1,16 +1,16 @@
 /**
  * feeReceiptPdf.js
- * Beautiful fee receipt ΓÇö 4.1in ├ù 5.8in each copy
+ * Beautiful fee receipt — 4.1in ├ù 5.8in each copy
  * Two copies side by side: School Copy (left) | Parent Copy (right)
  * Opens print dialog ΓåÆ Save as PDF
  */
 
 import defaultLogoUrl from '../assets/school_logo.png';
 
-const fmtAmt = (n) => `Γé╣${Number(n || 0).toLocaleString('en-IN')}`;
+const fmtAmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const fmtDate = (d) => d
     ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    : 'ΓÇö';
+    : '—';
 
 function toWords(num) {
     const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
@@ -38,7 +38,7 @@ function buildCopy(data, copyLabel) {
     // Logo: use converted base64, or fall back to the bundled URL directly
     const logoSrc = schoolLogo || defaultLogoUrl;
 
-    // Build fee rows ΓÇö one per month with sub-rows for components
+    // Build fee rows — one per month with sub-rows for components
     let slNo = 1;
     const feeRows = payments.map(p => {
         const components = (p.feeComponents || []).filter(fc =>
@@ -98,7 +98,7 @@ function buildCopy(data, copyLabel) {
             <tr>
                 <td class="lbl">Receipt No</td>
                 <td class="val colon">:</td>
-                <td class="val"><b>${groupReceiptNo || 'ΓÇö'}</b></td>
+                <td class="val"><b>${groupReceiptNo || '—'}</b></td>
                 <td class="lbl">Date</td>
                 <td class="val colon">:</td>
                 <td class="val">${fmtDate(collectedAt)}</td>
@@ -106,23 +106,23 @@ function buildCopy(data, copyLabel) {
             <tr>
                 <td class="lbl">Adm No</td>
                 <td class="val colon">:</td>
-                <td class="val">${student?.admissionNo || student?.UID || 'ΓÇö'}</td>
+                <td class="val">${student?.admissionNo || student?.UID || '—'}</td>
                 <td class="lbl">Session</td>
                 <td class="val colon">:</td>
-                <td class="val">${academicYear || 'ΓÇö'}</td>
+                <td class="val">${academicYear || '—'}</td>
             </tr>
             <tr>
                 <td class="lbl">Name</td>
                 <td class="val colon">:</td>
-                <td class="val" colspan="4"><b>${student?.name || 'ΓÇö'}</b></td>
+                <td class="val" colspan="4"><b>${student?.name || '—'}</b></td>
             </tr>
             <tr>
                 <td class="lbl">Class</td>
                 <td class="val colon">:</td>
-                <td class="val">${student?.class || 'ΓÇö'}</td>
+                <td class="val">${student?.class || '—'}</td>
                 <td class="lbl">Mode</td>
                 <td class="val colon">:</td>
-                <td class="val">${payments[0]?.paymentMode || 'ΓÇö'}</td>
+                <td class="val">${payments[0]?.paymentMode || '—'}</td>
             </tr>
             <tr>
                 <td class="lbl">Months</td>
@@ -233,7 +233,7 @@ export async function downloadFeeReceipt(receiptData) {
                     c.getContext('2d').drawImage(img, 0, 0);
                     resolve(c.toDataURL('image/png'));
                 } catch {
-                    // canvas tainted ΓÇö return the URL directly so img tag still works
+                    // canvas tainted — return the URL directly so img tag still works
                     resolve(url);
                 }
             };
@@ -245,7 +245,7 @@ export async function downloadFeeReceipt(receiptData) {
     // Try settings logo first, then fallback to bundled default
     let logoBase64 = await imgToBase64(receiptData.schoolLogo);
     if (!logoBase64) {
-        // defaultLogoUrl is a Vite-bundled URL ΓÇö use directly, no conversion needed
+        // defaultLogoUrl is a Vite-bundled URL — use directly, no conversion needed
         logoBase64 = defaultLogoUrl;
     }
 
@@ -278,7 +278,7 @@ body {
     height: 297mm;
 }
 
-/* A4 page ΓÇö top half only */
+/* A4 page — top half only */
 .page {
     display: flex;
     flex-direction: row;
@@ -287,7 +287,7 @@ body {
     border-bottom: 2px dashed #999;
 }
 
-/* ΓöÇΓöÇ Single receipt copy ΓöÇΓöÇ */
+/* ── Single receipt copy ── */
 .receipt {
     width: 50%;
     height: 148.5mm;

@@ -6,8 +6,8 @@ import Modal from '../../components/common/Modal';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useSettings } from '../../context/SettingsContext';
 
-const fmt = (n) => `Γé╣${Number(n || 0).toLocaleString('en-IN')}`;
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'ΓÇö';
+const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const MonthPill = ({ isPaid, isOverdue }) => {
     if (isPaid) return <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center"><CheckCircle size={14} className="text-emerald-600" /></div>;
@@ -67,7 +67,7 @@ const LedgerModal = ({ studentId, academicYear, onClose }) => {
                                 {data.payments.map(p => (
                                     <tr key={p._id} className="hover:bg-slate-50">
                                         <td className="px-3 py-2.5 font-mono text-xs text-slate-400">{p.receiptNo}</td>
-                                        <td className="px-3 py-2.5 font-medium">{p.month || 'ΓÇö'}</td>
+                                        <td className="px-3 py-2.5 font-medium">{p.month || '—'}</td>
                                         <td className="px-3 py-2.5 font-bold text-emerald-600">{fmt(p.amountPaid)}</td>
                                         <td className="px-3 py-2.5 text-xs text-slate-500">{p.paymentMode}</td>
                                         <td className="px-3 py-2.5 text-xs text-slate-400">{fmtDate(p.createdAt)}</td>
@@ -132,9 +132,9 @@ const TeacherFeeStatus = () => {
                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Class Teacher View</p>
                         <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
                             <DollarSign size={22} className="text-indigo-500" />
-                            Fee Status ΓÇö Class {data?.className}
+                            Fee Status — Class {data?.className}
                         </h1>
-                        <p className="text-slate-400 text-sm mt-0.5">{academicYear} ┬╖ Read-only</p>
+                        <p className="text-slate-400 text-sm mt-0.5">{academicYear} · Read-only</p>
                     </div>
                     <div className="flex gap-3">
                         {[

@@ -1,16 +1,16 @@
 /**
  * dailyCollectionPdf.js
- * Daily Fee Collection Report ΓÇö full A4 portrait
+ * Daily Fee Collection Report — full A4 portrait
  * Shows all payments for a given date, grouped by source (Admin / Student Portal)
  */
 
-const fmtAmt = (n) => `Γé╣${Number(n || 0).toLocaleString('en-IN')}`;
+const fmtAmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const fmtTime = (d) => d
     ? new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-    : 'ΓÇö';
+    : '—';
 const fmtDateLong = (d) => d
     ? new Date(d).toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
-    : 'ΓÇö';
+    : '—';
 
 function modeTag(mode) {
     const colors = {
@@ -30,10 +30,10 @@ function buildRows(entries) {
     return entries.map((e, i) => `
         <tr style="background:${i % 2 === 0 ? '#fff' : '#f8faff'}">
             <td style="padding:5px 8px;text-align:center;color:#6b7280;font-size:8pt">${i + 1}</td>
-            <td style="padding:5px 8px;font-family:monospace;font-size:8pt;color:#6366f1">${e.receiptNo || 'ΓÇö'}</td>
+            <td style="padding:5px 8px;font-family:monospace;font-size:8pt;color:#6366f1">${e.receiptNo || '—'}</td>
             <td style="padding:5px 8px">
-                <div style="font-weight:600;font-size:8.5pt;color:#111827">${e.student?.name || 'ΓÇö'}</div>
-                <div style="font-size:7.5pt;color:#6b7280">Class ${e.student?.class || 'ΓÇö'} ┬╖ ${e.student?.admissionNo || e.student?.UID || ''}</div>
+                <div style="font-weight:600;font-size:8.5pt;color:#111827">${e.student?.name || '—'}</div>
+                <div style="font-size:7.5pt;color:#6b7280">Class ${e.student?.class || '—'} · ${e.student?.admissionNo || e.student?.UID || ''}</div>
             </td>
             <td style="padding:5px 8px;font-size:8pt;color:#374151">${e.months}</td>
             <td style="padding:5px 8px;text-align:right;font-size:8.5pt;font-weight:700;color:#1d4ed8">${fmtAmt(e.amountPaid)}</td>
@@ -61,7 +61,7 @@ export function downloadDailyCollectionPdf({ date, entries, totalAmount, totalCa
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Daily Collection Report ΓÇö ${date}</title>
+<title>Daily Collection Report — ${date}</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 @page { size: A4 portrait; margin: 12mm 10mm; }
@@ -129,7 +129,7 @@ body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111827
         <img src="${logoSrc}" class="logo" alt="Logo" onerror="this.style.display='none'" />
         <div>
             <div class="school-name">${schoolName || 'DV Convent School'}</div>
-            <div class="school-sub">${schoolAddress || ''} ${schoolPhone ? '┬╖ ≡ƒô₧ ' + schoolPhone : ''}</div>
+            <div class="school-sub">${schoolAddress || ''} ${schoolPhone ? '· ≡ƒô₧ ' + schoolPhone : ''}</div>
         </div>
     </div>
 
@@ -140,7 +140,7 @@ body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111827
             <div style="font-size:9pt;color:rgba(255,255,255,0.85);margin-top:2px">${fmtDateLong(date)}</div>
         </div>
         <div class="report-meta">
-            <div>Academic Year: <b>${academicYear || 'ΓÇö'}</b></div>
+            <div>Academic Year: <b>${academicYear || '—'}</b></div>
             <div>Generated: ${new Date().toLocaleString('en-IN')}</div>
         </div>
     </div>
@@ -173,7 +173,7 @@ body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111827
     ${adminEntries.length > 0 ? `
     <div class="section-hdr">
         <span class="badge" style="background:#dbeafe;color:#1d4ed8">Admin Collected</span>
-        <span class="count">${adminEntries.length} receipt${adminEntries.length !== 1 ? 's' : ''} ┬╖ ${fmtAmt(byAdmin || 0)}</span>
+        <span class="count">${adminEntries.length} receipt${adminEntries.length !== 1 ? 's' : ''} · ${fmtAmt(byAdmin || 0)}</span>
     </div>
     <table class="tbl">
         <thead>
@@ -201,7 +201,7 @@ body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111827
     ${studentEntries.length > 0 ? `
     <div class="section-hdr" style="margin-top:12px">
         <span class="badge" style="background:#f3e8ff;color:#6b21a8">Student Portal (Self-Paid)</span>
-        <span class="count">${studentEntries.length} receipt${studentEntries.length !== 1 ? 's' : ''} ┬╖ ${fmtAmt(byStudent || 0)}</span>
+        <span class="count">${studentEntries.length} receipt${studentEntries.length !== 1 ? 's' : ''} · ${fmtAmt(byStudent || 0)}</span>
     </div>
     <table class="tbl">
         <thead>
@@ -242,7 +242,7 @@ body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111827
 
     <!-- Footer -->
     <div class="footer">
-        <div class="note">This is a computer generated report. ┬╖ ${new Date().toLocaleString('en-IN')}</div>
+        <div class="note">This is a computer generated report. · ${new Date().toLocaleString('en-IN')}</div>
         <div class="sig-block">
             <div class="sig-line"></div>
             <div class="sig-label">Authorised Signatory</div>

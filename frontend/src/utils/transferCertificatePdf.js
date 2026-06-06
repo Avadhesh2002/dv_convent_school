@@ -1,14 +1,14 @@
 /**
  * transferCertificatePdf.js
- * Premium Transfer Certificate ΓÇö A4 portrait, single page
+ * Premium Transfer Certificate — A4 portrait, single page
  * Matches the school's official TC format used across Indian schools
  */
 
 const fmtDate = (d) =>
-    d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'ΓÇö';
+    d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
 
 const fmtDateShort = (d) =>
-    d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'ΓÇö';
+    d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
 
 function toWords(num) {
     const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
@@ -49,7 +49,7 @@ export function printTransferCertificate(data) {
         ? (schoolLogo.startsWith('data:') ? schoolLogo : `data:image/png;base64,${schoolLogo}`)
         : '/src/assets/school_logo.png';
 
-    // State board logo ΓÇö use provided or local stateboard asset
+    // State board logo — use provided or local stateboard asset
     const stateLogo = stateBoardLogo
         ? (stateBoardLogo.startsWith('data:') ? stateBoardLogo : `data:image/png;base64,${stateBoardLogo}`)
         : '/src/assets/stateboard.png';
@@ -57,34 +57,34 @@ export function printTransferCertificate(data) {
     const dob = student?.dateOfBirth ? new Date(student.dateOfBirth) : null;
     const dobWords = dob
         ? `${toWords(dob.getDate())} ${dob.toLocaleString('en-IN',{month:'long'})} ${toWords(dob.getFullYear())}`
-        : 'ΓÇö';
+        : '—';
 
-    const admDateDisplay  = admissionDate ? fmtDate(admissionDate) : (student?.admissionDate ? fmtDate(student.admissionDate) : 'ΓÇö');
-    const leavingDateDisplay = leavingDate ? fmtDate(leavingDate) : 'ΓÇö';
+    const admDateDisplay  = admissionDate ? fmtDate(admissionDate) : (student?.admissionDate ? fmtDate(student.admissionDate) : '—');
+    const leavingDateDisplay = leavingDate ? fmtDate(leavingDate) : '—';
     const tcDate = issueDate ? fmtDate(issueDate) : fmtDate(new Date());
 
     const isDuplicate = forceDuplicate === true;
 
-    const admClass = admissionClass || student?.class || 'ΓÇö';
+    const admClass = admissionClass || student?.class || '—';
 
     const rows = [
-        ['1',  'Admission Number',                                    student?.UID || student?.admissionNo || 'ΓÇö'],
-        ['2',  'Name of Student',                                     `<b style="font-size:11pt">${student?.name || 'ΓÇö'}</b>`],
-        ['3',  "Father's Name",                                       student?.fatherName || 'ΓÇö'],
-        ['4',  "Mother's Name",                                       student?.motherName || 'ΓÇö'],
-        ['5',  'Address',                                             student?.address ? `${student.address}${student.pincode ? ', ' + student.pincode : ''}` : 'ΓÇö'],
+        ['1',  'Admission Number',                                    student?.UID || student?.admissionNo || '—'],
+        ['2',  'Name of Student',                                     `<b style="font-size:11pt">${student?.name || '—'}</b>`],
+        ['3',  "Father's Name",                                       student?.fatherName || '—'],
+        ['4',  "Mother's Name",                                       student?.motherName || '—'],
+        ['5',  'Address',                                             student?.address ? `${student.address}${student.pincode ? ', ' + student.pincode : ''}` : '—'],
         ['6',  'Date of Birth (in figures)',                          fmtDateShort(student?.dateOfBirth)],
         ['7',  'Date of Birth (in words)',                            dobWords],
         ['8',  'Nationality',                                         'Indian'],
-        ['9',  'Religion',                                            data.religion || 'ΓÇö'],
-        ['10', 'Caste / Category',                                    `${data.caste || 'ΓÇö'} (${student?.category || 'ΓÇö'})`],
-        ['11', 'Aadhar Number',                                       student?.aadharNumber || 'ΓÇö'],
-        ['12', 'PEN Number',                                          student?.penNumber || 'ΓÇö'],
+        ['9',  'Religion',                                            data.religion || '—'],
+        ['10', 'Caste / Category',                                    `${data.caste || '—'} (${student?.category || '—'})`],
+        ['11', 'Aadhar Number',                                       student?.aadharNumber || '—'],
+        ['12', 'PEN Number',                                          student?.penNumber || '—'],
         ['13', 'Date of Admission',                                   admDateDisplay],
         ['14', 'Class at the time of Admission',                      `Class ${admClass} (${getClassInWords(admClass)})`],
-        ['15', 'Class at the time of Leaving',                        `Class ${student?.class || 'ΓÇö'} (${getClassInWords(student?.class)})`],
+        ['15', 'Class at the time of Leaving',                        `Class ${student?.class || '—'} (${getClassInWords(student?.class)})`],
         ['16', 'Date of Leaving',                                     leavingDateDisplay],
-        ['17', 'Academic Session',                                    academicYear || 'ΓÇö'],
+        ['17', 'Academic Session',                                    academicYear || '—'],
         ['18', 'Whether failed (if so, mention the class)',           'No'],
         ['19', 'Subject Studied',                                     'As per school curriculum'],
         ['20', 'Whether qualified for promotion to next class',       'Yes'],
@@ -93,7 +93,7 @@ export function printTransferCertificate(data) {
         ['23', 'Date of application for TC',                          applicationDate ? fmtDate(applicationDate) : tcDate],
         ['24', 'Date of issue of TC',                                 tcDate],
         ['25', 'Conduct &amp; Character',                             'Good'],
-        ['26', 'Remarks',                                             remark || 'ΓÇö'],
+        ['26', 'Remarks',                                             remark || '—'],
     ];
 
     const tableRows = rows.map(([no, label, val]) => `
@@ -108,7 +108,7 @@ export function printTransferCertificate(data) {
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Transfer Certificate ΓÇö ${student?.name || ''}</title>
+<title>Transfer Certificate — ${student?.name || ''}</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -143,7 +143,7 @@ body {
     overflow: hidden;
 }
 
-/* ΓöÇΓöÇ Outer border frame ΓöÇΓöÇ */
+/* ── Outer border frame ── */
 .outer-border {
     position: absolute;
     inset: 6mm;
@@ -168,7 +168,7 @@ body {
     height: calc(297mm - 16mm);
 }
 
-/* ΓöÇΓöÇ Watermark ΓöÇΓöÇ */
+/* ── Watermark ── */
 .watermark {
     position: absolute;
     top: 50%;
@@ -184,7 +184,7 @@ body {
     font-family: Arial, sans-serif;
 }
 
-/* ΓöÇΓöÇ Top info bar ΓöÇΓöÇ */
+/* ── Top info bar ── */
 .top-bar {
     display: flex;
     justify-content: space-between;
@@ -195,7 +195,7 @@ body {
     padding: 0 2px;
 }
 
-/* ΓöÇΓöÇ Header ΓöÇΓöÇ */
+/* ── Header ── */
 .header {
     position: relative;
     padding-bottom: 5px;
@@ -255,7 +255,7 @@ body {
     background: #2d6a4f;
 }
 
-/* ΓöÇΓöÇ TC Title ΓöÇΓöÇ */
+/* ── TC Title ── */
 .tc-title-wrap {
     text-align: center;
     margin: 4px 0 4px;
@@ -277,7 +277,7 @@ body {
     font-style: italic;
 }
 
-/* ΓöÇΓöÇ TC Meta row ΓöÇΓöÇ */
+/* ── TC Meta row ── */
 .tc-meta {
     display: flex;
     justify-content: space-between;
@@ -291,7 +291,7 @@ body {
 }
 .tc-meta span { font-weight: bold; color: #1a3a6b; }
 
-/* ΓöÇΓöÇ Duplicate stamp ΓöÇΓöÇ */
+/* ── Duplicate stamp ── */
 .duplicate-stamp {
     display: inline-block;
     border: 2px solid #dc2626;
@@ -305,7 +305,7 @@ body {
     vertical-align: middle;
 }
 
-/* ΓöÇΓöÇ Main table ΓöÇΓöÇ */
+/* ── Main table ── */
 .tc-table {
     width: 100%;
     border-collapse: collapse;
@@ -345,7 +345,7 @@ body {
     color: #111;
 }
 
-/* ΓöÇΓöÇ Declaration ΓöÇΓöÇ */
+/* ── Declaration ── */
 .declaration {
     font-size: 8pt;
     color: #333;
@@ -359,7 +359,7 @@ body {
     margin-top: auto;
 }
 
-/* ΓöÇΓöÇ Signature row ΓöÇΓöÇ */
+/* ── Signature row ── */
 .sig-row {
     display: flex;
     justify-content: space-between;
@@ -388,7 +388,7 @@ body {
     margin-top: 1px;
 }
 
-/* ΓöÇΓöÇ Stamp area ΓöÇΓöÇ */
+/* ── Stamp area ── */
 .stamp-area {
     width: 72px;
     height: 72px;
@@ -404,7 +404,7 @@ body {
 }
 .stamp-area img { width: 100%; height: 100%; object-fit: contain; }
 
-/* ΓöÇΓöÇ Footer ΓöÇΓöÇ */
+/* ── Footer ── */
 .tc-footer {
     text-align: center;
     font-size: 7.5pt;
@@ -431,7 +431,7 @@ body {
 
         <!-- Top bar: Sr No (left) | Affiliation No (right) -->
         <div class="top-bar">
-            <div>Sr. No: ${srNo || 'ΓÇö'}</div>
+            <div>Sr. No: ${srNo || '—'}</div>
             <div>Affiliation No: ${data.affiliationNumber || '51380'}</div>
         </div>
 
@@ -442,7 +442,7 @@ body {
                 <div class="school-name">${schoolName || 'DV Convent School'}</div>
                 <div class="school-tagline">Empowering Minds, Building Futures</div>
                 <div class="school-meta">
-                    ${schoolAddress || 'Akodha, Rohi, Bhadohi - 221308'} &nbsp;|&nbsp; Ph: ${schoolPhone || 'ΓÇö'}
+                    ${schoolAddress || 'Akodha, Rohi, Bhadohi - 221308'} &nbsp;|&nbsp; Ph: ${schoolPhone || '—'}
                     ${schoolEmail ? ` &nbsp;|&nbsp; Γ£ë ${schoolEmail}` : ''}
                 </div>
                 <div class="affil-row">
@@ -460,8 +460,8 @@ body {
 
         <!-- TC Meta -->
         <div class="tc-meta">
-            <div>Book No: &nbsp;<span>${bookNo || 'ΓÇö'}</span></div>
-            <div>TC No: &nbsp;<span>${tcNumber || 'ΓÇö'}</span></div>
+            <div>Book No: &nbsp;<span>${bookNo || '—'}</span></div>
+            <div>TC No: &nbsp;<span>${tcNumber || '—'}</span></div>
             <div>School Code: &nbsp;<span>${data.schoolCode || '65730'}</span></div>
         </div>
 
@@ -507,7 +507,7 @@ body {
         <div class="tc-footer">
             This is a computer-generated Transfer Certificate. &nbsp;|&nbsp;
             Issued on: ${tcDate} &nbsp;|&nbsp;
-            ${isDuplicate ? 'ΓÜá DUPLICATE COPY ΓÇö Original issued on ' + fmtDate(student?.tcIssuedAt) : 'Original Copy'}
+            ${isDuplicate ? 'ΓÜá DUPLICATE COPY — Original issued on ' + fmtDate(student?.tcIssuedAt) : 'Original Copy'}
         </div>
 
     </div>

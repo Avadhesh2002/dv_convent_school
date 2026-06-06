@@ -18,12 +18,12 @@ const TERMS = ['Unit-1', 'Half Yearly Exam', 'Unit-2', 'Annual Exam'];
 const SyllabusManagement = () => {
     const { settings } = useSettings();
 
-    // ΓöÇΓöÇ data ΓöÇΓöÇ
+    // ── data ──
     const [classes,   setClasses]   = useState([]);
     const [subjects,  setSubjects]  = useState([]);
     const [syllabus,  setSyllabus]  = useState([]);   // all syllabi for selected class
 
-    // ΓöÇΓöÇ UI state ΓöÇΓöÇ
+    // ── UI state ──
     const [selectedClass,   setSelectedClass]   = useState('');
     const [loading,         setLoading]         = useState(false);
     const [toast,           setToast]           = useState(null);
@@ -32,7 +32,7 @@ const SyllabusManagement = () => {
     const [editTarget,      setEditTarget]      = useState(null);  // syllabus being edited
     const [saving,          setSaving]          = useState(false);
 
-    // ΓöÇΓöÇ form state ΓöÇΓöÇ
+    // ── form state ──
     const [form, setForm] = useState({
         subjectId: '',
         term: 'Full Year',
@@ -41,12 +41,12 @@ const SyllabusManagement = () => {
     });
     const [newTopic, setNewTopic] = useState({ title: '', description: '' });
 
-    // ΓöÇΓöÇ load classes once ΓöÇΓöÇ
+    // ── load classes once ──
     useEffect(() => {
         API.get('/admin/classes').then(r => setClasses(r.data)).catch(() => {});
     }, []);
 
-    // ΓöÇΓöÇ load subjects when class changes ΓöÇΓöÇ
+    // ── load subjects when class changes ──
     useEffect(() => {
         if (!selectedClass) { setSubjects([]); setSyllabus([]); return; }
         const cls = classes.find(c => c._id === selectedClass);
@@ -60,7 +60,7 @@ const SyllabusManagement = () => {
         }).catch(() => setToast({ message: 'Failed to load data', type: 'error' }));
     }, [selectedClass, classes]);
 
-    // ΓöÇΓöÇ open modal for new syllabus ΓöÇΓöÇ
+    // ── open modal for new syllabus ──
     const openNew = () => {
         setEditTarget(null);
         setForm({ subjectId: '', term: 'Unit-1', notes: '', topics: [] });
@@ -68,7 +68,7 @@ const SyllabusManagement = () => {
         setIsModalOpen(true);
     };
 
-    // ΓöÇΓöÇ open modal to edit existing ΓöÇΓöÇ
+    // ── open modal to edit existing ──
     const openEdit = (syl) => {
         setEditTarget(syl);
         setForm({
@@ -81,7 +81,7 @@ const SyllabusManagement = () => {
         setIsModalOpen(true);
     };
 
-    // ΓöÇΓöÇ add topic to local form ΓöÇΓöÇ
+    // ── add topic to local form ──
     const addTopic = () => {
         if (!newTopic.title.trim()) return;
         setForm(f => ({ ...f, topics: [...f.topics, { ...newTopic, isCompleted: false }] }));
@@ -91,7 +91,7 @@ const SyllabusManagement = () => {
     const removeTopic = (idx) =>
         setForm(f => ({ ...f, topics: f.topics.filter((_, i) => i !== idx) }));
 
-    // ΓöÇΓöÇ save ΓöÇΓöÇ
+    // ── save ──
     const handleSave = async () => {
         if (!form.subjectId) return setToast({ message: 'Select a subject', type: 'error' });
         if (form.topics.length === 0) return setToast({ message: 'Add at least one topic', type: 'error' });
@@ -125,7 +125,7 @@ const SyllabusManagement = () => {
         }
     };
 
-    // ΓöÇΓöÇ delete ΓöÇΓöÇ
+    // ── delete ──
     const handleDelete = async (id, name) => {
         if (!window.confirm(`Delete syllabus for "${name}"?`)) return;
         try {

@@ -9,7 +9,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useSettings } from '../../context/SettingsContext';
 import { useAuth } from '../../context/AuthContext';
 
-// ΓöÇΓöÇ Teacher needs to pick a class; student sees their own ΓöÇΓöÇ
+// ── Teacher needs to pick a class; student sees their own ──
 const SyllabusView = () => {
     const { user }     = useAuth();
     const { settings } = useSettings();
@@ -128,7 +128,7 @@ const SyllabusView = () => {
                 </div>
             )}
 
-            {/* Syllabus Cards ΓÇö grouped by subject */}
+            {/* Syllabus Cards — grouped by subject */}
             {!loading && Object.values(grouped).map(({ subject, entries }) => {
                 const totalTopics = entries.reduce((s, e) => s + e.topics.length, 0);
                 const doneTopics  = entries.reduce((s, e) => s + e.topics.filter(t => t.isCompleted).length, 0);

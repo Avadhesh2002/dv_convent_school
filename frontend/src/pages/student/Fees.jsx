@@ -10,8 +10,8 @@ import Toast from '../../components/common/Toast';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
 
-const fmt = (n) => `Γé╣${Number(n || 0).toLocaleString('en-IN')}`;
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'ΓÇö';
+const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 const MONTHS = ['April','May','June','July','August','September','October','November','December','January','February','March'];
 
 const modeIcon = (mode) => {
@@ -35,7 +35,7 @@ const StatusPill = ({ status }) => {
     );
 };
 
-// ΓöÇΓöÇ UPI Pay Modal ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ── UPI Pay Modal ─────────────────────────────────────────────────────────────
 const UPI_APPS = [
     { name: 'Google Pay',  color: 'from-blue-500 to-blue-600',   scheme: (upiId, amt, note) => `tez://upi/pay?pa=${upiId}&pn=School+Fee&am=${amt}&tn=${encodeURIComponent(note)}&cu=INR` },
     { name: 'PhonePe',     color: 'from-violet-500 to-purple-600', scheme: (upiId, amt, note) => `phonepe://pay?pa=${upiId}&pn=School+Fee&am=${amt}&tn=${encodeURIComponent(note)}&cu=INR` },
@@ -119,7 +119,7 @@ const PayModal = ({ student, academicYear, monthStatus, monthlyFeeAmt, preselect
                 <div className="bg-primary px-6 pt-5 pb-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-blue-300 text-xs">{student.name} ┬╖ Class {student.class}</p>
+                            <p className="text-blue-300 text-xs">{student.name} · Class {student.class}</p>
                             <p className="text-white font-bold text-2xl mt-0.5">{fmt(totalSelected)}</p>
                             {monthsArr.length > 0 && (
                                 <p className="text-blue-200 text-xs mt-0.5">{monthsArr.join(', ')}</p>
@@ -141,7 +141,7 @@ const PayModal = ({ student, academicYear, monthStatus, monthlyFeeAmt, preselect
 
                 <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
 
-                    {/* ΓöÇΓöÇ STEP 1: Select Months ΓöÇΓöÇ */}
+                    {/* ── STEP 1: Select Months ── */}
                     {step === 'months' && (
                         <>
                             <div className="flex items-center justify-between">
@@ -185,13 +185,13 @@ const PayModal = ({ student, academicYear, monthStatus, monthlyFeeAmt, preselect
                         </>
                     )}
 
-                    {/* ΓöÇΓöÇ STEP 2: Choose UPI App ΓöÇΓöÇ */}
+                    {/* ── STEP 2: Choose UPI App ── */}
                     {step === 'upi' && (
                         <>
                             <div className="text-center">
                                 <p className="font-black text-slate-800 text-lg">Choose UPI App</p>
                                 <p className="text-sm text-slate-500 mt-1">
-                                    Tap an app ΓÇö it will open with <span className="font-bold text-primary">{fmt(totalSelected)}</span> pre-filled
+                                    Tap an app — it will open with <span className="font-bold text-primary">{fmt(totalSelected)}</span> pre-filled
                                 </p>
                             </div>
 
@@ -247,7 +247,7 @@ const PayModal = ({ student, academicYear, monthStatus, monthlyFeeAmt, preselect
                         </>
                     )}
 
-                    {/* ΓöÇΓöÇ STEP 3: Enter Transaction ID ΓöÇΓöÇ */}
+                    {/* ── STEP 3: Enter Transaction ID ── */}
                     {step === 'txn' && (
                         <>
                             <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 text-center">
@@ -294,7 +294,7 @@ const PayModal = ({ student, academicYear, monthStatus, monthlyFeeAmt, preselect
                         </>
                     )}
 
-                    {/* ΓöÇΓöÇ STEP 4: Done ΓöÇΓöÇ */}
+                    {/* ── STEP 4: Done ── */}
                     {step === 'done' && (
                         <div className="text-center space-y-4 py-4">
                             <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
@@ -315,7 +315,7 @@ const PayModal = ({ student, academicYear, monthStatus, monthlyFeeAmt, preselect
         </div>
     );
 };
-// ΓöÇΓöÇ Due Status Section ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ── Due Status Section ────────────────────────────────────────────────────────
 const DueStatus = ({ monthStatus, onPayMonth }) => {
     // Show only overdue and active due months (not paid)
     const dueMonths = monthStatus.filter(ms => !ms.isPaid && ms.isActive);
@@ -393,7 +393,7 @@ const DueStatus = ({ monthStatus, onPayMonth }) => {
     );
 };
 
-// ΓöÇΓöÇ Main Page ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ── Main Page ─────────────────────────────────────────────────────────────────
 const StudentFees = () => {
     const { user } = useAuth();
     const { settings } = useSettings();
@@ -436,7 +436,7 @@ const StudentFees = () => {
             <div className="bg-primary rounded-3xl p-6 text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
                 <div className="relative z-10 flex items-center justify-between">
                     <div>
-                        <p className="text-indigo-200 text-[10px] font-black uppercase tracking-widest mb-1">Fee Portal ┬╖ {academicYear}</p>
+                        <p className="text-indigo-200 text-[10px] font-black uppercase tracking-widest mb-1">Fee Portal · {academicYear}</p>
                         <h1 className="text-white text-2xl font-black">{data.student.name}</h1>
                         <p className="text-indigo-200 text-sm mt-0.5">Class {data.student.class}</p>
                     </div>

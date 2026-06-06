@@ -12,9 +12,9 @@ import Table from '../../components/common/Table';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Toast from '../../components/common/Toast';
 
-const fmt = (n) => `Γé╣${Number(n || 0).toLocaleString('en-IN')}`;
+const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
-/* ΓöÇΓöÇ Stat Card ΓÇö identical pattern to FeeManagement ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── Stat Card — identical pattern to FeeManagement ─────────────────────── */
 const StatCard = ({ icon: Icon, label, value, sub, gradient, onClick }) => (
     <button onClick={onClick} className={`${gradient} rounded-2xl p-5 text-left w-full transition-all hover:scale-[1.02] hover:shadow-lg`}>
         <div className="flex items-start justify-between mb-3">
@@ -29,7 +29,7 @@ const StatCard = ({ icon: Icon, label, value, sub, gradient, onClick }) => (
     </button>
 );
 
-/* ΓöÇΓöÇ Route Form Modal ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── Route Form Modal ────────────────────────────────────────────────────── */
 const RouteModal = ({ onClose, onSuccess, editing }) => {
     const [form, setForm] = useState({
         routeName:   editing?.routeName   || '',
@@ -68,7 +68,7 @@ const RouteModal = ({ onClose, onSuccess, editing }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
                 <Input label="Route Name *" placeholder="e.g. Route A ΓÇô Sector 12"
                     value={form.routeName} onChange={set('routeName')} />
-                <Input label="Monthly Fee (Γé╣) *" type="number" min="0" placeholder="500"
+                <Input label="Monthly Fee (₹) *" type="number" min="0" placeholder="500"
                     value={form.monthlyFee} onChange={set('monthlyFee')} />
                 <Input label="Description" placeholder="Short description of the route"
                     value={form.description} onChange={set('description')} />
@@ -105,7 +105,7 @@ const RouteModal = ({ onClose, onSuccess, editing }) => {
     );
 };
 
-/* ΓöÇΓöÇ Assign Students Modal ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── Assign Students Modal ───────────────────────────────────────────────── */
 const AssignStudentModal = ({ route, onClose, onSuccess }) => {
     const [search, setSearch]     = useState('');
     const [results, setResults]   = useState([]);
@@ -160,7 +160,7 @@ const AssignStudentModal = ({ route, onClose, onSuccess }) => {
     };
 
     return (
-        <Modal isOpen onClose={() => { onSuccess(); onClose(); }} title={`Manage Students ΓÇö ${route.routeName}`} size="lg">
+        <Modal isOpen onClose={() => { onSuccess(); onClose(); }} title={`Manage Students — ${route.routeName}`} size="lg">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
             {/* Route info banner */}
@@ -197,7 +197,7 @@ const AssignStudentModal = ({ route, onClose, onSuccess }) => {
                             <div key={s._id} onClick={() => assign(s)}
                                 className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer text-sm flex items-center justify-between">
                                 <span className="font-semibold text-slate-800">{s.name}</span>
-                                <span className="text-slate-400 text-xs">Class {s.class} ┬╖ {s.admissionNo || s.UID}</span>
+                                <span className="text-slate-400 text-xs">Class {s.class} · {s.admissionNo || s.UID}</span>
                             </div>
                         ))}
                         {results.filter(s => !assignedIds.has(s._id)).length === 0 && (
@@ -245,7 +245,7 @@ const AssignStudentModal = ({ route, onClose, onSuccess }) => {
 
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                 <p className="text-xs text-secondary">
-                    {assigned.length} student{assigned.length !== 1 ? 's' : ''} ┬╖ Bus fee auto-added to monthly collection
+                    {assigned.length} student{assigned.length !== 1 ? 's' : ''} · Bus fee auto-added to monthly collection
                 </p>
                 <Button onClick={() => { onSuccess(); onClose(); }}>Done</Button>
             </div>
@@ -253,7 +253,7 @@ const AssignStudentModal = ({ route, onClose, onSuccess }) => {
     );
 };
 
-/* ΓöÇΓöÇ Route Detail Modal (view stops + students count) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── Route Detail Modal (view stops + students count) ────────────────────── */
 const RouteDetailModal = ({ route, onClose }) => (
     <Modal isOpen onClose={onClose} title="Route Details" size="sm">
         <div className="space-y-4">
@@ -291,7 +291,7 @@ const RouteDetailModal = ({ route, onClose }) => (
     </Modal>
 );
 
-/* ΓöÇΓöÇ Main Page ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ── Main Page ───────────────────────────────────────────────────────────── */
 export default function BusManagement() {
     const [routes, setRoutes]               = useState([]);
     const [loading, setLoading]             = useState(true);
@@ -340,7 +340,7 @@ export default function BusManagement() {
         <div className="space-y-5 animate-in fade-in duration-500">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            {/* ΓöÇΓöÇ Hero Header */}
+            {/* ── Hero Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
@@ -355,7 +355,7 @@ export default function BusManagement() {
                 </button>
             </div>
 
-            {/* ΓöÇΓöÇ Stats Grid */}
+            {/* ── Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <StatCard icon={Bus}          label="Total Routes"    value={routes.length}    sub="configured"          gradient="bg-gradient-to-br from-blue-500 to-indigo-600" />
                 <StatCard icon={CheckCircle}  label="Active Routes"   value={activeRoutes}     sub="currently running"   gradient="bg-gradient-to-br from-emerald-500 to-teal-600" />
@@ -363,7 +363,7 @@ export default function BusManagement() {
                 <StatCard icon={TrendingUp}   label="Monthly Revenue" value={fmt(totalRevenue)} sub="from bus fees"      gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
             </div>
 
-            {/* ΓöÇΓöÇ Routes Table */}
+            {/* ── Routes Table */}
             <Card noPadding>
                 <div className="p-4 border-b border-slate-50 flex flex-col sm:flex-row gap-3 items-center justify-between">
                     <div className="relative flex-1 max-w-sm">
@@ -383,7 +383,7 @@ export default function BusManagement() {
                         headers={['Route Name', 'Monthly Fee', 'Stops', 'Students', 'Status', '']}
                         count={filtered.length}
                         emptyMessage="No bus routes found"
-                        emptyIcon="≡ƒÜî"
+                        emptyIcon="🚌"
                     >
                         {filtered.map(route => (
                             <tr key={route._id} className="hover:bg-blue-50/20 transition-colors">
@@ -405,7 +405,7 @@ export default function BusManagement() {
                                             <MapPin size={11} /> {route.stops.length} stops
                                         </button>
                                     ) : (
-                                        <span className="text-slate-300 text-xs">ΓÇö</span>
+                                        <span className="text-slate-300 text-xs">—</span>
                                     )}
                                 </td>
                                 <td className="px-5 py-3">
@@ -446,7 +446,7 @@ export default function BusManagement() {
                 )}
             </Card>
 
-            {/* ΓöÇΓöÇ Modals */}
+            {/* ── Modals */}
             {showRouteModal && (
                 <RouteModal
                     editing={editingRoute}

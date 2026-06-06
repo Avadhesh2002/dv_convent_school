@@ -19,8 +19,8 @@ const MONTHS  = ['April','May','June','July','August','September','October','Nov
 const MODES   = ['Cash','Bank Transfer','Google Pay','PhonePe'];
 const FREQ    = ['monthly','quarterly','annually','one-time'];
 
-const fmt = (n) => `Γé╣${Number(n || 0).toLocaleString('en-IN')}`;
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'ΓÇö';
+const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const modeIcon = (mode) => {
     if (mode === 'Google Pay' || mode === 'PhonePe') return <Smartphone size={11} />;
@@ -57,13 +57,13 @@ const StatCard = ({ icon: Icon, label, value, sub, gradient, onClick }) => (
     </button>
 );
 
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-   RECEIPT MODAL  ΓÇö  redesigned, compact, half-A4 printable
-ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+/* ─────────────────────────────────────────────────────────────────────────────
+   RECEIPT MODAL  —  redesigned, compact, half-A4 printable
+───────────────────────────────────────────────────────────────────────────── */
 const ReceiptModal = ({ receiptData, onClose }) => {
     const { student, payments, academicYear, collectedAt, groupReceiptNo, discount, fine } = receiptData;
     const [downloading, setDownloading] = useState(false);
-    const receiptDisplay = groupReceiptNo || payments[0]?.receiptNo || 'ΓÇö';
+    const receiptDisplay = groupReceiptNo || payments[0]?.receiptNo || '—';
     const { settings }   = useSettings();
 
     const handleDownload = async () => {
@@ -99,10 +99,10 @@ const ReceiptModal = ({ receiptData, onClose }) => {
                     <div className="text-center">
                         <p className="font-black text-slate-900 text-lg">Fee Collected!</p>
                         <p className="text-secondary text-sm mt-0.5">
-                            {payments.length} month{payments.length > 1 ? 's' : ''} ┬╖ Receipt #{receiptDisplay}
+                            {payments.length} month{payments.length > 1 ? 's' : ''} · Receipt #{receiptDisplay}
                         </p>
                         <p className="font-bold text-primary text-2xl mt-1">
-                            Γé╣{payments.reduce((s, p) => s + p.amountPaid, 0).toLocaleString('en-IN')}
+                            ₹{payments.reduce((s, p) => s + p.amountPaid, 0).toLocaleString('en-IN')}
                         </p>
                     </div>
                 </div>
@@ -122,9 +122,9 @@ const ReceiptModal = ({ receiptData, onClose }) => {
     );
 };
 
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+/* ─────────────────────────────────────────────────────────────────────────────
    COLLECT FEE MODAL
-ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+───────────────────────────────────────────────────────────────────────────── */
 const CollectFeeModal = ({ onClose, onSuccess, academicYear, structures }) => {
     const [search, setSearch] = useState('');
     const [students, setStudents] = useState([]);
@@ -258,7 +258,7 @@ const CollectFeeModal = ({ onClose, onSuccess, academicYear, structures }) => {
                             {students.map(s => (
                                 <div key={s._id} onClick={() => selectStudent(s)} className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer text-sm flex items-center justify-between">
                                     <span className="font-semibold text-slate-800">{s.name}</span>
-                                    <span className="text-slate-400 text-xs">Class {s.class} ┬╖ {s.admissionNo || s.UID}</span>
+                                    <span className="text-slate-400 text-xs">Class {s.class} · {s.admissionNo || s.UID}</span>
                                 </div>
                             ))}
                         </div>
@@ -268,8 +268,8 @@ const CollectFeeModal = ({ onClose, onSuccess, academicYear, structures }) => {
                 {selected && (
                     <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
                         <p className="font-bold text-primary">{selected.name}</p>
-                        <p className="text-blue-600 text-sm">Class {selected.class} ┬╖ {selected.admissionNo || selected.UID}</p>
-                        {busRoute && <p className="text-violet-600 text-xs mt-1">≡ƒÜî {busRoute.routeName} ┬╖ +Γé╣{busRoute.monthlyFee}/month</p>}
+                        <p className="text-blue-600 text-sm">Class {selected.class} · {selected.admissionNo || selected.UID}</p>
+                        {busRoute && <p className="text-violet-600 text-xs mt-1">🚌 {busRoute.routeName} · +₹{busRoute.monthlyFee}/month</p>}
                         {!structure && <p className="text-amber-600 text-xs mt-1">No fee structure for Class {selected.class} ({admissionType})</p>}
                     </div>
                 )}
@@ -345,8 +345,8 @@ const CollectFeeModal = ({ onClose, onSuccess, academicYear, structures }) => {
                         </select>
                     </div>
                     <Input label="Transaction ID" value={form.transactionId} onChange={e => setForm(f => ({ ...f, transactionId: e.target.value }))} />
-                    <Input label="Discount (Γé╣)" type="number" min="0" value={form.discount} onChange={e => setForm(f => ({ ...f, discount: e.target.value }))} />
-                    <Input label="Fine (Γé╣)" type="number" min="0" value={form.fine} onChange={e => setForm(f => ({ ...f, fine: e.target.value }))} />
+                    <Input label="Discount (₹)" type="number" min="0" value={form.discount} onChange={e => setForm(f => ({ ...f, discount: e.target.value }))} />
+                    <Input label="Fine (₹)" type="number" min="0" value={form.fine} onChange={e => setForm(f => ({ ...f, fine: e.target.value }))} />
                     <Input label="Paid By" value={form.paidBy} onChange={e => setForm(f => ({ ...f, paidBy: e.target.value }))} />
                 </div>
                 <Input label="Remarks" value={form.remarks} onChange={e => setForm(f => ({ ...f, remarks: e.target.value }))} />
@@ -356,7 +356,7 @@ const CollectFeeModal = ({ onClose, onSuccess, academicYear, structures }) => {
                     <div className="rounded-2xl p-4 bg-primary">
                         <div className="flex justify-between items-start">
                             <div>
-                                <p className="text-indigo-200 text-xs">{selectedMonths.size} month{selectedMonths.size > 1 ? 's' : ''} ┬╖ Net Payable</p>
+                                <p className="text-indigo-200 text-xs">{selectedMonths.size} month{selectedMonths.size > 1 ? 's' : ''} · Net Payable</p>
                                 <p className="text-white text-3xl font-black">{fmt(netAmount)}</p>
                             </div>
                             <div className="text-right text-xs text-indigo-200 space-y-0.5">
@@ -380,9 +380,9 @@ const CollectFeeModal = ({ onClose, onSuccess, academicYear, structures }) => {
     );
 };
 
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+/* ─────────────────────────────────────────────────────────────────────────────
    FEE STRUCTURE MODAL
-ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+───────────────────────────────────────────────────────────────────────────── */
 const DEFAULT_MONTH_FEES = () =>
     MONTHS.map(month => ({ month, baseFee: 0, extraFees: [] }));
 
@@ -506,7 +506,7 @@ const FeeStructureModal = ({ onClose, onSuccess, academicYear, editing }) => {
                     <input type="number" min="0" placeholder="Enter base fee amount"
                         className="w-full sm:flex-1 border border-blue-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary/30"
                         onChange={e => fillAll(e.target.value)} />
-                    <span className="text-xs text-slate-400 shrink-0">Γé╣/month</span>
+                    <span className="text-xs text-slate-400 shrink-0">₹/month</span>
                 </div>
 
                 <div>
@@ -520,7 +520,7 @@ const FeeStructureModal = ({ onClose, onSuccess, academicYear, editing }) => {
                                 <div className="flex items-center gap-2 px-3 py-2.5">
                                     <span className="text-sm font-black text-slate-700 w-20 shrink-0">{m.month}</span>
                                     <div className="flex items-center gap-1 flex-1 min-w-0">
-                                        <span className="text-xs text-slate-400">Γé╣</span>
+                                        <span className="text-xs text-slate-400">₹</span>
                                         <input type="number" min="0" value={m.baseFee || ''}
                                             onChange={e => updateBaseFee(mIdx, e.target.value)}
                                             placeholder="Base fee"
@@ -537,7 +537,7 @@ const FeeStructureModal = ({ onClose, onSuccess, academicYear, editing }) => {
                                             value={e.name} onChange={ev => updateExtraFee(mIdx, eIdx, 'name', ev.target.value)}
                                             className="flex-1 min-w-0 border border-violet-200 bg-violet-50 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-violet-300" />
                                         <div className="flex items-center gap-1 shrink-0">
-                                            <span className="text-xs text-slate-400">Γé╣</span>
+                                            <span className="text-xs text-slate-400">₹</span>
                                             <input type="number" min="0" placeholder="0"
                                                 value={e.amount || ''}
                                                 onChange={ev => updateExtraFee(mIdx, eIdx, 'amount', ev.target.value)}
@@ -557,9 +557,9 @@ const FeeStructureModal = ({ onClose, onSuccess, academicYear, editing }) => {
                 <div className="rounded-2xl p-4 flex justify-between items-center bg-primary">
                     <div>
                         <p className="text-indigo-200 text-xs">Annual Total</p>
-                        <p className="text-white text-2xl font-black">Γé╣{annualTotal.toLocaleString('en-IN')}</p>
+                        <p className="text-white text-2xl font-black">₹{annualTotal.toLocaleString('en-IN')}</p>
                         <p className="text-indigo-200 text-xs mt-0.5">
-                            Class {className} ┬╖ {admissionType === 'new' ? 'New Admission' : 'Old / Continuing'}
+                            Class {className} · {admissionType === 'new' ? 'New Admission' : 'Old / Continuing'}
                         </p>
                     </div>
                     <TrendingUp size={28} className="text-white/30" />
@@ -574,9 +574,9 @@ const FeeStructureModal = ({ onClose, onSuccess, academicYear, editing }) => {
     );
 };
 
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+/* ─────────────────────────────────────────────────────────────────────────────
    STUDENT LEDGER MODAL
-ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+───────────────────────────────────────────────────────────────────────────── */
 const StudentLedgerModal = ({ studentId, academicYear, onClose }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -592,7 +592,7 @@ const StudentLedgerModal = ({ studentId, academicYear, onClose }) => {
                 <div className="space-y-4">
                     <div className="rounded-2xl p-4 bg-primary">
                         <p className="text-white font-black text-lg">{data.student.name}</p>
-                        <p className="text-indigo-200 text-sm">Class {data.student.class} ┬╖ {data.student.admissionNo || data.student.UID}</p>
+                        <p className="text-indigo-200 text-sm">Class {data.student.class} · {data.student.admissionNo || data.student.UID}</p>
                         <div className="grid grid-cols-2 gap-3 mt-3">
                             <div className="bg-white/15 rounded-xl p-3">
                                 <p className="text-indigo-200 text-xs">Total Paid</p>
@@ -615,7 +615,7 @@ const StudentLedgerModal = ({ studentId, academicYear, onClose }) => {
                                 {data.payments.map(p => (
                                     <tr key={p._id} className="hover:bg-slate-50">
                                         <td className="px-3 py-2.5 font-mono text-xs text-slate-400">{p.receiptNo}</td>
-                                        <td className="px-3 py-2.5 font-medium">{p.month || 'ΓÇö'}</td>
+                                        <td className="px-3 py-2.5 font-medium">{p.month || '—'}</td>
                                         <td className="px-3 py-2.5 text-slate-600">{fmt(p.totalAmount)}</td>
                                         <td className="px-3 py-2.5 font-bold text-primary">{fmt(p.amountPaid)}</td>
                                         <td className="px-3 py-2.5">
@@ -636,9 +636,9 @@ const StudentLedgerModal = ({ studentId, academicYear, onClose }) => {
     );
 };
 
-/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+/* ─────────────────────────────────────────────────────────────────────────────
    MAIN COMPONENT
-ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
+───────────────────────────────────────────────────────────────────────────── */
 const FeeManagement = () => {
     const { settings } = useSettings();
     const academicYear = settings?.academicYear || settings?.currentAcademicYear || '2025-26';
@@ -778,7 +778,7 @@ const FeeManagement = () => {
         <div className="space-y-5 animate-in fade-in duration-500">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            {/* ΓöÇΓöÇ Hero Header */}
+            {/* ── Hero Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
@@ -798,15 +798,15 @@ const FeeManagement = () => {
                 </div>
             </div>
 
-            {/* ΓöÇΓöÇ Stats Grid */}
+            {/* ── Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <StatCard icon={TrendingUp} label="Total Collected" value={summary ? fmt(summary.totalCollected) : 'ΓÇö'} sub={academicYear} gradient="bg-gradient-to-br from-emerald-500 to-teal-600" />
-                <StatCard icon={Receipt} label="Total Receipts" value={summary?.totalPayments ?? 'ΓÇö'} sub="payments" gradient="bg-gradient-to-br from-blue-500 to-indigo-600" onClick={() => setTab('payments')} />
-                <StatCard icon={AlertCircle} label="Defaulters" value={defaulters.length || 'ΓÇö'} sub="pending balance" gradient="bg-gradient-to-br from-red-500 to-rose-600" onClick={() => setTab('defaulters')} />
+                <StatCard icon={TrendingUp} label="Total Collected" value={summary ? fmt(summary.totalCollected) : '—'} sub={academicYear} gradient="bg-gradient-to-br from-emerald-500 to-teal-600" />
+                <StatCard icon={Receipt} label="Total Receipts" value={summary?.totalPayments ?? '—'} sub="payments" gradient="bg-gradient-to-br from-blue-500 to-indigo-600" onClick={() => setTab('payments')} />
+                <StatCard icon={AlertCircle} label="Defaulters" value={defaulters.length || '—'} sub="pending balance" gradient="bg-gradient-to-br from-red-500 to-rose-600" onClick={() => setTab('defaulters')} />
                 <StatCard icon={Users} label="Fee Structures" value={structures.length} sub="classes configured" gradient="bg-gradient-to-br from-violet-500 to-purple-600" onClick={() => setTab('structures')} />
             </div>
 
-            {/* ΓöÇΓöÇ Today's Summary + Daily Report Download */}
+            {/* ── Today's Summary + Daily Report Download */}
             {summary?.today && (
                 <div className="space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -861,7 +861,7 @@ const FeeManagement = () => {
                 </div>
             )}
 
-            {/* ΓöÇΓöÇ Tabs */}
+            {/* ── Tabs */}
             <div className="flex gap-1 bg-white rounded-xl p-1 shadow-sm border border-slate-100 overflow-x-auto">
                 {[['payments','Payments'],['structures','Structures'],['defaulters','Defaulters']].map(([key, label]) => (
                     <button key={key} onClick={() => setTab(key)}
@@ -882,7 +882,7 @@ const FeeManagement = () => {
 
             {loading ? <div className="flex justify-center py-16"><LoadingSpinner size="lg" /></div> : (
                 <>
-                    {/* ΓöÇΓöÇ Payments Tab */}
+                    {/* ── Payments Tab */}
                     {tab === 'payments' && (
                         <Card noPadding>
                             <div className="p-4 border-b border-slate-50 flex flex-col sm:flex-row gap-3">
@@ -962,7 +962,7 @@ const FeeManagement = () => {
                         </Card>
                     )}
 
-                    {/* ΓöÇΓöÇ Structures Tab */}
+                    {/* ── Structures Tab */}
                     {tab === 'structures' && (
                         <div className="space-y-6">
                             {/* New Admission */}
@@ -1090,7 +1090,7 @@ const FeeManagement = () => {
                         </div>
                     )}
 
-                    {/* ΓöÇΓöÇ Defaulters Tab */}
+                    {/* ── Defaulters Tab */}
                     {tab === 'defaulters' && (
                         <Card noPadding>
                             <div className="p-4 border-b border-slate-50 flex items-center gap-3">
@@ -1106,7 +1106,7 @@ const FeeManagement = () => {
                                     </span>
                                 )}
                             </div>
-                            <Table headers={['Student','Class','Unpaid Months','Due Amount','']} count={defaulters.length} emptyMessage="No defaulters ΓÇö all months cleared!" emptyIcon="Γ£à">
+                            <Table headers={['Student','Class','Unpaid Months','Due Amount','']} count={defaulters.length} emptyMessage="No defaulters — all months cleared!" emptyIcon="Γ£à">
                                 {defaulters.map(({ student, totalPaid, unpaidMonths, monthCount, balance }) => (
                                     <tr key={student._id} className="hover:bg-red-50/30 transition-colors">
                                         <td className="px-5 py-3">
@@ -1134,7 +1134,7 @@ const FeeManagement = () => {
                         </Card>
                     )}
 
-                    {/* ΓöÇΓöÇ Pending UPI Tab */}
+                    {/* ── Pending UPI Tab */}
                     {tab === 'pending_upi' && (
                         <Card noPadding>
                             <div className="p-4 border-b border-slate-50 flex items-center justify-between">
