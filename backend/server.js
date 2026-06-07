@@ -14,9 +14,7 @@ const app = express();
 // Middleware
 const allowedOrigins = [
   "https://dvgss.in",
-  "https://www.dvgss.in",
-  "http://localhost:5173",
-  "http://localhost:3000"
+  "https://www.dvgss.in"
 ];
 
 app.use(cors({
