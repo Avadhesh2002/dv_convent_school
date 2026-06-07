@@ -232,7 +232,7 @@ const IDCardGenerator = () => {
     if (!selectedItems.length) { setToast({ message: 'Select at least one card', type: 'error' }); return; }
     setPrinting(true);
     setProgress({ current: 0, total: selectedItems.length });
-    setToast({ message: selectedItems.length === 1 ? 'Preparing PNGΓÇª' : 'Preparing ZIPΓÇª', type: 'success' });
+    setToast({ message: selectedItems.length === 1 ? 'Preparing PNG…' : 'Preparing ZIP…', type: 'success' });
     try {
       await downloadCards(selectedItems, tab, settings, schoolLogo, signImage,
         (current, total) => setProgress({ current, total }),
@@ -256,13 +256,13 @@ const IDCardGenerator = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">ID Card Generator</h1>
-          <p className="text-xs text-gray-500 font-medium mt-0.5">CR-80 standard • 54mm ├ù 85.6mm</p>
+          <p className="text-xs text-gray-500 font-medium mt-0.5">CR-80 standard • 54mm × 85.6mm</p>
         </div>
         <button onClick={handleDownload} disabled={printing}
           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-colors shadow-sm">
           <Download size={16} />
           {printing
-            ? progress.total > 1 ? `Processing ${progress.current}/${progress.total}ΓÇª` : 'ProcessingΓÇª'
+            ? progress.total > 1 ? `Processing ${progress.current}/${progress.total}…` : 'Processing…'
             : selectedItems.length > 1 ? `Download ZIP (${selectedItems.length})` : `Download PNG (${selectedItems.length})`}
         </button>
       </div>
@@ -320,7 +320,7 @@ const IDCardGenerator = () => {
             <div key={item._id} onClick={() => toggleSelect(item._id)} style={{ cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
               <div style={{ position: 'absolute', inset: -3, borderRadius: 17, border: selected.has(item._id) ? '3px solid #4f46e5' : '3px solid transparent', transition: 'border-color 0.15s', pointerEvents: 'none', zIndex: 10 }} />
               {selected.has(item._id) && (
-                <div style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: '#4f46e5', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, zIndex: 20, boxShadow: '0 2px 6px rgba(79,70,229,0.4)' }}>Γ£ô</div>
+                <div style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: '#4f46e5', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, zIndex: 20, boxShadow: '0 2px 6px rgba(79,70,229,0.4)' }}>✔</div>
               )}
               {tab === 'student'
                 ? <StudentCard student={item} settings={settings} color={studentColor} />

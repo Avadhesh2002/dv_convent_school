@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 
-const CW = 648;   // 216px ├ù 3
+const CW = 648;   // 216px × 3
 const R  = 3;
 const s  = (v) => v * R;
 
@@ -31,7 +31,7 @@ const ellipseText = (ctx, text, maxW) => {
   if (!text) return '—';
   let t = String(text);
   while (ctx.measureText(t).width > maxW && t.length > 1) t = t.slice(0, -1);
-  if (t.length < String(text).length) t = t.slice(0, -1) + 'ΓÇª';
+  if (t.length < String(text).length) t = t.slice(0, -1) + '…';
   return t;
 };
 
@@ -61,9 +61,9 @@ const fmtDate = (d) => d
   ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
   : '—';
 
-// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+// ════════════════════════════════════════════════════════════════════════════
 // STUDENT CARD
-// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+// ════════════════════════════════════════════════════════════════════════════
 const drawStudentCard = async (canvas, student, settings, assets, color = '#1565c0') => {
   const { logoImg, signImg, photoImg } = assets;
 
@@ -74,7 +74,7 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
   const nameH  = s(18);   // name text
   const uidH   = s(14);   // uid pill
   const lx2    = s(12), vx = lx2 + s(62), valMaxW = CW - vx - lx2;
-  const baseRH = s(14);   // single-line row height (matches preview padding: 3px top+bottom + 7px font Γëê 14)
+  const baseRH = s(14);   // single-line row height (matches preview padding: 3px top+bottom + 7px font ≈ 14)
   const lineH  = s(9);    // per extra line height inside a wrapped row
   const ftH    = s(42);   // footer (class + sign area) — increased to fit sign + label
   const noteH  = s(16);   // bottom strip
@@ -228,9 +228,9 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
   ctx.restore();
 };
 
-// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+// ════════════════════════════════════════════════════════════════════════════
 // TEACHER CARD
-// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+// ════════════════════════════════════════════════════════════════════════════
 const drawTeacherCard = async (canvas, teacher, settings, assets) => {
   const { logoImg, signImg, photoImg } = assets;
 

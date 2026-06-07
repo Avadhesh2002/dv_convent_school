@@ -319,7 +319,7 @@ const CollectFeeModal = ({ onClose, onSuccess, academicYear, structures }) => {
                                             : isSelected ? 'bg-primary border-primary'
                                             : 'border-slate-300'
                                         }`}>
-                                            {(isPaid || isSelected) && <span className="text-white text-[8px] font-black">Γ£ô</span>}
+                                            {(isPaid || isSelected) && <span className="text-white text-[8px] font-black">✔</span>}
                                         </div>
                                         <span className={`text-xs font-semibold ${isPaid ? 'text-emerald-700' : 'text-slate-700'}`}>
                                             {m.slice(0,3)}
@@ -1031,7 +1031,7 @@ const FeeManagement = () => {
                                                                     <div className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2">
                                                                         <div>
                                                                             <p className="text-xs font-bold text-slate-700">Monthly Fee</p>
-                                                                            <p className="text-[10px] text-slate-400">├ù {activeMonths.length} months</p>
+                                                                            <p className="text-[10px] text-slate-400">× {activeMonths.length} months</p>
                                                                         </div>
                                                                         <p className="font-black text-slate-800">{fmt(baseFees[0])}<span className="text-xs font-normal text-slate-400">/mo</span></p>
                                                                     </div>

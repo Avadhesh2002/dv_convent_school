@@ -1,6 +1,6 @@
 /**
  * feeReceiptPdf.js
- * Beautiful fee receipt — 4.1in ├ù 5.8in each copy
+ * Beautiful fee receipt — 4.1in × 5.8in each copy
  * Two copies side by side: School Copy (left) | Parent Copy (right)
  * Opens print dialog ΓåÆ Save as PDF
  */
