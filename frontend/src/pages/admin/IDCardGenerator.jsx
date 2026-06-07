@@ -11,14 +11,21 @@ import { downloadCards } from '../../utils/idCardDownload';
 const CARD_W = 220;
 const CARD_H = 360;
 
+// Helper: resolve any profile image URL correctly
+// Cloudinary images are full https:// URLs, local uploads start with /uploads/
+const resolvePhoto = (profileImage) => {
+  if (!profileImage) return null;
+  if (profileImage.startsWith('data:')) return profileImage;           // base64
+  if (profileImage.startsWith('http')) return profileImage;            // Cloudinary / any full URL
+  const apiBase = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+  return `${apiBase}${profileImage}`;                                  // local /uploads/...
+};
+
 // ─── StudentCard ──────────────────────────────────────────────────────────────
 const StudentCard = ({ student, settings, color = '#1565c0' }) => {
   const dob     = student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
   const contact = student.fatherMobile || student.motherMobile || student.guardianMobile || '—';
-  const apiBase = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
-  const photo   = student.profileImage
-    ? (student.profileImage.startsWith('data:') ? student.profileImage : `${apiBase}${student.profileImage}`)
-    : null;
+  const photo   = resolvePhoto(student.profileImage);
 
   // derive a slightly lighter shade for gradient
   const colorDark  = color;
@@ -90,7 +97,13 @@ const StudentCard = ({ student, settings, color = '#1565c0' }) => {
           Class : {student.class || '—'}
         </div>
         <div style={{ textAlign: 'center' }}>
-          <img src={signImage} alt="sign" style={{ height: 22, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+          <img
+            src={signImage}
+            alt="sign"
+            crossOrigin="anonymous"
+            style={{ height: 28, width: 60, objectFit: 'contain', display: 'block', margin: '0 auto' }}
+            onError={e => { e.target.style.display = 'none'; }}
+          />
           <div style={{ fontSize: 7, color: '#374151', fontWeight: 600, marginTop: 1 }}>Principal Sign.</div>
         </div>
       </div>
@@ -107,10 +120,7 @@ const StudentCard = ({ student, settings, color = '#1565c0' }) => {
 
 // ─── TeacherCard ──────────────────────────────────────────────────────────────
 const TeacherCard = ({ teacher, settings }) => {
-  const apiBase = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
-  const photo   = teacher.profileImage
-    ? (teacher.profileImage.startsWith('data:') ? teacher.profileImage : `${apiBase}${teacher.profileImage}`)
-    : null;
+  const photo = resolvePhoto(teacher.profileImage);
 
   return (
     <div style={{ width: CARD_W, minHeight: CARD_H, fontFamily: 'Arial, sans-serif', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 6px 24px rgba(0,0,0,0.2)', flexShrink: 0, background: '#fff' }}>
@@ -173,7 +183,13 @@ const TeacherCard = ({ teacher, settings }) => {
         {/* Principal Sign */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: 'auto', paddingTop: 6, borderTop: '1px solid #f0e0e0' }}>
           <div style={{ textAlign: 'center' }}>
-            <img src={signImage} alt="sign" style={{ height: 22, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+            <img
+              src={signImage}
+              alt="sign"
+              crossOrigin="anonymous"
+              style={{ height: 28, width: 60, objectFit: 'contain', display: 'block', margin: '0 auto' }}
+              onError={e => { e.target.style.display = 'none'; }}
+            />
             <div style={{ fontSize: 7, color: '#374151', fontWeight: 600, marginTop: 1 }}>Principal Sign.</div>
           </div>
         </div>

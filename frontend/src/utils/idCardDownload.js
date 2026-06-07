@@ -389,10 +389,15 @@ const drawTeacherCard = async (canvas, teacher, settings, assets) => {
 
 // ─── Internals ────────────────────────────────────────────────────────────────
 const itemToBlob = async (item, type, settings, sharedAssets, studentColor = '#1565c0') => {
-  const apiBase  = import.meta.env?.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
-  const photoSrc = item.profileImage
-    ? (item.profileImage.startsWith('data:') ? item.profileImage : `${apiBase}${item.profileImage}`)
-    : null;
+  // Resolve profile image URL — Cloudinary images are full https:// URLs
+  const resolvePhoto = (profileImage) => {
+    if (!profileImage) return null;
+    if (profileImage.startsWith('data:')) return profileImage;
+    if (profileImage.startsWith('http')) return profileImage;
+    const apiBase = import.meta.env?.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    return `${apiBase}${profileImage}`;
+  };
+  const photoSrc = resolvePhoto(item.profileImage);
   const photoImg = await loadImage(photoSrc);
   const canvas   = document.createElement('canvas');
   if (type === 'student') await drawStudentCard(canvas, item, settings, { ...sharedAssets, photoImg }, studentColor);
