@@ -14,7 +14,7 @@ const { createSubject, getSubjectsByClass, getAllSubjects, deleteSubject, update
 
 const { assignTeacher, getClassAssignments, removeAssignment, updateAssignment } = require('../controllers/assignmentController');
 
-const { createAnnouncement, getAdminAnnouncements, updateAnnouncement, deleteAnnouncement } = require('../controllers/announcementController');
+const { createAnnouncement, getAdminAnnouncements, updateAnnouncement, deleteAnnouncement, getAnnouncementViews } = require('../controllers/announcementController');
 
 const { getAdminStats, getAdminDashboard, globalSearch } = require('../controllers/dashboardController');
 
@@ -72,6 +72,7 @@ router.post('/announcements', protect, authorize('admin'), createAnnouncement);
 router.get('/announcements', protect, authorize('admin'), getAdminAnnouncements);
 router.put('/announcements/:id', protect, authorize('admin'), updateAnnouncement);
 router.delete('/announcements/:id', protect, authorize('admin'), deleteAnnouncement);
+router.get('/announcements/:id/views', protect, authorize('admin'), getAnnouncementViews);
 
 
 // Add to the bottom of the routes list

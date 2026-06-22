@@ -238,6 +238,52 @@ const getLatestAnnouncements = async (req, res) => {
     }
 };
 
+// @desc    Mark announcements as viewed by current user (called when they open the page)
+// @route   POST /api/users/announcements/mark-viewed
+// @access  Private (Teacher/Student)
+const markAnnouncementsViewed = async (req, res) => {
+    try {
+        const userId   = req.user._id;
+        const userRole = req.user.role;
+        const now      = new Date();
+
+        // Build query same as getMyAnnouncements
+        let query = { isActive: true, $or: [{ expiryDate: { $exists: false } }, { expiryDate: null }, { expiryDate: { $gt: now } }] };
+        if (userRole === 'teacher') query.targetAudience = { $in: ['Teachers', 'Everyone'] };
+        else if (userRole === 'student') query.targetAudience = { $in: ['Students', 'Everyone'] };
+
+        // Add this user to viewedBy if not already there
+        await Announcement.updateMany(
+            { ...query, 'viewedBy.userId': { $ne: userId } },
+            { $push: { viewedBy: { userId, role: userRole, viewedAt: now } } }
+        );
+
+        res.status(200).json({ message: 'Marked as viewed' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Get view counts for all announcements (Admin only)
+// @route   GET /api/admin/announcements/:id/views
+// @access  Private (Admin)
+const getAnnouncementViews = async (req, res) => {
+    try {
+        const announcement = await Announcement.findById(req.params.id)
+            .select('title viewedBy targetAudience');
+
+        if (!announcement) return res.status(404).json({ message: 'Not found' });
+
+        const totalViews    = announcement.viewedBy.length;
+        const teacherViews  = announcement.viewedBy.filter(v => v.role === 'teacher').length;
+        const studentViews  = announcement.viewedBy.filter(v => v.role === 'student').length;
+
+        res.status(200).json({ totalViews, teacherViews, studentViews });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 // Update your exports at the bottom
 module.exports = { 
     createAnnouncement, 
@@ -246,5 +292,7 @@ module.exports = {
     deleteAnnouncement,
     getMyAnnouncements,
     getNewAnnouncementCount,
-    getLatestAnnouncements // New
+    getLatestAnnouncements,
+    markAnnouncementsViewed,
+    getAnnouncementViews
 };

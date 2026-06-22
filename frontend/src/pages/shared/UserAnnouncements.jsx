@@ -14,9 +14,10 @@ const UserAnnouncements = () => {
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        // This calls the role-based filtering logic you wrote in the backend
         const res = await API.get('/users/announcements');
         setNotices(res.data);
+        // Mark all visible announcements as viewed
+        API.post('/users/announcements/mark-viewed').catch(() => {});
       } catch (err) {
         console.error("Failed to load announcements");
       } finally {

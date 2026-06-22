@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Megaphone, Plus, Users, GraduationCap, Globe, AlertCircle, Trash2, Calendar, Send, Clock, EyeOff } from 'lucide-react';
+import { Megaphone, Plus, Users, GraduationCap, Globe, Trash2, Calendar, Send, Clock, Eye } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import API from '../../api/axios';
 import Card from '../../components/common/Card';
@@ -154,6 +154,11 @@ const AnnouncementManagement = () => {
                             <Calendar size={12} /> Expires {new Date(item.expiryDate).toLocaleDateString()}
                          </div>
                        )}
+                       {/* View Count Badge */}
+                       <div className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase border border-indigo-100">
+                          <Eye size={11} />
+                          {item.viewedBy?.length || 0} Seen
+                       </div>
                     </div>
                   </div>
 

@@ -42,7 +42,13 @@ const announcementSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin',
         required: true
-    }
+    },
+    // Track who has viewed this announcement
+    viewedBy: [{
+        userId: { type: mongoose.Schema.Types.ObjectId, required: true },
+        role:   { type: String, enum: ['teacher', 'student'], required: true },
+        viewedAt: { type: Date, default: Date.now }
+    }]
 }, { timestamps: true });
 
 // ARCHITECT'S INDEXING STRATEGY:
