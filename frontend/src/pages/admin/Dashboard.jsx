@@ -41,6 +41,27 @@ const AdminDashboard = () => {
 
   if (loading) return <div className="py-20"><LoadingSpinner size="lg" /></div>;
 
+  // API failed — show fallback instead of crashing
+  if (!data || !data.overview) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Command Center</h1>
+          <p className="text-sm text-secondary font-medium">Overview of school operations & staff performance.</p>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard icon={Users} label="Students" value="—" color="text-primary" bg="bg-indigo-50" />
+          <StatCard icon={GraduationCap} label="Teachers" value="—" color="text-success" bg="bg-green-50" />
+          <StatCard icon={BookOpen} label="Classes" value="—" color="text-warning" bg="bg-amber-50" />
+          <StatCard icon={ClipboardCheck} label="Attendance" value="—%" color="text-danger" bg="bg-red-50" />
+        </div>
+        <div className="py-10 text-center text-gray-400 font-bold">
+          Could not load dashboard data. Please refresh.
+        </div>
+      </div>
+    );
+  }
+
   const { overview, recentActivity } = data;
 
   return (
