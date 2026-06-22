@@ -54,6 +54,7 @@ const StudentRegistration = () => {
     { id: 'casteCertificate',     label: 'Caste Certificate' },
     { id: 'birthCertificate',     label: 'Birth Certificate' },
     { id: 'markSheet',            label: 'Previous Class Result' },
+    { id: 'fivePhotos',           label: '5 Photograph Passport Size' },
     { id: 'studentAadhar',        label: 'Student Aadhar Copy' },
     { id: 'fatherAadhar',         label: 'Father Aadhar Copy' },
     { id: 'motherAadhar',         label: 'Mother Aadhar Copy' },

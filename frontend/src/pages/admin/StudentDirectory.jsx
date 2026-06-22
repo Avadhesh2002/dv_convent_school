@@ -115,7 +115,7 @@ const handleUpdate = async (e) => {
   // So we need to explicitly build the documents object
   const docIds = [
     'transferCertificate','migrationCertificate','characterCertificate',
-    'casteCertificate','birthCertificate','markSheet',
+    'casteCertificate','birthCertificate','markSheet','fivePhotos',
     'studentAadhar','fatherAadhar','motherAadhar'
   ];
   const documents = {};
@@ -795,6 +795,7 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
               { id: 'casteCertificate',     label: 'Caste Certificate' },
               { id: 'birthCertificate',     label: 'Birth Certificate' },
               { id: 'markSheet',            label: 'Previous Class Result' },
+              { id: 'fivePhotos',           label: '5 Photograph Passport Size' },
               { id: 'studentAadhar',        label: 'Student Aadhar Copy' },
               { id: 'fatherAadhar',         label: 'Father Aadhar Copy' },
               { id: 'motherAadhar',         label: 'Mother Aadhar Copy' },
