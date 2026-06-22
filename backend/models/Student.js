@@ -205,7 +205,10 @@ const studentSchema = new mongoose.Schema({
         casteCertificate: { type: Boolean, default: false },
         birthCertificate: { type: Boolean, default: false },
         fivePhotos: { type: Boolean, default: false },
-        aadharPhotoCopy: { type: Boolean, default: false }
+        aadharPhotoCopy: { type: Boolean, default: false },
+        studentAadhar: { type: Boolean, default: false },
+        fatherAadhar: { type: Boolean, default: false },
+        motherAadhar: { type: Boolean, default: false },
     },
 
     role: {
