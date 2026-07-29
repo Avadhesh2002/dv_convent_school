@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, UserX, Edit3, Key, Eye, FileText, ShieldCheck, ChevronLeft, ChevronRight, User, Phone, Camera , MapPin, Calendar, CheckCircle } from 'lucide-react';
+import { Search, Filter, UserX, Edit3, Key, Eye, FileText, ShieldCheck, ChevronLeft, ChevronRight, User, Phone, MapPin, Calendar, CheckCircle } from 'lucide-react';
 import API from '../../api/axios';
 import Card from '../../components/common/Card';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Toast from '../../components/common/Toast';
-import Modal from '../../components/common/Modal'; 
+import Modal from '../../components/common/Modal';
+import ImagePickerWithCrop from '../../components/common/ImagePickerWithCrop';
 import { generateStudentListPDF } from '../../utils/pdfGenerator';
 
 const StudentDirectory = () => {
@@ -664,15 +665,6 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
     setImagePreview(student?.profileImage || null);
   }, [student?._id]);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 2000000) return alert("File too large. Max 2MB.");
-    const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result);
-    reader.readAsDataURL(file);
-  };
-
   if (!student) return null;
 
   return (
@@ -682,34 +674,14 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
         onSubmit(e);
       }} className="space-y-4">
 
-        {/* STUDENT PHOTO - Admin Editable */}
-        <div className="flex flex-col items-center p-5 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-          <div className="relative group">
-            <div className="w-24 h-28 bg-white border-2 border-gray-200 rounded-xl overflow-hidden flex items-center justify-center shadow-md">
-              {imagePreview ? (
-                <img src={imagePreview} alt="Student" className="w-full h-full object-cover" />
-              ) : (
-                <div className="text-center p-2">
-                  <span className="text-3xl font-black text-primary/30">{student.name?.charAt(0)}</span>
-                </div>
-              )}
-            </div>
-          </div>
-          <p className="text-[10px] text-secondary font-bold uppercase mt-3 tracking-wider mb-3">Update Photo</p>
-          <div className="flex gap-3">
-            {/* Gallery option */}
-            <label className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-indigo-700 transition-colors shadow-sm">
-              <Camera size={14} /> Gallery
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-            </label>
-            {/* Camera option */}
-            <label className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-green-700 transition-colors shadow-sm">
-              <Camera size={14} /> Camera
-              <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleImageChange} />
-            </label>
-          </div>
-          <input type="hidden" name="profileImage" value={imagePreview || ''} />
-        </div>
+        {/* STUDENT PHOTO - with crop */}
+        <ImagePickerWithCrop
+          value={imagePreview}
+          onChange={setImagePreview}
+          aspect={3 / 4}
+          label="Student Photo"
+        />
+        <input type="hidden" name="profileImage" value={imagePreview || ''} />
 
         {/* BASIC INFO */}
         <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">

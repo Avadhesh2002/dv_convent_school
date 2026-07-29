@@ -9,7 +9,6 @@ import {
   Mail,
   Users, 
   Send, 
-  Camera, 
   Info,
   ChevronRight,
   ShieldCheck
@@ -18,6 +17,7 @@ import API from '../../api/axios';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import Toast from '../../components/common/Toast';
+import ImagePickerWithCrop from '../../components/common/ImagePickerWithCrop';
 import { useSettings } from '../../context/SettingsContext';
 
 
@@ -59,20 +59,6 @@ const StudentRegistration = () => {
     { id: 'fatherAadhar',         label: 'Father Aadhar Copy' },
     { id: 'motherAadhar',         label: 'Mother Aadhar Copy' },
   ];
-
-  // --- EVENT HANDLERS ---
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 2000000) {
-        setToast({ message: "File is too large. Max 2MB.", type: "error" });
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result);
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleAadharInput = (e) => {
   const formatted = formatAadhar(e.target.value);
@@ -447,31 +433,12 @@ const StudentRegistration = () => {
                 </div>
 
                 {/* PHOTO UPLOAD */}
-                <div className="flex flex-col items-center p-6 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                  <div className="w-32 h-40 bg-white border-2 border-gray-200 rounded-xl overflow-hidden flex items-center justify-center shadow-md mb-4">
-                    {imagePreview ? (
-                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-center p-4">
-                        <Camera size={32} className="mx-auto text-gray-300 mb-2" />
-                        <p className="text-[10px] font-bold text-gray-400 uppercase">Optional Photo</p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-3">
-                    {/* Gallery */}
-                    <label className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-indigo-700 transition-colors shadow-sm">
-                      <Camera size={14} /> Gallery
-                      <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-                    </label>
-                    {/* Camera */}
-                    <label className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-green-700 transition-colors shadow-sm">
-                      <Camera size={14} /> Camera
-                      <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleImageChange} />
-                    </label>
-                  </div>
-                  <p className="text-xs text-secondary mt-3">You can upload this later</p>
-                </div>
+                <ImagePickerWithCrop
+                  value={imagePreview}
+                  onChange={setImagePreview}
+                  aspect={3 / 4}
+                  label="Student Photo"
+                />
 
                 {/* AADHAR - SIMPLIFIED */}
                 <div className="space-y-3 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
