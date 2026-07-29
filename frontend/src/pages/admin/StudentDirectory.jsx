@@ -39,6 +39,7 @@ const StudentDirectory = () => {
     status: 'active',
     page: 1
   });
+  const [limit, setLimit] = useState(10);
 
   // ============ CONSTANTS ============
   const DOCUMENT_LABELS = {
@@ -73,7 +74,7 @@ const availableParams = [
       try {
         const { search, studentClass, status, page, admissionType } = filters;
         const res = await API.get('/admin/students', {
-          params: { search, studentClass, status, page, admissionType, limit: 10 }
+          params: { search, studentClass, status, page, admissionType, limit }
         });
         setStudents(res.data.students);
         setPagination(res.data.pagination);
@@ -86,7 +87,7 @@ const availableParams = [
 
     const timer = setTimeout(() => fetchStudents(), 300);
     return () => clearTimeout(timer);
-  }, [filters]);
+  }, [filters, limit]);
 
   // ============ MODAL HANDLERS ============
   const handleView = (student) => {
@@ -398,29 +399,46 @@ const handleUpdate = async (e) => {
               </div>
             </div>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center gap-4">
-                <button 
-                  disabled={filters.page === 1} 
-                  onClick={() => setFilters({...filters, page: filters.page - 1})} 
-                  className="p-2.5 bg-gray-50 border border-gray-200 rounded-xl disabled:opacity-30 shadow-sm"
+            <div className="flex items-center gap-4">
+              {/* Per page selector */}
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black text-gray-400 uppercase">Show:</span>
+                <select
+                  value={limit}
+                  onChange={e => { setLimit(Number(e.target.value)); setFilters(f => ({ ...f, page: 1 })); }}
+                  className="h-9 px-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-black outline-none focus:border-primary"
                 >
-                  <ChevronLeft size={20}/>
-                </button>
-                <div className="px-4 py-2 bg-indigo-50 rounded-lg border border-indigo-100">
-                  <span className="text-xs font-black text-primary uppercase">
-                    Page {filters.page} / {pagination.totalPages}
-                  </span>
-                </div>
-                <button 
-                  disabled={filters.page === pagination.totalPages} 
-                  onClick={() => setFilters({...filters, page: filters.page + 1})} 
-                  className="p-2.5 bg-gray-50 border border-gray-200 rounded-xl disabled:opacity-30 shadow-sm"
-                >
-                  <ChevronRight size={20}/>
-                </button>
+                  {[10, 30, 50, 100].map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+                <span className="text-[10px] font-bold text-gray-400">per page</span>
               </div>
-            )}
+
+              {pagination.totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={filters.page === 1}
+                    onClick={() => setFilters({...filters, page: filters.page - 1})}
+                    className="p-2.5 bg-gray-50 border border-gray-200 rounded-xl disabled:opacity-30 shadow-sm"
+                  >
+                    <ChevronLeft size={20}/>
+                  </button>
+                  <div className="px-4 py-2 bg-indigo-50 rounded-lg border border-indigo-100">
+                    <span className="text-xs font-black text-primary uppercase">
+                      Page {filters.page} / {pagination.totalPages}
+                    </span>
+                  </div>
+                  <button
+                    disabled={filters.page === pagination.totalPages}
+                    onClick={() => setFilters({...filters, page: filters.page + 1})}
+                    className="p-2.5 bg-gray-50 border border-gray-200 rounded-xl disabled:opacity-30 shadow-sm"
+                  >
+                    <ChevronRight size={20}/>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -676,12 +694,20 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
                 </div>
               )}
             </div>
-            <label className="absolute -bottom-2 -right-2 bg-primary text-white p-2 rounded-full cursor-pointer shadow-lg hover:bg-indigo-600 transition-colors">
-              <Camera size={16} />
+          </div>
+          <p className="text-[10px] text-secondary font-bold uppercase mt-3 tracking-wider mb-3">Update Photo</p>
+          <div className="flex gap-3">
+            {/* Gallery option */}
+            <label className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-indigo-700 transition-colors shadow-sm">
+              <Camera size={14} /> Gallery
               <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
             </label>
+            {/* Camera option */}
+            <label className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-green-700 transition-colors shadow-sm">
+              <Camera size={14} /> Camera
+              <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleImageChange} />
+            </label>
           </div>
-          <p className="text-[10px] text-secondary font-bold uppercase mt-3 tracking-wider">Admin: Click camera to update photo</p>
           <input type="hidden" name="profileImage" value={imagePreview || ''} />
         </div>
 

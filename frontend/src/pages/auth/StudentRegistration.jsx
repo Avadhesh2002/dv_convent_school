@@ -448,25 +448,26 @@ const StudentRegistration = () => {
 
                 {/* PHOTO UPLOAD */}
                 <div className="flex flex-col items-center p-6 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                  <div className="relative group">
-                    <div className="w-32 h-40 bg-white border-2 border-gray-200 rounded-xl overflow-hidden flex items-center justify-center shadow-md">
-                      {imagePreview ? (
-                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="text-center p-4">
-                          <Camera size={32} className="mx-auto text-gray-300 mb-2" />
-                          <p className="text-[10px] font-bold text-gray-400 uppercase">Optional Photo</p>
-                        </div>
-                      )}
-                    </div>
-                    <label className="absolute -bottom-3 -right-3 bg-primary text-white p-2 rounded-full cursor-pointer shadow-lg hover:bg-indigo-600 transition-colors">
-                      <Camera size={20} />
-                      <input 
-                        type="file" 
-                        className="hidden" 
-                        accept="image/*" 
-                        onChange={handleImageChange} 
-                      />
+                  <div className="w-32 h-40 bg-white border-2 border-gray-200 rounded-xl overflow-hidden flex items-center justify-center shadow-md mb-4">
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center p-4">
+                        <Camera size={32} className="mx-auto text-gray-300 mb-2" />
+                        <p className="text-[10px] font-bold text-gray-400 uppercase">Optional Photo</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    {/* Gallery */}
+                    <label className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-indigo-700 transition-colors shadow-sm">
+                      <Camera size={14} /> Gallery
+                      <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                    </label>
+                    {/* Camera */}
+                    <label className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-green-700 transition-colors shadow-sm">
+                      <Camera size={14} /> Camera
+                      <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleImageChange} />
                     </label>
                   </div>
                   <p className="text-xs text-secondary mt-3">You can upload this later</p>
