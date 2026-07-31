@@ -320,8 +320,11 @@ const handleUpdate = async (e) => {
                   <tr key={s._id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-indigo-50 text-primary rounded-full flex items-center justify-center font-bold">
-                          {s.name.charAt(0)}
+                        <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-bold shrink-0 bg-indigo-50 text-primary">
+                          {s.profileImage
+                            ? <img src={s.profileImage} alt={s.name} className="w-full h-full object-cover" />
+                            : <span>{s.name.charAt(0)}</span>
+                          }
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -365,8 +368,11 @@ const handleUpdate = async (e) => {
               <Card key={s._id} className="p-4">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-indigo-50 text-primary rounded-xl flex items-center justify-center font-bold">
-                      {s.name.charAt(0)}
+                    <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center font-bold shrink-0 bg-indigo-50 text-primary">
+                      {s.profileImage
+                        ? <img src={s.profileImage} alt={s.name} className="w-full h-full object-cover" />
+                        : <span>{s.name.charAt(0)}</span>
+                      }
                     </div>
                     <div>
                       <p className="text-sm font-bold text-gray-900">{s.name}</p>
