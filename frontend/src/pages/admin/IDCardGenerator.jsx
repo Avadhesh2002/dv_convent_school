@@ -67,9 +67,9 @@ const StudentCard = ({ student, settings, color = '#1565c0' }) => {
 
       {/* ── Photo centered ── */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: -2, flexShrink: 0 }}>
-        <div style={{ width: 86, height: 94, border: `2.5px solid ${colorDark}`, overflow: 'hidden', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 96, height: 112, border: `2.5px solid ${colorDark}`, overflow: 'hidden', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {photo
-            ? <img src={photo} alt="photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ? <img src={photo} alt="photo" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
             : <span style={{ fontSize: 36, fontWeight: 900, color: colorDark }}>{student.name?.charAt(0)}</span>}
         </div>
       </div>
@@ -150,9 +150,9 @@ const TeacherCard = ({ teacher, settings }) => {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 12px 6px', background: '#fff' }}>
 
         {/* Photo */}
-        <div style={{ width: 96, height: 106, border: '2.5px solid #8b1a1a', overflow: 'hidden', background: '#f5e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 96, height: 116, border: '2.5px solid #8b1a1a', overflow: 'hidden', background: '#f5e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {photo
-            ? <img src={photo} alt="photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ? <img src={photo} alt="photo" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
             : <span style={{ fontSize: 40, fontWeight: 900, color: '#8b1a1a' }}>{teacher.name?.charAt(0)}</span>}
         </div>
 
