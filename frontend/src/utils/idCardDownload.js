@@ -147,7 +147,7 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
   wg.addColorStop(0, color + 'dd'); wg.addColorStop(1, '#ffffff');
   ctx.fillStyle = wg; ctx.fillRect(0, hdrH, CW, waveH);
 
-  // Photo — cover with face-focus (center 20% vertical)
+  // Photo — cover with smart crop (portrait: top-align, landscape: center-crop)
   const photoX = (CW - photoW) / 2;
   ctx.strokeStyle = color; ctx.lineWidth = s(2.5);
   ctx.strokeRect(photoX, photoY, photoW, photoH);
@@ -158,18 +158,17 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
     const boxAspect = photoW / photoH;
     let srcX, srcY, srcW, srcH;
     if (imgAspect > boxAspect) {
-      // wider — crop sides, center horizontally
+      // Landscape — crop sides equally, show center
       srcH = photoImg.height;
       srcW = photoImg.height * boxAspect;
       srcX = (photoImg.width - srcW) / 2;
       srcY = 0;
     } else {
-      // taller — crop bottom, keep top 20% vertical focus
+      // Portrait — fill width, start from top (face at top)
       srcW = photoImg.width;
       srcH = photoImg.width / boxAspect;
       srcX = 0;
-      srcY = photoImg.height * 0.1; // start 10% from top for face focus
-      if (srcY + srcH > photoImg.height) srcY = photoImg.height - srcH;
+      srcY = 0; // start from very top — no offset
     }
     ctx.drawImage(photoImg, srcX, srcY, srcW, srcH, photoX, photoY, photoW, photoH);
   } else {
@@ -324,7 +323,7 @@ const drawTeacherCard = async (canvas, teacher, settings, assets) => {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, hdrH, CW, CH - hdrH);
 
-  // Photo — cover with face-focus
+  // Photo — cover smart crop
   const photoX = (CW - photoW) / 2;
   ctx.strokeStyle = '#8b1a1a'; ctx.lineWidth = s(2.5);
   ctx.strokeRect(photoX, photoY, photoW, photoH);
@@ -343,8 +342,7 @@ const drawTeacherCard = async (canvas, teacher, settings, assets) => {
       srcW = photoImg.width;
       srcH = photoImg.width / boxAspect;
       srcX = 0;
-      srcY = photoImg.height * 0.1;
-      if (srcY + srcH > photoImg.height) srcY = photoImg.height - srcH;
+      srcY = 0;
     }
     ctx.drawImage(photoImg, srcX, srcY, srcW, srcH, photoX, photoY, photoW, photoH);
   } else {
