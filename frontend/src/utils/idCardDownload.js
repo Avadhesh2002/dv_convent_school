@@ -147,22 +147,28 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
   wg.addColorStop(0, color + 'dd'); wg.addColorStop(1, '#ffffff');
   ctx.fillStyle = wg; ctx.fillRect(0, hdrH, CW, waveH);
 
-  // Photo — draw with aspect-fit from top (face visible)
+  // Photo — contain (no crop, full image visible)
   const photoX = (CW - photoW) / 2;
   ctx.strokeStyle = color; ctx.lineWidth = s(2.5);
   ctx.strokeRect(photoX, photoY, photoW, photoH);
+  // Fill background
+  ctx.fillStyle = '#f0f4ff';
+  ctx.fillRect(photoX, photoY, photoW, photoH);
   if (photoImg) {
-    // Scale to fill width, anchor to top so face is not cut
-    const scale  = photoW / photoImg.width;
-    const dstW   = photoW;
-    const dstH   = photoImg.height * scale;
-    const srcX   = 0, srcY = 0;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(photoX, photoY, photoW, photoH);
-    ctx.clip();
-    ctx.drawImage(photoImg, srcX, srcY, photoImg.width, photoImg.height, photoX, photoY, dstW, dstH);
-    ctx.restore();
+    // objectFit: contain — scale to fit inside box, centered
+    const imgAspect = photoImg.width / photoImg.height;
+    const boxAspect = photoW / photoH;
+    let dstW, dstH, dstX, dstY;
+    if (imgAspect > boxAspect) {
+      // wider than box — fit width
+      dstW = photoW; dstH = photoW / imgAspect;
+      dstX = photoX; dstY = photoY + (photoH - dstH) / 2;
+    } else {
+      // taller than box — fit height
+      dstH = photoH; dstW = photoH * imgAspect;
+      dstX = photoX + (photoW - dstW) / 2; dstY = photoY;
+    }
+    ctx.drawImage(photoImg, 0, 0, photoImg.width, photoImg.height, dstX, dstY, dstW, dstH);
   } else {
     ctx.fillStyle = '#dbeafe'; ctx.fillRect(photoX, photoY, photoW, photoH);
     ctx.font = `900 ${s(36)}px Arial`; ctx.fillStyle = color;
@@ -316,17 +322,24 @@ const drawTeacherCard = async (canvas, teacher, settings, assets) => {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, hdrH, CW, CH - hdrH);
 
-  // Photo — aspect-fit from top so face is not cut
+  // Photo — aspect-fit contain (no crop)
   const photoX = (CW - photoW) / 2;
   ctx.strokeStyle = '#8b1a1a'; ctx.lineWidth = s(2.5);
   ctx.strokeRect(photoX, photoY, photoW, photoH);
-  ctx.save();
-  ctx.beginPath(); ctx.rect(photoX, photoY, photoW, photoH); ctx.clip();
+  ctx.fillStyle = '#fff0f0';
+  ctx.fillRect(photoX, photoY, photoW, photoH);
   if (photoImg) {
-    const scale = photoW / photoImg.width;
-    const dstW  = photoW;
-    const dstH  = photoImg.height * scale;
-    ctx.drawImage(photoImg, 0, 0, photoImg.width, photoImg.height, photoX, photoY, dstW, dstH);
+    const imgAspect = photoImg.width / photoImg.height;
+    const boxAspect = photoW / photoH;
+    let dstW, dstH, dstX, dstY;
+    if (imgAspect > boxAspect) {
+      dstW = photoW; dstH = photoW / imgAspect;
+      dstX = photoX; dstY = photoY + (photoH - dstH) / 2;
+    } else {
+      dstH = photoH; dstW = photoH * imgAspect;
+      dstX = photoX + (photoW - dstW) / 2; dstY = photoY;
+    }
+    ctx.drawImage(photoImg, 0, 0, photoImg.width, photoImg.height, dstX, dstY, dstW, dstH);
   } else {
     ctx.fillStyle = '#f5e0e0'; ctx.fillRect(photoX, photoY, photoW, photoH);
     ctx.font = `900 ${s(40)}px Arial`; ctx.fillStyle = '#8b1a1a';
