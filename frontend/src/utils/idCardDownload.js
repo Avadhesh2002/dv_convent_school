@@ -147,30 +147,32 @@ const drawStudentCard = async (canvas, student, settings, assets, color = '#1565
   wg.addColorStop(0, color + 'dd'); wg.addColorStop(1, '#ffffff');
   ctx.fillStyle = wg; ctx.fillRect(0, hdrH, CW, waveH);
 
-  // Photo — contain (no crop, full image visible)
+  // Photo — cover with face-focus (center 20% vertical)
   const photoX = (CW - photoW) / 2;
   ctx.strokeStyle = color; ctx.lineWidth = s(2.5);
   ctx.strokeRect(photoX, photoY, photoW, photoH);
-  // Fill background
-  ctx.fillStyle = '#f0f4ff';
+  ctx.fillStyle = '#dbeafe';
   ctx.fillRect(photoX, photoY, photoW, photoH);
   if (photoImg) {
-    // objectFit: contain — scale to fit inside box, centered
     const imgAspect = photoImg.width / photoImg.height;
     const boxAspect = photoW / photoH;
-    let dstW, dstH, dstX, dstY;
+    let srcX, srcY, srcW, srcH;
     if (imgAspect > boxAspect) {
-      // wider than box — fit width
-      dstW = photoW; dstH = photoW / imgAspect;
-      dstX = photoX; dstY = photoY + (photoH - dstH) / 2;
+      // wider — crop sides, center horizontally
+      srcH = photoImg.height;
+      srcW = photoImg.height * boxAspect;
+      srcX = (photoImg.width - srcW) / 2;
+      srcY = 0;
     } else {
-      // taller than box — fit height
-      dstH = photoH; dstW = photoH * imgAspect;
-      dstX = photoX + (photoW - dstW) / 2; dstY = photoY;
+      // taller — crop bottom, keep top 20% vertical focus
+      srcW = photoImg.width;
+      srcH = photoImg.width / boxAspect;
+      srcX = 0;
+      srcY = photoImg.height * 0.1; // start 10% from top for face focus
+      if (srcY + srcH > photoImg.height) srcY = photoImg.height - srcH;
     }
-    ctx.drawImage(photoImg, 0, 0, photoImg.width, photoImg.height, dstX, dstY, dstW, dstH);
+    ctx.drawImage(photoImg, srcX, srcY, srcW, srcH, photoX, photoY, photoW, photoH);
   } else {
-    ctx.fillStyle = '#dbeafe'; ctx.fillRect(photoX, photoY, photoW, photoH);
     ctx.font = `900 ${s(36)}px Arial`; ctx.fillStyle = color;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText((student.name || '?').charAt(0).toUpperCase(), photoX + photoW/2, photoY + photoH/2);
@@ -322,24 +324,29 @@ const drawTeacherCard = async (canvas, teacher, settings, assets) => {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, hdrH, CW, CH - hdrH);
 
-  // Photo — aspect-fit contain (no crop)
+  // Photo — cover with face-focus
   const photoX = (CW - photoW) / 2;
   ctx.strokeStyle = '#8b1a1a'; ctx.lineWidth = s(2.5);
   ctx.strokeRect(photoX, photoY, photoW, photoH);
-  ctx.fillStyle = '#fff0f0';
+  ctx.fillStyle = '#f5e0e0';
   ctx.fillRect(photoX, photoY, photoW, photoH);
   if (photoImg) {
     const imgAspect = photoImg.width / photoImg.height;
     const boxAspect = photoW / photoH;
-    let dstW, dstH, dstX, dstY;
+    let srcX, srcY, srcW, srcH;
     if (imgAspect > boxAspect) {
-      dstW = photoW; dstH = photoW / imgAspect;
-      dstX = photoX; dstY = photoY + (photoH - dstH) / 2;
+      srcH = photoImg.height;
+      srcW = photoImg.height * boxAspect;
+      srcX = (photoImg.width - srcW) / 2;
+      srcY = 0;
     } else {
-      dstH = photoH; dstW = photoH * imgAspect;
-      dstX = photoX + (photoW - dstW) / 2; dstY = photoY;
+      srcW = photoImg.width;
+      srcH = photoImg.width / boxAspect;
+      srcX = 0;
+      srcY = photoImg.height * 0.1;
+      if (srcY + srcH > photoImg.height) srcY = photoImg.height - srcH;
     }
-    ctx.drawImage(photoImg, 0, 0, photoImg.width, photoImg.height, dstX, dstY, dstW, dstH);
+    ctx.drawImage(photoImg, srcX, srcY, srcW, srcH, photoX, photoY, photoW, photoH);
   } else {
     ctx.fillStyle = '#f5e0e0'; ctx.fillRect(photoX, photoY, photoW, photoH);
     ctx.font = `900 ${s(40)}px Arial`; ctx.fillStyle = '#8b1a1a';
