@@ -2,21 +2,22 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const FIELD_MAP = {
-  name: "Name of Student",
-  class: "Class",
-  UID: "UID",
-  dateOfBirth: "Date of Birth",
-  category: "Category",
-  fatherName: "Father's Name",
-  fatherMobile: "Father's Contact",
-  motherName: "Mother's Name",
-  motherMobile: "Mother's Mobile",
-  guardianName: "Guardian Name",
-  guardianMobile: "Guardian Mobile",
-  aadharNumber: "Aadhar No",
-  penNumber: "PEN No.",
-  address: "Address",
-  pincode: "Pincode"
+  srNo:          "SR No.",
+  name:          "Name of Student",
+  class:         "Class",
+  UID:           "UID",
+  dateOfBirth:   "Date of Birth",
+  category:      "Category",
+  fatherName:    "Father's Name",
+  fatherMobile:  "Father's Contact",
+  motherName:    "Mother's Name",
+  motherMobile:  "Mother's Mobile",
+  guardianName:  "Guardian Name",
+  guardianMobile:"Guardian Mobile",
+  aadharNumber:  "Aadhar No",
+  penNumber:     "PEN No.",
+  address:       "Address",
+  pincode:       "Pincode"
 };
 
 // -------------------------------------------------------------------
@@ -26,6 +27,7 @@ const FIELD_MAP = {
 // -------------------------------------------------------------------
 const COLUMN_WIDTH_MAP = {
   // S.No is always fixed at 30
+  srNo:          { min: 42,  wrap: false },
   name:          { min: 80,  wrap: true  },
   class:         { min: 35,  wrap: false },
   UID:           { min: 50,  wrap: false },
@@ -96,7 +98,7 @@ export const generateStudentListPDF = (students, reportTitle, selectedFields) =>
 
       selectedFields.forEach(field => {
         let value;
-        if (field === 'fatherName')       value = contact.fatherName;
+        if (field === 'fatherName')        value = contact.fatherName;
         else if (field === 'fatherMobile') value = contact.fatherMobile;
         else if (field === 'dateOfBirth' && student[field])
           value = new Date(student[field]).toLocaleDateString('en-GB');

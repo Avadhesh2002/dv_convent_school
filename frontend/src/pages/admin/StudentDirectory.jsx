@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, UserX, Edit3, Key, Eye, FileText, ShieldCheck, ChevronLeft, ChevronRight, User, Phone, MapPin, Calendar, CheckCircle } from 'lucide-react';
+import { Search, Filter, UserX, Edit3, Key, Eye, FileText, ShieldCheck, ChevronLeft, ChevronRight, User, Phone, MapPin, Calendar, CheckCircle, Printer } from 'lucide-react';
 import API from '../../api/axios';
 import Card from '../../components/common/Card';
 import Input from '../../components/common/Input';
@@ -9,8 +9,11 @@ import Toast from '../../components/common/Toast';
 import Modal from '../../components/common/Modal';
 import ImagePickerWithCrop from '../../components/common/ImagePickerWithCrop';
 import { generateStudentListPDF } from '../../utils/pdfGenerator';
+import { printAdmissionForm } from '../../utils/admissionFormPdf';
+import { useSettings } from '../../context/SettingsContext';
 
 const StudentDirectory = () => {
+  const { settings } = useSettings();
   // ============ STATE MANAGEMENT ============
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,17 +58,18 @@ const StudentDirectory = () => {
   };
 
 const availableParams = [
-    { id: 'name', label: 'Student Name' },
+    { id: 'srNo',       label: 'SR No.' },
+    { id: 'name',       label: 'Student Name' },
     { id: 'dateOfBirth', label: 'Date of Birth' },
     { id: 'fatherName', label: 'Father Name' },
     { id: 'fatherMobile', label: 'Father Mobile' },
     { id: 'motherName', label: 'Mother Name' },   
     { id: 'aadharNumber', label: 'Aadhar Card' },
-    { id: 'penNumber', label: 'PEN No.' },          
-    { id: 'address', label: 'Address' },
-    { id: 'category', label: 'Category' },
-    { id: 'pincode', label: 'Pincode' },
-    { id: 'UID', label: 'UID' },                    
+    { id: 'penNumber',  label: 'PEN No.' },          
+    { id: 'address',    label: 'Address' },
+    { id: 'category',   label: 'Category' },
+    { id: 'pincode',    label: 'Pincode' },
+    { id: 'UID',        label: 'UID' },                    
 ];
 
   // ============ DATA FETCHING ============
@@ -170,6 +174,10 @@ const handleUpdate = async (e) => {
     } catch (err) {
       setToast({ message: "Action failed", type: "error" });
     }
+  };
+
+  const handlePrintAdmission = (student) => {
+    printAdmissionForm(student, settings);
   };
 
   // ============ PDF GENERATION ============
@@ -309,16 +317,22 @@ const handleUpdate = async (e) => {
             <table className="w-full text-left">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase">Student</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase">Class</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase">Parent Contact</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase text-right">Actions</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase w-16">SR No.</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase">Student</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase">Class</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase">Parent Contact</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {students.map((s) => (
                   <tr key={s._id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4">
+                      <span className="text-xs font-black text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">
+                        {s.srNo || '—'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-bold shrink-0 bg-indigo-50 text-primary">
                           {s.profileImage
@@ -339,8 +353,8 @@ const handleUpdate = async (e) => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4"><span className="text-xs font-bold text-gray-700">Class {s.class}</span></td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4"><span className="text-xs font-bold text-gray-700">Class {s.class}</span></td>
+                    <td className="px-4 py-4">
                       <p className="text-xs font-bold text-gray-700">
                         {s.fatherMobile || s.guardianMobile || 'No contact'}
                       </p>
@@ -348,10 +362,11 @@ const handleUpdate = async (e) => {
                         {s.fatherName || s.guardianName || ''}
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-4 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         <ActionBtn icon={Eye} color="text-primary" onClick={() => handleView(s)} />
                         <ActionBtn icon={Edit3} color="text-warning" onClick={() => handleEdit(s)} />
+                        <ActionBtn icon={Printer} color="text-green-600" title="Print Admission Form" onClick={() => handlePrintAdmission(s)} />
                         <ActionBtn icon={Key} color="text-purple-600" onClick={() => { setSelectedStudent(s); setIsResetModalOpen(true); }} />
                         {s.accountStatus === 'active' && <ActionBtn icon={UserX} color="text-danger" onClick={() => handleDeactivate(s._id, s.name)} />}
                       </div>
@@ -536,6 +551,11 @@ const ViewStudentModal = ({ isOpen, onClose, student, documentLabels }) => {
               <p className="text-[10px] font-bold text-primary uppercase tracking-widest bg-white/60 px-2 py-0.5 rounded-md border border-indigo-100">
                 UID: {student.UID || 'Not assigned'}
               </p>
+              {student.srNo && (
+                <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest bg-white/60 px-2 py-0.5 rounded-md border border-gray-200">
+                  SR No: {student.srNo}
+                </p>
+              )}
               <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-tight shadow-sm border ${
                 student.admissionType === 'New' 
                 ? 'bg-amber-500 text-white border-amber-600' 
@@ -560,6 +580,8 @@ const ViewStudentModal = ({ isOpen, onClose, student, documentLabels }) => {
               label="Original Admission Date" 
               value={student.admissionDate ? new Date(student.admissionDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'} 
             />
+            <InfoBox label="SR No." value={student.srNo || 'N/A'} />
+            <InfoBox label="UID" value={student.UID || 'N/A'} />
             <InfoBox label="Current Status" value={student.admissionType === 'New' ? 'Fresh Admission' : 'Promoted Student'} />
             <InfoBox label="Gender" value={student.gender} />
             <InfoBox label="Aadhar Number" value={student.aadharNumber || 'N/A'} />
@@ -694,6 +716,7 @@ const EditStudentModal = ({ isOpen, onClose, student, onSubmit, submitting }) =>
           <p className="text-[10px] font-black text-primary uppercase mb-2">Basic Info</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Student Full Name" name="name" defaultValue={student.name} required />
+            <Input label="SR No. (Register Number)" name="srNo" defaultValue={student.srNo} placeholder="e.g. 142" />
             <div className="space-y-1">
               <label className="text-xs font-bold text-secondary uppercase">Gender</label>
               <select name="gender" defaultValue={student.gender} className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-primary">

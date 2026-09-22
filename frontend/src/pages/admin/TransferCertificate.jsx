@@ -266,6 +266,7 @@ const TransferCertificate = () => {
                 schoolAffiliation: settings.schoolAffiliation,
                 affiliationNumber: settings.affiliationNumber,
                 schoolCode: settings.schoolCode,
+                udiseCode: settings.udiseCode,
                 schoolLogo: settings.schoolLogo,
                 academicYear: settings.currentAcademicYear,
                 principalName: settings.principalName,

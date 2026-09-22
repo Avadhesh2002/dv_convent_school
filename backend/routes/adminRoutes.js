@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getPendingStudents, approveStudent, addTeacher, getAllTeachers, updateTeacher, deleteTeacher,
     getAllStudents, updateStudent, deleteStudent, bulkUploadStudents, promoteStudents, getSettings, updateSettings,
-    massPromote, resetPassword } = require('../controllers/adminController');
+    massPromote, resetPassword, issueTc } = require('../controllers/adminController');
 
 const { createExam, getAllExams, updateExamStatus, deleteExam, getAcademicSessions } = require('../controllers/examController');
 
@@ -33,6 +33,7 @@ router.delete('/teachers/:id', protect, authorize('admin'), deleteTeacher);
 // Student Management (Active Students)
 router.get('/students', protect, authorize('admin'), getAllStudents);
 router.put('/students/:id', protect, authorize('admin'), updateStudent);
+router.put('/students/:id/issue-tc', protect, authorize('admin'), issueTc);
 router.delete('/students/:id', protect, authorize('admin'), deleteStudent);
 
 

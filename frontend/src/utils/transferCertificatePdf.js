@@ -41,7 +41,8 @@ export function printTransferCertificate(data) {
         religion, caste,
         isDuplicate: forceDuplicate,
         schoolName, schoolAddress, schoolPhone, schoolEmail,
-        schoolAffiliation, schoolLogo, stateBoardLogo, academicYear,
+        schoolAffiliation, affiliationNumber, schoolLogo, stateBoardLogo, academicYear,
+        schoolCode, udiseCode,
         principalName = '', stampImageBase64 = '', principalSign = ''
     } = data;
 
@@ -432,7 +433,7 @@ body {
         <!-- Top bar: Sr No (left) | Affiliation No (right) -->
         <div class="top-bar">
             <div>Sr. No: ${srNo || '—'}</div>
-            <div>Affiliation No: ${data.affiliationNumber || '51380'}</div>
+            <div>Affiliation No: ${affiliationNumber || '—'}</div>
         </div>
 
         <!-- Header -->
@@ -443,9 +444,10 @@ body {
                 <div class="school-tagline">Empowering Minds, Building Futures</div>
                 <div class="school-meta">
                     ${schoolAddress || 'Akodha, Rohi, Bhadohi - 221308'} &nbsp;|&nbsp; Ph: ${schoolPhone || '—'}
-                    ${schoolEmail ? ` &nbsp;|&nbsp; Γ£ë ${schoolEmail}` : ''}
+                    ${schoolEmail ? ` &nbsp;|&nbsp; ✉ ${schoolEmail}` : ''}
                 </div>
                 <div class="affil-row">
+                    ${udiseCode ? `<span class="affil-badge">UDISE: ${udiseCode}</span>&nbsp;` : ''}
                     <span class="affil-badge">Affiliated by State Government</span>
                     ${schoolAffiliation ? `&nbsp;<span class="affil-badge affil-secondary">${schoolAffiliation}</span>` : ''}
                 </div>
@@ -462,7 +464,8 @@ body {
         <div class="tc-meta">
             <div>Book No: &nbsp;<span>${bookNo || '—'}</span></div>
             <div>TC No: &nbsp;<span>${tcNumber || '—'}</span></div>
-            <div>School Code: &nbsp;<span>${data.schoolCode || '65730'}</span></div>
+            <div>School Code: &nbsp;<span>${schoolCode || '—'}</span></div>
+            ${udiseCode ? `<div>UDISE: &nbsp;<span>${udiseCode}</span></div>` : ''}
         </div>
 
         <!-- Main Table -->

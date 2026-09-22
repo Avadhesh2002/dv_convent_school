@@ -3,6 +3,7 @@ const Teacher = require('../models/Teacher');
 const bcrypt = require('bcryptjs');
 const Settings = require('../models/Settings');
 const Notification = require('../models/Notification');
+const Student = require('../models/Student');
 
 
 const PROMOTION_MAP = {
@@ -555,6 +556,42 @@ const resetPassword = async (req, res) => {
 
 
 
+// @desc    Issue Transfer Certificate
+// @route   PUT /api/admin/students/:id/issue-tc
+// @access  Private (Admin)
+const issueTc = async (req, res) => {
+    try {
+        const student = await Student.findById(req.params.id);
+        if (!student) return res.status(404).json({ message: 'Student not found' });
+
+        const {
+            tcNumber, bookNo, srNo, religion, caste,
+            admissionDate, admissionClass, leavingDate,
+            applicationDate, reason, remark
+        } = req.body;
+
+        student.tcIssuedAt = new Date();
+        student.tcDetails = {
+            tcNumber, bookNo, srNo, religion, caste,
+            admissionDate: admissionDate ? new Date(admissionDate) : null,
+            admissionClass,
+            leavingDate: leavingDate ? new Date(leavingDate) : null,
+            applicationDate: applicationDate ? new Date(applicationDate) : null,
+            reason, remark
+        };
+
+        await student.save();
+
+        res.status(200).json({
+            message: `Transfer Certificate issued for ${student.name}`,
+            tcIssuedAt: student.tcIssuedAt,
+            tcDetails: student.tcDetails
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to issue TC', error: error.message });
+    }
+};
+
 module.exports = { 
     getPendingStudents, 
     approveStudent, 
@@ -571,5 +608,6 @@ module.exports = {
     updateSettings,
     massPromote,
     resetPassword,
+    issueTc,
 };
 

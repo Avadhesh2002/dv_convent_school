@@ -122,6 +122,11 @@ const studentSchema = new mongoose.Schema({
         sparse: true
     },
 
+    srNo: {
+        type: String,
+        default: ""
+    },
+
     password: {
         type: String
     },
@@ -195,6 +200,24 @@ const studentSchema = new mongoose.Schema({
         enum: ['New', 'Old'],
         default: 'Old',
         required: [true, "Admission type is mandatory"]
+    },
+
+    // ============================
+    // Transfer Certificate
+    // ============================
+    tcIssuedAt: { type: Date, default: null },
+    tcDetails: {
+        tcNumber:       { type: String, default: "" },
+        bookNo:         { type: String, default: "" },
+        srNo:           { type: String, default: "" },
+        religion:       { type: String, default: "" },
+        caste:          { type: String, default: "" },
+        admissionDate:  { type: Date,   default: null },
+        admissionClass: { type: String, default: "" },
+        leavingDate:    { type: Date,   default: null },
+        applicationDate:{ type: Date,   default: null },
+        reason:         { type: String, default: "" },
+        remark:         { type: String, default: "" },
     },
 
     documents: {
