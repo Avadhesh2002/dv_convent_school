@@ -447,14 +447,18 @@ const getSettings = async (req, res) => {
 // @route   PUT /api/admin/settings
 const updateSettings = async (req, res) => {
     try {
+        // _id, __v, timestamps ko remove karo — inhe update nahi karna
+        const { _id, __v, createdAt, updatedAt, ...updateData } = req.body;
+
         const settings = await Settings.findOneAndUpdate(
-            {}, // Empty filter finds the first/only document
-            { $set: req.body },
-            { new: true, upsert: true }
+            {},
+            { $set: updateData },
+            { new: true, upsert: true, runValidators: false }
         );
         res.status(200).json({ message: "Settings Updated Successfully", settings });
     } catch (error) {
-        res.status(500).json({ message: "Update Failed" });
+        console.error('Settings update error:', error);
+        res.status(500).json({ message: "Update Failed", error: error.message });
     }
 };
 
