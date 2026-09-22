@@ -397,6 +397,7 @@ const handleUpdate = async (e) => {
                   <div className="flex gap-2">
                     <button onClick={() => handleView(s)} className="p-2 bg-indigo-50 text-primary rounded-lg"><Eye size={16}/></button>
                     <button onClick={() => handleEdit(s)} className="p-2 bg-amber-50 text-warning rounded-lg"><Edit3 size={16}/></button>
+                    <button onClick={() => handlePrintAdmission(s)} className="p-2 bg-green-50 text-green-600 rounded-lg"><Printer size={16}/></button>
                     <button onClick={() => { setSelectedStudent(s); setIsResetModalOpen(true); }} className="p-2 bg-purple-50 text-purple-600 rounded-lg"><Key size={16}/></button>
                     <button onClick={() => handleDeactivate(s._id, s.name)} className="p-2 bg-red-50 text-danger rounded-lg"><UserX size={16}/></button>
                   </div>
