@@ -6,20 +6,20 @@ const settingsSchema = new mongoose.Schema({
     schoolAddress:       { type: String, default: "Enter School Address" },
     contactNumber:       { type: String, default: "0000000000" },
     schoolEmail:         { type: String, default: "" },
-    schoolLogo:          { type: String, default: "" },   // Base64
+    schoolLogo:          { type: String, default: "" },
     currentAcademicYear: { type: String, default: "2025-26" },
     isRegistrationOpen:  { type: Boolean, default: true },
 
     // School Identity for TC & Documents
-    udiseCode:           { type: String, default: "" },   // UDISE+ Code
-    schoolCode:          { type: String, default: "" },   // Govt / Board School Code
-    schoolAffiliation:   { type: String, default: "" },   // e.g. "UP Board"
+    udiseCode:           { type: String, default: "" },
+    schoolCode:          { type: String, default: "" },
+    schoolAffiliation:   { type: String, default: "" },
     affiliationNumber:   { type: String, default: "" },
     principalName:       { type: String, default: "" },
 
     // UPI Payment
     upiId:               { type: String, default: "" },
-    upiQr:               { type: String, default: "" },   // Base64 QR image
-}, { timestamps: true });
+    upiQr:               { type: String, default: "" },
+}, { timestamps: true, strict: false });
 
 module.exports = mongoose.model('Settings', settingsSchema);

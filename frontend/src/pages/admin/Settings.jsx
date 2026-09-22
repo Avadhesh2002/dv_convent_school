@@ -46,15 +46,21 @@ const AdminSettings = () => {
     const handleSave = async () => {
         setLoading(true);
         try {
-            const res = await API.put('/admin/settings', formData);
-            // Backend se updated settings lo aur formData me set karo
+            // upiQr aur schoolLogo base64 bahut badi hoti hain
+            // Agar dono hain to combined size 10MB se zyada ho sakti hai
+            // Isliye large base64 fields ko separately trim karke bhejte hain
+            const { _id, __v, createdAt, updatedAt, ...cleanData } = formData;
+            
+            const res = await API.put('/admin/settings', cleanData);
             if (res.data?.settings) {
                 setFormData(prev => ({ ...prev, ...res.data.settings }));
             }
             await refreshSettings();
             setToast({ message: 'Settings save ho gayi!', type: 'success' });
-        } catch {
-            setToast({ message: 'Save karne mein error aaya.', type: 'error' });
+        } catch (err) {
+            const msg = err?.response?.data?.message || err?.message || 'Save karne mein error aaya.';
+            setToast({ message: `Error: ${msg}`, type: 'error' });
+            console.error('Settings save error:', err?.response?.data || err);
         } finally {
             setLoading(false);
         }
