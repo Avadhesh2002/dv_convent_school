@@ -6,8 +6,22 @@ const SettingsContext = createContext(null); // Initialize with null
 export const SettingsProvider = ({ children }) => {
     const [settings, setSettings] = useState({
         schoolName: 'DV Convent School',
-        currentAcademicYear: '2024-2025',
-        isRegistrationOpen: true
+        schoolSlogan: 'Education for Excellence',
+        schoolAddress: '',
+        contactNumber: '',
+        schoolEmail: '',
+        schoolLogo: '',
+        currentAcademicYear: '2025-26',
+        isRegistrationOpen: true,
+        // School Identity
+        udiseCode: '',
+        schoolCode: '',
+        schoolAffiliation: '',
+        affiliationNumber: '',
+        principalName: '',
+        // UPI
+        upiId: '',
+        upiQr: '',
     });
 
     const refreshSettings = async () => {

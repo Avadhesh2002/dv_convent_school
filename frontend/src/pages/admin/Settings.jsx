@@ -23,7 +23,11 @@ const AdminSettings = () => {
     const [toast, setToast] = useState(null);
     const qrInputRef = useRef(null);
 
-    useEffect(() => { setFormData(settings); }, [settings]);
+    useEffect(() => {
+        // Merge: nayi settings ke saath existing formData ko override karo
+        // lekin user ke type kiye hue values na khoyein agar settings reload ho
+        setFormData(prev => ({ ...prev, ...settings }));
+    }, [settings]);
 
     const set = (key, value) => setFormData(prev => ({ ...prev, [key]: value }));
 
@@ -42,7 +46,11 @@ const AdminSettings = () => {
     const handleSave = async () => {
         setLoading(true);
         try {
-            await API.put('/admin/settings', formData);
+            const res = await API.put('/admin/settings', formData);
+            // Backend se updated settings lo aur formData me set karo
+            if (res.data?.settings) {
+                setFormData(prev => ({ ...prev, ...res.data.settings }));
+            }
             await refreshSettings();
             setToast({ message: 'Settings save ho gayi!', type: 'success' });
         } catch {
