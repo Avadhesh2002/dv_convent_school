@@ -1,366 +1,391 @@
 import JSZip from 'jszip';
 
-// ── Exact 57mm × 87mm @ 300 DPI ───────────────────────────────────────────
-// 1 inch = 25.4mm  →  300px/inch
-const PPI  = 300;
-const MM   = PPI / 25.4;          // px per mm  = 11.811...
-const CW   = Math.round(57 * MM); // 673 px  (width  = 57mm)
-const CH   = Math.round(87 * MM); // 1028 px (height = 87mm)
-const p    = (mm) => Math.round(mm * MM); // mm → px helper
+// ── Exact 57 × 87 mm @ 300 DPI ────────────────────────────────────────────
+const MM  = 300 / 25.4;                  // px per mm = 11.811
+const CW  = Math.round(57 * MM);        // 673 px
+const CH  = Math.round(87 * MM);        // 1028 px
+const p   = (mm) => Math.round(mm * MM); // mm → px
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-const loadImage = (src) =>
-  new Promise((resolve) => {
-    if (!src) { resolve(null); return; }
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload  = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
+// ── Image loader ───────────────────────────────────────────────────────────
+const loadImg = (src) => new Promise((res) => {
+  if (!src) return res(null);
+  const i = new Image(); i.crossOrigin = 'anonymous';
+  i.onload = () => res(i); i.onerror = () => res(null); i.src = src;
+});
 
-const ellipsis = (ctx, text, maxW) => {
-  if (!text) return '—';
-  let t = String(text);
+// ── Text helpers ───────────────────────────────────────────────────────────
+const clip  = (ctx, txt, maxW) => {
+  if (!txt) return '—';
+  let t = String(txt);
   while (ctx.measureText(t).width > maxW && t.length > 1) t = t.slice(0, -1);
-  return t.length < String(text).length ? t.slice(0, -1) + '…' : t;
+  return t.length < String(txt).length ? t.slice(0, -1) + '…' : t;
 };
-
-const wrapLines = (ctx, text, maxW) => {
-  if (!text) return ['—'];
-  const words = String(text).replace(/,/g, ', ').replace(/\s+/g, ' ').trim().split(' ');
-  const lines = []; let line = '';
-  for (const w of words) {
-    const test = line ? line + ' ' + w : w;
-    if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
-    else line = test;
+const wrap  = (ctx, txt, maxW) => {
+  if (!txt) return ['—'];
+  const ws = String(txt).replace(/,(\S)/g, ', $1').replace(/\s+/g, ' ').trim().split(' ');
+  const ls = []; let l = '';
+  for (const w of ws) {
+    const t = l ? l + ' ' + w : w;
+    if (ctx.measureText(t).width > maxW && l) { ls.push(l); l = w; } else l = t;
   }
-  if (line) lines.push(line);
-  return lines.length ? lines : ['—'];
+  if (l) ls.push(l);
+  return ls.length ? ls : ['—'];
 };
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
 
-const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
-
-// Clip + draw photo inside a rectangle
+// ── Draw cropped photo ─────────────────────────────────────────────────────
 const drawPhoto = (ctx, img, x, y, w, h, fallColor, letter) => {
-  ctx.save();
-  ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
   if (img) {
-    const ia = img.width / img.height, ba = w / h;
-    let sx, sy, sw, sh;
-    if (ia > ba) { sh = img.height; sw = sh * ba; sx = (img.width - sw) / 2; sy = 0; }
-    else         { sw = img.width;  sh = sw / ba; sx = 0; sy = 0; }
-    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+    const ia = img.width/img.height, ba = w/h;
+    let sx,sy,sw,sh;
+    if (ia>ba){ sh=img.height; sw=sh*ba; sx=(img.width-sw)/2; sy=0; }
+    else      { sw=img.width;  sh=sw/ba; sx=0; sy=0; }
+    ctx.drawImage(img, sx,sy,sw,sh, x,y,w,h);
   } else {
-    ctx.fillStyle = fallColor + '33'; ctx.fillRect(x, y, w, h);
-    ctx.font = `900 ${p(9)}px Arial`; ctx.fillStyle = fallColor;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(letter, x + w / 2, y + h / 2);
+    ctx.fillStyle=fallColor+'22'; ctx.fillRect(x,y,w,h);
+    ctx.font=`900 ${p(9)}px Arial`; ctx.fillStyle=fallColor;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(letter, x+w/2, y+h/2);
   }
   ctx.restore();
 };
 
-// ════════════════════════════════════════════════════════════════════════════
-// DRAW CARD  — layout matching reference image
-//
-//  ┌──────────────────────────────────┐
-//  │  RIBBON HOLE  (top 8mm)          │  ← white strip, punch hole center
-//  ├──────────────────────────────────┤
-//  │ HEADER (27mm)                    │  ← gradient bg, diagonal cut
-//  │  Logo + School Name   │  PHOTO   │
-//  │  Address / Phone      │  (right) │
-//  ├──────────────────────────────────┤
-//  │ "STUDENT ID CARD" vertical strip │  ← right 8mm, full body height
-//  │ INFO ROWS (left)                 │
-//  │  Name, F/Name, Class, DOB, Addr  │
-//  ├──────────────────────────────────┤
-//  │ FOOTER (phone + principal sign)  │
-//  └──────────────────────────────────┘
-// ════════════════════════════════════════════════════════════════════════════
-const drawCard = async (canvas, person, settings, assets, opts) => {
+// ── Rounded rect path ──────────────────────────────────────────────────────
+const rrect = (ctx,x,y,w,h,r) => {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+};
+
+// ══════════════════════════════════════════════════════════════════════════
+// PREMIUM CARD DRAW
+// Layout (top→bottom):
+//  [8mm]  Ribbon space — pearl white + metallic hole
+//  [26mm] Header — deep navy with gold geometry + school name + logo
+//  [35mm] Photo zone — centered large photo, gold frame, name + ID pill
+//  [remaining] Info section — clean rows on white
+//  [9mm]  Footer — dark strip, phone + sign
+// ══════════════════════════════════════════════════════════════════════════
+const drawCard = async (canvas, settings, assets, opts) => {
   const { logoImg, signImg, photoImg } = assets;
-  const { color, accentColor, cardLabel, rows, personName, idVal } = opts;
+  const { themeColor, goldColor, cardLabel, personName, idLine, rows } = opts;
 
   canvas.width  = CW;
   canvas.height = CH;
   const ctx = canvas.getContext('2d');
 
-  // ── White base ──────────────────────────────────────────────────────────
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, CW, CH);
+  // ─── geometry ─────────────────────────────────────────────────────────
+  const ribbonH = p(8);
+  const headerH = p(26);
+  const photoZH = p(35);
+  const footerH = p(9);
+  const infoH   = CH - ribbonH - headerH - photoZH - footerH;
 
-  // ── SECTION HEIGHTS ─────────────────────────────────────────────────────
-  const ribbonH = p(8);           // top ribbon space
-  const headerH = p(28);          // gradient header
-  const footerH = p(9);           // bottom footer
-  const sideW   = p(8);           // right "ID CARD" strip width
-  const bodyY   = ribbonH + headerH;
-  const bodyH   = CH - ribbonH - headerH - footerH;
-  const infoW   = CW - sideW;     // info area width
+  const hdrY    = ribbonH;
+  const pzY     = hdrY + headerH;
+  const infoY   = pzY + photoZH;
+  const ftY     = CH - footerH;
 
-  // ══════════════════════════════════════════════════════════════
-  // 1. RIBBON STRIP
-  // ══════════════════════════════════════════════════════════════
-  // subtle tint
-  const rg = ctx.createLinearGradient(0, 0, 0, ribbonH);
-  rg.addColorStop(0, color + '22'); rg.addColorStop(1, '#fff');
-  ctx.fillStyle = rg; ctx.fillRect(0, 0, CW, ribbonH);
+  // ─── 1. PEARL WHITE BASE ──────────────────────────────────────────────
+  ctx.fillStyle = '#f8f9ff'; ctx.fillRect(0, 0, CW, CH);
 
-  // punch hole
-  const hR = p(2.2);
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.18)'; ctx.shadowBlur = p(1);
-  ctx.beginPath(); ctx.arc(CW / 2, ribbonH / 2, hR, 0, Math.PI * 2);
-  ctx.fillStyle = '#fff'; ctx.fill();
-  ctx.restore();
-  ctx.beginPath(); ctx.arc(CW / 2, ribbonH / 2, hR, 0, Math.PI * 2);
-  ctx.strokeStyle = color + '55'; ctx.lineWidth = p(0.4); ctx.stroke();
+  // ─── 2. RIBBON SPACE ──────────────────────────────────────────────────
+  // gradient tint
+  const rg = ctx.createLinearGradient(0,0,0,ribbonH);
+  rg.addColorStop(0, themeColor+'28'); rg.addColorStop(1,'#fff');
+  ctx.fillStyle = rg; ctx.fillRect(0,0,CW,ribbonH);
 
-  // ══════════════════════════════════════════════════════════════
-  // 2. HEADER BAND  (gradient + diagonal accent + logo + photo)
-  // ══════════════════════════════════════════════════════════════
-  // main gradient fill
-  const hg = ctx.createLinearGradient(0, ribbonH, CW, ribbonH + headerH);
-  hg.addColorStop(0,   color);
-  hg.addColorStop(0.65, color);
-  hg.addColorStop(1,   accentColor);
-  ctx.fillStyle = hg; ctx.fillRect(0, ribbonH, CW, headerH);
+  // metallic punch hole
+  const hR = p(2.4), hX = CW/2, hY = ribbonH/2;
+  // outer metallic ring
+  const mGrad = ctx.createRadialGradient(hX-p(0.5),hY-p(0.5),p(0.5), hX,hY,hR+p(0.8));
+  mGrad.addColorStop(0,'#e8e0c8'); mGrad.addColorStop(0.5,'#c9b97a'); mGrad.addColorStop(1,'#a08840');
+  ctx.beginPath(); ctx.arc(hX,hY,hR+p(0.8),0,Math.PI*2); ctx.fillStyle=mGrad; ctx.fill();
+  // hole
+  ctx.beginPath(); ctx.arc(hX,hY,hR,0,Math.PI*2);
+  ctx.fillStyle='#d4d8e8'; ctx.fill();
+  // inner shadow
+  const iGrad = ctx.createRadialGradient(hX,hY,p(0.5), hX,hY,hR);
+  iGrad.addColorStop(0,'rgba(0,0,0,0.15)'); iGrad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath(); ctx.arc(hX,hY,hR,0,Math.PI*2); ctx.fillStyle=iGrad; ctx.fill();
 
-  // diagonal yellow/accent wedge (right side like reference image)
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(CW * 0.52, ribbonH);
-  ctx.lineTo(CW, ribbonH);
-  ctx.lineTo(CW, ribbonH + headerH);
-  ctx.lineTo(CW * 0.32, ribbonH + headerH);
-  ctx.closePath();
-  ctx.fillStyle = accentColor + 'bb';
-  ctx.fill();
-  ctx.restore();
+  // ─── 3. HEADER BAND ───────────────────────────────────────────────────
+  // deep navy gradient
+  const hg = ctx.createLinearGradient(0,hdrY,CW,hdrY+headerH);
+  hg.addColorStop(0, themeColor);
+  hg.addColorStop(1, themeColor+'cc');
+  ctx.fillStyle=hg; ctx.fillRect(0,hdrY,CW,headerH);
 
-  // shimmer lines on header
-  ctx.save();
-  ctx.beginPath(); ctx.rect(0, ribbonH, CW, headerH); ctx.clip();
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = p(4);
-  for (let xi = -CW; xi < CW * 2; xi += p(11)) {
-    ctx.beginPath(); ctx.moveTo(xi, ribbonH); ctx.lineTo(xi + p(8), ribbonH + headerH); ctx.stroke();
+  // geometric gold lines (decorative)
+  ctx.save(); ctx.beginPath(); ctx.rect(0,hdrY,CW,headerH); ctx.clip();
+  ctx.strokeStyle = goldColor+'30'; ctx.lineWidth = p(0.4);
+  // diagonal grid
+  for(let xi=-CW; xi<CW*2; xi+=p(8)){
+    ctx.beginPath(); ctx.moveTo(xi,hdrY); ctx.lineTo(xi+p(14),hdrY+headerH); ctx.stroke();
   }
+  // horizontal accent lines
+  [0.3,0.7].forEach(t => {
+    ctx.strokeStyle=goldColor+'25'; ctx.lineWidth=p(0.3);
+    ctx.beginPath(); ctx.moveTo(0,hdrY+headerH*t); ctx.lineTo(CW,hdrY+headerH*t); ctx.stroke();
+  });
   ctx.restore();
 
-  // PHOTO in header (right side)
-  const photoW = p(20), photoH = p(24);
-  const photoX = CW - photoW - p(2.5), photoY = ribbonH + (headerH - photoH) / 2;
+  // Gold top border line
+  const topBorderH = p(0.8);
+  const topGrad = ctx.createLinearGradient(0,hdrY,CW,hdrY);
+  topGrad.addColorStop(0,'transparent'); topGrad.addColorStop(0.2,goldColor);
+  topGrad.addColorStop(0.8,goldColor); topGrad.addColorStop(1,'transparent');
+  ctx.fillStyle=topGrad; ctx.fillRect(0,hdrY,CW,topBorderH);
 
-  // white border around photo
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  ctx.fillRect(photoX - p(1), photoY - p(1), photoW + p(2), photoH + p(2));
+  // Gold bottom border line
+  const bGrad = ctx.createLinearGradient(0,0,CW,0);
+  bGrad.addColorStop(0,'transparent'); bGrad.addColorStop(0.2,goldColor);
+  bGrad.addColorStop(0.8,goldColor); bGrad.addColorStop(1,'transparent');
+  ctx.fillStyle=bGrad; ctx.fillRect(0,hdrY+headerH-p(0.8),CW,p(0.8));
 
-  drawPhoto(ctx, photoImg, photoX, photoY, photoW, photoH, color, (personName||'?').charAt(0).toUpperCase());
-
-  // logo circle
-  const logoSz = p(11), logoX = p(3), logoY2 = ribbonH + p(3);
-  ctx.save();
-  ctx.beginPath(); ctx.arc(logoX + logoSz/2, logoY2 + logoSz/2, logoSz/2 + p(0.8), 0, Math.PI*2);
-  ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fill();
-  ctx.restore();
-  ctx.save();
-  ctx.beginPath(); ctx.arc(logoX + logoSz/2, logoY2 + logoSz/2, logoSz/2, 0, Math.PI*2);
-  ctx.fillStyle = '#fff'; ctx.fill(); ctx.clip();
-  if (logoImg) ctx.drawImage(logoImg, logoX, logoY2, logoSz, logoSz);
-  ctx.restore();
-
-  // school name + address in header
-  const tx = logoX + logoSz + p(2), tw = photoX - tx - p(2);
-  ctx.textBaseline = 'top'; ctx.textAlign = 'left';
-  ctx.font = `900 ${p(4)}px Arial`; ctx.fillStyle = '#fff';
-  ctx.fillText(ellipsis(ctx, settings.schoolName || 'D V Convent School', tw), tx, ribbonH + p(3));
-  ctx.font = `700 ${p(3.2)}px Arial`; ctx.fillStyle = 'rgba(255,255,255,0.82)';
-  ctx.fillText(ellipsis(ctx, settings.schoolName || 'D V Convent School', tw), tx, ribbonH + p(9));
-  ctx.font = `400 ${p(2.8)}px Arial`; ctx.fillStyle = 'rgba(255,255,255,0.75)';
-  const addrLines = wrapLines(ctx, settings.schoolAddress || 'Akodha, Rohi, Bhadohi', tw);
-  addrLines.slice(0, 2).forEach((line, i) => ctx.fillText(line, tx, ribbonH + p(14) + i * p(4)));
-  ctx.font = `700 ${p(2.8)}px Arial`; ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.fillText(`Ph: ${settings.contactNumber || '—'}`, tx, ribbonH + p(23));
-
-  // ══════════════════════════════════════════════════════════════
-  // 3. RIGHT SIDE STRIP  "STUDENT ID CARD" vertical
-  // ══════════════════════════════════════════════════════════════
-  ctx.fillStyle = color;
-  ctx.fillRect(CW - sideW, bodyY, sideW, bodyH);
-
-  // vertical text
-  ctx.save();
-  ctx.translate(CW - sideW / 2, bodyY + bodyH / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.font = `900 ${p(3.5)}px Arial`; ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.letterSpacing = `${p(1.5)}px`;
-  ctx.fillText(cardLabel, 0, 0);
-  ctx.letterSpacing = '0px';
+  // Logo — circular with double gold ring
+  const logoSz=p(14), logoX=p(3.5), logoY=hdrY+(headerH-logoSz)/2;
+  // outer glow
+  ctx.save(); ctx.shadowColor=goldColor+'88'; ctx.shadowBlur=p(2);
+  ctx.beginPath(); ctx.arc(logoX+logoSz/2,logoY+logoSz/2,logoSz/2+p(1.5),0,Math.PI*2);
+  const lgOuter = ctx.createLinearGradient(logoX,logoY,logoX+logoSz,logoY+logoSz);
+  lgOuter.addColorStop(0,'#e8d48a'); lgOuter.addColorStop(0.5,'#c9a94a'); lgOuter.addColorStop(1,'#a07830');
+  ctx.fillStyle=lgOuter; ctx.fill(); ctx.restore();
+  // inner white ring
+  ctx.beginPath(); ctx.arc(logoX+logoSz/2,logoY+logoSz/2,logoSz/2+p(0.6),0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fill();
+  // logo circle clip
+  ctx.save(); ctx.beginPath(); ctx.arc(logoX+logoSz/2,logoY+logoSz/2,logoSz/2,0,Math.PI*2);
+  ctx.fillStyle='#fff'; ctx.fill(); ctx.clip();
+  if(logoImg) ctx.drawImage(logoImg,logoX,logoY,logoSz,logoSz);
   ctx.restore();
 
-  // ══════════════════════════════════════════════════════════════
-  // 4. INFO ROWS  (left of right strip)
-  // ══════════════════════════════════════════════════════════════
-  const lx  = p(3), vx = p(3) + p(17), valW = infoW - vx - p(2);
-  const rowH = p(5.5), lineH2 = p(3.5);
-  const rowBorderColor = '#e5e7eb';
+  // School name text
+  const ntx=logoX+logoSz+p(3), ntw=CW-ntx-p(3);
+  ctx.textAlign='left'; ctx.textBaseline='top';
+  // School name (bold white)
+  ctx.font=`900 ${p(4.2)}px Arial`; ctx.fillStyle='#ffffff';
+  ctx.fillText(clip(ctx, settings.schoolName||'D V Convent School', ntw), ntx, hdrY+p(3.5));
+  // Gold divider line
+  const gdY=hdrY+p(10);
+  const gdGrad=ctx.createLinearGradient(ntx,0,ntx+ntw,0);
+  gdGrad.addColorStop(0,goldColor); gdGrad.addColorStop(1,goldColor+'44');
+  ctx.fillStyle=gdGrad; ctx.fillRect(ntx,gdY,ntw*0.8,p(0.5));
+  // Sub info
+  ctx.font=`400 ${p(2.8)}px Arial`; ctx.fillStyle='rgba(255,255,255,0.75)';
+  ctx.fillText(clip(ctx,settings.schoolAddress||'Akodha, Rohi, Bhadohi',ntw), ntx, hdrY+p(13));
+  ctx.font=`700 ${p(2.8)}px Arial`; ctx.fillStyle=goldColor+'dd';
+  ctx.fillText(`Ph: ${settings.contactNumber||'—'}`, ntx, hdrY+p(18.5));
+  // Card type badge
+  const badgeTxt = cardLabel;
+  ctx.font=`700 ${p(2.4)}px Arial`;
+  const bw=ctx.measureText(badgeTxt).width+p(4);
+  rrect(ctx,ntx,hdrY+headerH-p(7),bw,p(5),p(2));
+  const bbg=ctx.createLinearGradient(ntx,0,ntx+bw,0);
+  bbg.addColorStop(0,goldColor); bbg.addColorStop(1,'#e8c84a');
+  ctx.fillStyle=bbg; ctx.fill();
+  ctx.fillStyle=themeColor; ctx.textBaseline='middle';
+  ctx.fillText(badgeTxt, ntx+p(2), hdrY+headerH-p(4.5));
 
-  let ry = bodyY + p(2);
+  // ─── 4. PHOTO ZONE ────────────────────────────────────────────────────
+  // Soft background
+  const pzbg=ctx.createLinearGradient(0,pzY,0,pzY+photoZH);
+  pzbg.addColorStop(0,'#f0f3ff'); pzbg.addColorStop(1,'#ffffff');
+  ctx.fillStyle=pzbg; ctx.fillRect(0,pzY,CW,photoZH);
 
-  rows.forEach(([lbl, val], i) => {
-    // measure wrap
-    ctx.font = `500 ${p(2.8)}px Arial`;
-    const lines = wrapLines(ctx, val, valW);
-    const thisH = lines.length > 1 ? lines.length * lineH2 + p(2) : rowH;
+  // Large centered photo with premium gold frame
+  const pW=p(22), pH=p(27);
+  const pX=(CW-pW)/2, pY=pzY+p(3.5);
 
-    if (i % 2 === 0) {
-      ctx.fillStyle = color + '07';
-      ctx.fillRect(0, ry, infoW, thisH);
+  // shadow
+  ctx.save(); ctx.shadowColor='rgba(0,0,0,0.25)'; ctx.shadowBlur=p(3); ctx.shadowOffsetY=p(1.5);
+  rrect(ctx,pX-p(1.5),pY-p(1.5),pW+p(3),pH+p(3),p(2));
+  const frameGrad=ctx.createLinearGradient(pX,pY,pX+pW,pY+pH);
+  frameGrad.addColorStop(0,'#e8d88a'); frameGrad.addColorStop(0.25,'#c9a94a');
+  frameGrad.addColorStop(0.5,'#f0e090'); frameGrad.addColorStop(0.75,'#c9a94a');
+  frameGrad.addColorStop(1,'#a07830');
+  ctx.fillStyle=frameGrad; ctx.fill(); ctx.restore();
+
+  // photo
+  drawPhoto(ctx,photoImg,pX,pY,pW,pH,themeColor,(personName||'?').charAt(0).toUpperCase());
+
+  // Name below photo
+  const nameY=pY+pH+p(2);
+  ctx.font=`900 ${p(4.2)}px Arial`; ctx.fillStyle=themeColor;
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText(clip(ctx,personName||'',CW-p(10)), CW/2, nameY);
+
+  // ID pill below name
+  const pillTxt=idLine;
+  ctx.font=`700 ${p(2.8)}px Arial`;
+  const pillW=ctx.measureText(pillTxt).width+p(8), pillH=p(5);
+  const pillX=(CW-pillW)/2, pillY=nameY+p(5.5);
+  rrect(ctx,pillX,pillY,pillW,pillH,pillH/2);
+  const pg=ctx.createLinearGradient(pillX,pillY,pillX+pillW,pillY);
+  pg.addColorStop(0,themeColor); pg.addColorStop(1,themeColor+'bb');
+  ctx.fillStyle=pg; ctx.fill();
+  // gold border on pill
+  rrect(ctx,pillX,pillY,pillW,pillH,pillH/2);
+  ctx.strokeStyle=goldColor+'88'; ctx.lineWidth=p(0.5); ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(pillTxt, CW/2, pillY+pillH/2);
+
+  // ─── 5. INFO SECTION ──────────────────────────────────────────────────
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,infoY,CW,infoH);
+
+  // top gold accent line
+  const topAccGrad=ctx.createLinearGradient(0,infoY,CW,infoY);
+  topAccGrad.addColorStop(0,'transparent'); topAccGrad.addColorStop(0.1,goldColor);
+  topAccGrad.addColorStop(0.9,goldColor); topAccGrad.addColorStop(1,'transparent');
+  ctx.fillStyle=topAccGrad; ctx.fillRect(0,infoY,CW,p(0.6));
+
+  const lx=p(4), vx=p(22), valW=CW-vx-p(4);
+  const rowH=p(5), lnH=p(3.5);
+  let ry=infoY+p(1.5);
+
+  // measure first
+  const tmp=document.createElement('canvas'); tmp.width=CW; tmp.height=10;
+  const mctx=tmp.getContext('2d'); mctx.font=`500 ${p(2.8)}px Arial`;
+
+  rows.forEach(([lbl,val],i)=>{
+    const lines=wrap(mctx,val,valW);
+    const rh=lines.length>1 ? lines.length*lnH+p(2.5) : rowH;
+
+    // alt row bg
+    if(i%2===0){
+      ctx.fillStyle=themeColor+'06';
+      ctx.fillRect(0,ry,CW,rh);
     }
 
+    // left colored accent bar
+    const barGrad=ctx.createLinearGradient(0,ry,0,ry+rh);
+    barGrad.addColorStop(0,themeColor+'cc'); barGrad.addColorStop(1,themeColor+'44');
+    ctx.fillStyle=barGrad; ctx.fillRect(lx-p(1.5),ry+p(1),p(0.8),rh-p(2));
+
     // label
-    ctx.font = `700 ${p(2.8)}px Arial`; ctx.fillStyle = color + 'cc';
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText(lbl, lx, ry + thisH / 2);
+    ctx.font=`700 ${p(2.8)}px Arial`; ctx.fillStyle=themeColor;
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText(lbl, lx, ry+rh/2);
 
     // colon
-    ctx.font = `500 ${p(2.8)}px Arial`; ctx.fillStyle = '#9ca3af';
-    ctx.fillText(':', lx + p(15), ry + thisH / 2);
+    ctx.font=`400 ${p(2.8)}px Arial`; ctx.fillStyle='#9ca3af';
+    ctx.fillText(':', vx-p(3.5), ry+rh/2);
 
     // value
-    ctx.font = `500 ${p(2.8)}px Arial`; ctx.fillStyle = '#1f2937';
-    ctx.textBaseline = 'top';
-    lines.forEach((line, li) => ctx.fillText(line, vx, ry + p(1) + li * lineH2));
+    ctx.font=`500 ${p(2.8)}px Arial`; ctx.fillStyle='#111827';
+    ctx.textBaseline='top';
+    lines.forEach((ln,li)=>ctx.fillText(ln, vx, ry+p(1.2)+li*lnH));
 
     // divider
-    ctx.strokeStyle = rowBorderColor; ctx.lineWidth = p(0.3);
-    ctx.beginPath(); ctx.moveTo(0, ry + thisH); ctx.lineTo(infoW, ry + thisH); ctx.stroke();
-
-    ry += thisH;
+    ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=p(0.3);
+    ctx.beginPath(); ctx.moveTo(lx,ry+rh); ctx.lineTo(CW-lx,ry+rh); ctx.stroke();
+    ry+=rh;
   });
 
-  // ══════════════════════════════════════════════════════════════
-  // 5. FOOTER  (phone icon + principal sign)
-  // ══════════════════════════════════════════════════════════════
-  const footY = CH - footerH;
+  // ─── 6. FOOTER ────────────────────────────────────────────────────────
+  const ftGrad=ctx.createLinearGradient(0,ftY,0,CH);
+  ftGrad.addColorStop(0,themeColor+'f0'); ftGrad.addColorStop(1,themeColor);
+  ctx.fillStyle=ftGrad; ctx.fillRect(0,ftY,CW,footerH);
 
-  // footer bg — light tint
-  const fg = ctx.createLinearGradient(0, footY, 0, CH);
-  fg.addColorStop(0, '#f9fafb'); fg.addColorStop(1, '#f0f4ff');
-  ctx.fillStyle = fg; ctx.fillRect(0, footY, CW - sideW, footerH);
+  // gold top border on footer
+  ctx.fillStyle=topAccGrad; ctx.fillRect(0,ftY,CW,p(0.6));
 
-  // top border line
-  ctx.strokeStyle = color + '30'; ctx.lineWidth = p(0.3);
-  ctx.beginPath(); ctx.moveTo(0, footY); ctx.lineTo(CW - sideW, footY); ctx.stroke();
+  // phone
+  ctx.font=`700 ${p(2.6)}px Arial`; ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillText(`📞 ${settings.contactNumber||'—'}`, p(4), ftY+footerH/2);
 
-  // phone icon area
-  ctx.font = `600 ${p(2.5)}px Arial`; ctx.fillStyle = color + 'bb';
-  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.fillText('📞', lx, footY + footerH / 2);
-  ctx.font = `700 ${p(2.5)}px Arial`; ctx.fillStyle = '#374151';
-  ctx.fillText(settings.contactNumber || '—', lx + p(5), footY + footerH / 2);
-
-  // principal sign
-  if (signImg) {
-    const sh = Math.min(p(7), footerH - p(1));
-    const sw = sh * (signImg.width / signImg.height);
-    const sx = infoW - sw - p(2), sy = footY + (footerH - sh) / 2;
-    ctx.drawImage(signImg, sx, sy, sw, sh);
+  // sign + principal
+  if(signImg){
+    const sh=Math.min(p(6.5),footerH-p(1.5));
+    const sw=sh*(signImg.width/signImg.height);
+    const sx=CW-sw-p(4), sy=ftY+(footerH-sh)/2;
+    ctx.drawImage(signImg,sx,sy,sw,sh);
+    // underline
+    ctx.strokeStyle=goldColor+'99'; ctx.lineWidth=p(0.4);
+    ctx.beginPath(); ctx.moveTo(sx,sy+sh+p(0.5)); ctx.lineTo(sx+sw,sy+sh+p(0.5)); ctx.stroke();
   }
-  ctx.font = `700 ${p(2.4)}px Arial`; ctx.fillStyle = '#374151';
-  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-  ctx.fillText('Principal', infoW - p(2), footY + footerH / 2);
-
-  // extend right strip into footer
-  ctx.fillStyle = color + 'dd';
-  ctx.fillRect(CW - sideW, footY, sideW, footerH);
+  ctx.font=`700 ${p(2.4)}px Arial`; ctx.fillStyle=goldColor+'ee';
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.fillText('Principal', CW-p(4), ftY+footerH/2);
 };
 
-// ════════════════════════════════════════════════════════════════
-// STUDENT CARD
-// ════════════════════════════════════════════════════════════════
-const drawStudentCard = async (canvas, student, settings, assets, color = '#1a3a6b') => {
-  const accent = color === '#1a3a6b' ? '#f59e0b' : color + 'aa';
-  await drawCard(canvas, student, settings, assets, {
-    color, accentColor: accent,
-    cardLabel:  'STUDENT ID CARD',
-    personName: student.name || '',
-    idVal:      student.UID || '—',
+// ════════════════════════════════════════════════════════════════════════════
+// STUDENT
+// ════════════════════════════════════════════════════════════════════════════
+const drawStudent = async (canvas, student, settings, assets, color='#1a3a6b') => {
+  const gold = '#c9a94a';
+  await drawCard(canvas, settings, assets, {
+    themeColor: color, goldColor: gold,
+    cardLabel: 'STUDENT ID CARD',
+    personName: student.name||'',
+    idLine: `UID : ${student.UID||'—'}`,
     rows: [
-      ['Name',    student.name || '—'],
-      ['F/Name',  student.fatherName || '—'],
-      ['Class',   `Class ${student.class || '—'}`],
+      ['Name',    student.name||'—'],
+      ['F/Name',  student.fatherName||'—'],
+      ['Class',   `Class ${student.class||'—'}`],
       ['D.O.B',   fmtDate(student.dateOfBirth)],
-      ['Address', student.address || '—'],
+      ['Address', student.address||'—'],
     ],
   });
 };
 
-// ════════════════════════════════════════════════════════════════
-// TEACHER CARD
-// ════════════════════════════════════════════════════════════════
-const drawTeacherCard = async (canvas, teacher, settings, assets) => {
-  const color = '#7b1d1d', accent = '#f59e0b';
-  await drawCard(canvas, teacher, settings, assets, {
-    color, accentColor: accent,
-    cardLabel:  'STAFF ID CARD',
-    personName: teacher.name || '',
-    idVal:      teacher.employeeCode || '—',
+// ════════════════════════════════════════════════════════════════════════════
+// TEACHER
+// ════════════════════════════════════════════════════════════════════════════
+const drawTeacher = async (canvas, teacher, settings, assets) => {
+  const gold = '#c9a94a';
+  await drawCard(canvas, settings, assets, {
+    themeColor: '#7b1d1d', goldColor: gold,
+    cardLabel: 'STAFF ID CARD',
+    personName: teacher.name||'',
+    idLine: `ID : ${teacher.employeeCode||'—'}`,
     rows: [
-      ['Name',   teacher.name || '—'],
-      ['Desig.', teacher.designation || 'Teacher'],
-      ['Phone',  teacher.phone || '—'],
-      ['Addr.',  teacher.address || '—'],
+      ['Name',   teacher.name||'—'],
+      ['Desig.', teacher.designation||'Teacher'],
+      ['Phone',  teacher.phone||'—'],
+      ['Addr.',  teacher.address||'—'],
     ],
   });
 };
 
-// ── Download pipeline ──────────────────────────────────────────────────────
-const itemToBlob = async (item, type, settings, sharedAssets, studentColor) => {
-  const resolvePhoto = (pp) => {
-    if (!pp) return null;
-    if (pp.startsWith('data:') || pp.startsWith('http')) return pp;
-    const base = import.meta.env?.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
-    return `${base}${pp}`;
+// ── Pipeline ───────────────────────────────────────────────────────────────
+const toBlob = async (item, type, settings, shared, sColor) => {
+  const rp = (pp) => {
+    if(!pp) return null;
+    if(pp.startsWith('data:')||pp.startsWith('http')) return pp;
+    return `${import.meta.env?.VITE_API_URL?.replace('/api','')||'http://localhost:5000'}${pp}`;
   };
-  const photoImg = await loadImage(resolvePhoto(item.profileImage));
+  const photoImg = await loadImg(rp(item.profileImage));
   const canvas   = document.createElement('canvas');
-  if (type === 'student') await drawStudentCard(canvas, item, settings, { ...sharedAssets, photoImg }, studentColor);
-  else                     await drawTeacherCard(canvas, item, settings, { ...sharedAssets, photoImg });
-  return new Promise((res, rej) =>
-    canvas.toBlob((b) => (b ? res(b) : rej(new Error('toBlob failed'))), 'image/png', 1.0)
-  );
+  if(type==='student') await drawStudent(canvas, item, settings, {...shared, photoImg}, sColor);
+  else                  await drawTeacher(canvas, item, settings, {...shared, photoImg});
+  return new Promise((res,rej) => canvas.toBlob(b=>b?res(b):rej(new Error('toBlob failed')),'image/png',1.0));
 };
 
-const triggerDownload = (blob, filename) => {
-  const url = URL.createObjectURL(blob);
-  const a   = Object.assign(document.createElement('a'), { href: url, download: filename });
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+const dl = (blob,name) => {
+  const url=URL.createObjectURL(blob);
+  const a=Object.assign(document.createElement('a'),{href:url,download:name}); a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
 };
 
-export const downloadCards = async (items, type, settings, schoolLogoSrc, signImageSrc, onProgress, studentColor = '#1a3a6b') => {
-  if (!items?.length) throw new Error('No items to download');
-  const label  = type === 'student' ? 'student' : 'teacher';
-  const shared = {
-    logoImg: await loadImage(settings.schoolLogo || schoolLogoSrc),
-    signImg: await loadImage(signImageSrc),
-  };
-  if (items.length === 1) {
-    onProgress?.(0, 1);
-    triggerDownload(await itemToBlob(items[0], type, settings, shared, studentColor), `${label}-id-card.png`);
-    onProgress?.(1, 1);
-    return;
+export const downloadCards = async (items,type,settings,logoSrc,signSrc,onProgress,sColor='#1a3a6b') => {
+  if(!items?.length) throw new Error('No items');
+  const label  = type==='student'?'student':'teacher';
+  const shared = { logoImg:await loadImg(settings.schoolLogo||logoSrc), signImg:await loadImg(signSrc) };
+  if(items.length===1){
+    onProgress?.(0,1);
+    dl(await toBlob(items[0],type,settings,shared,sColor), `${label}-id-card.png`);
+    onProgress?.(1,1); return;
   }
-  const zip = new JSZip();
-  const folder = zip.folder(`${label}-id-cards`);
-  for (let i = 0; i < items.length; i++) {
-    onProgress?.(i, items.length);
-    folder.file(`${label}-card-${String(i+1).padStart(3,'0')}.png`,
-      await itemToBlob(items[i], type, settings, shared, studentColor));
+  const zip=new JSZip(), folder=zip.folder(`${label}-id-cards`);
+  for(let i=0;i<items.length;i++){
+    onProgress?.(i,items.length);
+    folder.file(`${label}-card-${String(i+1).padStart(3,'0')}.png`, await toBlob(items[i],type,settings,shared,sColor));
   }
-  onProgress?.(items.length, items.length);
-  triggerDownload(await zip.generateAsync({ type: 'blob' }), `${label}-id-cards.zip`);
+  onProgress?.(items.length,items.length);
+  dl(await zip.generateAsync({type:'blob'}), `${label}-id-cards.zip`);
 };
