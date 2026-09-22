@@ -15,327 +15,249 @@ const pp = (mm) => mm * PW / 57;
 const resolvePhoto = (p) => {
   if (!p) return null;
   if (p.startsWith('data:') || p.startsWith('http')) return p;
-  return `${import.meta.env.VITE_API_URL?.replace('/api','') || 'http://localhost:5000'}${p}`;
+  return `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${p}`;
 };
 const fmtDate = (d) => d
-  ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})
+  ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
   : '—';
 const getLogoSrc = (s) => s.schoolLogo
   ? (s.schoolLogo.startsWith('data:') ? s.schoolLogo : `data:image/png;base64,${s.schoolLogo}`)
   : schoolLogo;
 
-// Small reusable corner-bracket ornament (premium/security-card look)
-const CornerBrackets = ({ inset = 0, size, thickness = 1, color, z = 5 }) => (
-  <>
-    {['tl','tr','bl','br'].map(pos => {
-      const style = { position:'absolute', width:size, height:size, zIndex:z, pointerEvents:'none' };
-      if (pos==='tl'){ style.top=inset; style.left=inset; style.borderTop=`${thickness}px solid ${color}`; style.borderLeft=`${thickness}px solid ${color}`; style.borderTopLeftRadius=2; }
-      if (pos==='tr'){ style.top=inset; style.right=inset; style.borderTop=`${thickness}px solid ${color}`; style.borderRight=`${thickness}px solid ${color}`; style.borderTopRightRadius=2; }
-      if (pos==='bl'){ style.bottom=inset; style.left=inset; style.borderBottom=`${thickness}px solid ${color}`; style.borderLeft=`${thickness}px solid ${color}`; style.borderBottomLeftRadius=2; }
-      if (pos==='br'){ style.bottom=inset; style.right=inset; style.borderBottom=`${thickness}px solid ${color}`; style.borderRight=`${thickness}px solid ${color}`; style.borderBottomRightRadius=2; }
-      return <div key={pos} style={style}/>;
-    })}
-  </>
-);
-
 // ── CARD PREVIEW ──────────────────────────────────────────────────────────
-const PremiumCard = ({ color, gold='#c9a94a', logoSrc, sName, sAddr, sPhone,
-  label, photo, name, idLine, rows }) => {
-
-  const RH=pp(7), HH=pp(24), PZH=pp(29), FH=pp(9);
-  const HY=RH, PZY=RH+HH, IY=PZY+PZH, IH=PH-RH-HH-PZH-FH, FTY=PH-FH;
-  const PW2=pp(20), PHGT=pp(24), PX=(PW-PW2)/2, PYY=PZY+pp(2);
-  const rowH=IH/rows.length;
+const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, personName, idLine, rows, classVal }) => {
+  const RH = pp(7), HH = pp(22), PZH = pp(29), IH = pp(20), SFH = pp(9);
+  const HY = RH, PZY = HY + HH, IY = PZY + PZH, SFY = IY + IH, FTY = SFY + SFH;
+  const BTSH = PH - FTY;
+  const PW2 = pp(30), PHGT = pp(36);
+  const PX = (PW - PW2) / 2, PYY = PZY + (PZH - PHGT) / 2;
+  const rowH = IH / rows.length;
 
   return (
-    <div style={{ width:PW, height:PH, position:'relative', fontFamily:'"Georgia","Times New Roman",serif',
-      background:'linear-gradient(180deg,#ffffff 0%,#fdfcf9 100%)', borderRadius:6, overflow:'hidden', flexShrink:0,
-      border:`1px solid ${gold}55`,
-      boxShadow:`0 12px 34px rgba(0,0,0,0.26), 0 2px 6px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.7) inset` }}>
+    <div style={{ width: PW, height: PH, position: 'relative', fontFamily: 'Arial,sans-serif',
+      background: '#fff', borderRadius: 5, overflow: 'hidden', flexShrink: 0,
+      boxShadow: '0 6px 24px rgba(0,0,0,0.2)' }}>
 
-      {/* Outer premium corner ornaments */}
-      <CornerBrackets inset={pp(1.2)} size={pp(4.2)} thickness={1.1} color={gold+'cc'} z={30}/>
+      {/* 1. Ribbon — plain white */}
+      {/* intentionally empty */}
 
-      {/* ── Ribbon: faint gold hairline only ── */}
-      <div style={{ position:'absolute', top:pp(3.4), left:'20%', right:'20%', height:0.8,
-        background:`linear-gradient(90deg,transparent,${gold}66,transparent)` }}/>
-
-      {/* ── Header ── */}
-      <div style={{ position:'absolute', top:HY, left:0, right:0, height:HH,
-        background:`linear-gradient(135deg,${color} 0%,${color}f0 42%,${color}cc 100%)`,
-        overflow:'hidden' }}>
-        {/* diagonal lines */}
-        <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity:0.16 }}>
-          {Array.from({length:18},(_,i)=>(
-            <line key={i} x1={i*11-15} y1="0" x2={i*11+22} y2="100%" stroke={gold} strokeWidth="0.5"/>
-          ))}
-        </svg>
-        {/* foil shine sweep */}
-        <div style={{ position:'absolute', top:0, left:'-25%', width:'50%', height:'100%',
-          background:'linear-gradient(115deg,transparent 25%,rgba(255,255,255,0.20) 48%,rgba(255,255,255,0.05) 58%,transparent 75%)',
-          pointerEvents:'none' }}/>
-        {/* gold top/bottom borders */}
-        <div style={{ position:'absolute', top:0, left:'6%', right:'6%', height:1.3,
-          background:`linear-gradient(90deg,transparent,${gold},${gold},transparent)` }}/>
-        <div style={{ position:'absolute', bottom:0, left:'6%', right:'6%', height:1.3,
-          background:`linear-gradient(90deg,transparent,${gold},${gold},transparent)` }}/>
-
+      {/* 2. Header */}
+      <div style={{ position: 'absolute', top: HY, left: 0, right: 0, height: HH,
+        background: `linear-gradient(180deg, #1565c0 0%, #1976d2 100%)` }}>
         {/* Logo */}
-        <div style={{ position:'absolute', left:pp(3), top:'50%', transform:'translateY(-50%)',
-          width:pp(14), height:pp(14), borderRadius:'50%',
-          background:`linear-gradient(135deg,#fef3c0,${gold},#78500a)`,
-          padding:1.5, boxShadow:`0 0 0 1.4px rgba(255,255,255,0.55), 0 0 ${pp(2.4)}px ${gold}aa, 0 2px 4px rgba(0,0,0,0.3)` }}>
-          <div style={{ width:'100%', height:'100%', borderRadius:'50%', overflow:'hidden', background:'#fff',
-            boxShadow:'inset 0 0 0 1px rgba(0,0,0,0.06)' }}>
-            <img src={logoSrc} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
-          </div>
+        <div style={{ position: 'absolute', left: pp(3), top: '50%', transform: 'translateY(-50%)',
+          width: pp(14), height: pp(14), borderRadius: '50%',
+          border: `${pp(0.6)}px solid rgba(255,255,255,0.3)`,
+          overflow: 'hidden', background: '#fff' }}>
+          <img src={logoSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-
-        {/* School text */}
-        <div style={{ position:'absolute', left:pp(19), right:pp(2), top:pp(2) }}>
-          {/* name — 1 line, auto-shrink via CSS */}
-          <div style={{ color:'#fff', fontWeight:900, lineHeight:1.2, letterSpacing:0.3,
-            textShadow:'0 1px 2px rgba(0,0,0,0.35)',
-            fontSize: sName.length > 20 ? pp(3.2) : sName.length > 15 ? pp(3.6) : pp(4),
-            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sName}</div>
-          <div style={{ height:1, background:`linear-gradient(90deg,${gold},transparent)`,
-            margin:`${pp(0.8)}px 0`, width:'75%' }}/>
-          <div style={{ color:'rgba(255,255,255,0.75)', fontSize:pp(2.3), fontStyle:'italic',
-            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sAddr}</div>
-          <div style={{ color:gold+'ee', fontWeight:700, fontSize:pp(2.5), marginTop:pp(0.8) }}>
-            Ph: {sPhone}
+        {/* Text */}
+        <div style={{ position: 'absolute', left: pp(19), right: pp(2), top: pp(2) }}>
+          <div style={{ color: '#fff', fontWeight: 900, lineHeight: 1.2,
+            fontSize: sName.length > 20 ? pp(3.2) : sName.length > 14 ? pp(3.8) : pp(4.5),
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sName}</div>
+          <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: pp(2.3), marginTop: pp(0.5) }}>
+            (Govt. Recognised)
           </div>
-          {/* small badge */}
-          <div style={{ display:'inline-flex', alignItems:'center', gap:pp(0.6), marginTop:pp(1),
-            background:`linear-gradient(90deg,#fef3c0,${gold} 40%,#f5d050)`,
-            color:color, fontWeight:900, fontSize:pp(2), letterSpacing:0.4,
-            padding:`${pp(0.6)}px ${pp(2)}px`, borderRadius:pp(1.8),
-            boxShadow:'0 1px 3px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.5)' }}>
-            <span style={{fontSize:pp(2)}}>✦</span>{label}
+          <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: pp(2.2), marginTop: pp(0.3),
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sAddr}</div>
+          <div style={{ color: '#fff', fontWeight: 800, fontSize: pp(2.5), marginTop: pp(0.8) }}>
+            Phone No.: {sPhone}
           </div>
         </div>
       </div>
 
-      {/* ── Photo Zone ── */}
-      <div style={{ position:'absolute', top:PZY, left:0, right:0, height:PZH,
-        background:'radial-gradient(ellipse at 50% 0%, #eef1f9 0%, #f7f8fc 55%, #ffffff 100%)' }}>
-
-        {/* gold frame */}
-        <div style={{ position:'absolute',
-          left:PX-pp(1.8), top:PYY-pp(1.8),
-          width:PW2+pp(3.6), height:PHGT+pp(3.6),
-          borderRadius:pp(2),
-          background:`linear-gradient(135deg,#fef3c0 0%,${gold} 28%,#fef0a0 55%,${gold} 80%,#78500a 100%)`,
-          boxShadow:`0 ${pp(1.8)}px ${pp(4.5)}px rgba(0,0,0,0.24), inset 0 0 0 0.8px rgba(255,255,255,0.4)` }}/>
-        {/* dark inner ring for depth */}
-        <div style={{ position:'absolute', left:PX-pp(0.5), top:PYY-pp(0.5), width:PW2+pp(1), height:PHGT+pp(1),
-          borderRadius:pp(1.4), boxShadow:`0 0 0 0.6px rgba(0,0,0,0.25)` }}/>
-
-        {/* photo */}
-        {photo
-          ? <img src={photo} alt="" style={{
-              position:'absolute', left:PX, top:PYY, width:PW2, height:PHGT,
-              objectFit:'cover', objectPosition:'center top',
-              borderRadius:pp(1) }}/>
-          : <div style={{ position:'absolute', left:PX, top:PYY, width:PW2, height:PHGT,
-              borderRadius:pp(1), background:color+'12',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              fontSize:pp(10), fontWeight:900, color:color+'55' }}>
-              {name?.charAt(0)?.toUpperCase()}
-            </div>}
-
-        {/* glass shine overlay on photo */}
-        <div style={{ position:'absolute', left:PX, top:PYY, width:PW2, height:PHGT*0.45,
-          borderRadius:`${pp(1)}px ${pp(1)}px 0 0`,
-          background:'linear-gradient(180deg,rgba(255,255,255,0.30) 0%,rgba(255,255,255,0.05) 70%,transparent 100%)',
-          pointerEvents:'none' }}/>
-
-        {/* photo corner brackets */}
-        <div style={{ position:'absolute', left:PX-pp(3), top:PYY-pp(3), width:PW2+pp(6), height:PHGT+pp(6) }}>
-          <CornerBrackets inset={0} size={pp(2.4)} thickness={0.9} color={color+'99'} z={2}/>
+      {/* 3. Photo zone */}
+      <div style={{ position: 'absolute', top: PZY, left: 0, right: 0, height: PZH, background: '#fff' }}>
+        {/* photo with blue border */}
+        <div style={{ position: 'absolute', left: PX - pp(0.8), top: PYY - pp(0.8),
+          width: PW2 + pp(1.6), height: PHGT + pp(1.6),
+          border: `${pp(0.8)}px solid ${color}`, background: '#dbeafe' }}>
+          {photo && <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />}
         </div>
+        {!photo && (
+          <div style={{ position: 'absolute', left: PX, top: PYY, width: PW2, height: PHGT,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: pp(12), fontWeight: 900, color: color + '66' }}>
+            {personName?.charAt(0)?.toUpperCase()}
+          </div>
+        )}
+      </div>
 
-        {/* Name — single line, auto-shrink */}
-        <div style={{ position:'absolute', bottom:pp(7.2), left:pp(2), right:pp(2),
-          textAlign:'center', fontWeight:900, color:color, lineHeight:1.1, letterSpacing:0.2,
-          fontSize: name?.length > 20 ? pp(2.8) : name?.length > 15 ? pp(3.2) : pp(3.6),
-          overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-          {name}
+      {/* 4. Name + UID */}
+      <div style={{ position: 'absolute', top: IY - pp(11), left: pp(3), right: pp(3), textAlign: 'center' }}>
+        <div style={{ fontWeight: 700, color: '#1a1a1a', lineHeight: 1.2,
+          fontSize: (personName?.length || 0) > 18 ? pp(3.2) : pp(4.5),
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {personName}
         </div>
-        <div style={{ position:'absolute', bottom:pp(6.5), left:'35%', right:'35%', height:0.8,
-          background:`linear-gradient(90deg,transparent,${gold},transparent)` }}/>
-
-        {/* UID pill */}
-        <div style={{ position:'absolute', bottom:pp(2), left:'50%', transform:'translateX(-50%)',
-          background:`linear-gradient(90deg,${color},${color}d0,${color}bb)`,
-          color:'#fff', fontWeight:800, fontSize:pp(2.4), letterSpacing:0.3,
-          padding:`${pp(0.9)}px ${pp(3.5)}px`, borderRadius:pp(3),
-          border:`0.8px solid ${gold}88`, whiteSpace:'nowrap',
-          boxShadow:`0 ${pp(0.8)}px ${pp(2)}px ${color}55, inset 0 1px 0 rgba(255,255,255,0.25)` }}>
-          ❖ {idLine}
+        <div style={{ display: 'inline-block', marginTop: pp(1),
+          background: color, color: '#fff', fontWeight: 800, fontSize: pp(2.8),
+          padding: `${pp(0.8)}px ${pp(3.5)}px`, borderRadius: pp(3) }}>
+          {idLine}
         </div>
       </div>
 
-      {/* ── Info rows ── */}
-      <div style={{ position:'absolute', top:IY, left:0, right:0, height:IH,
-        background:'#fff', overflow:'hidden' }}>
-        {/* faint watermark logo */}
-        <img src={logoSrc} alt="" style={{ position:'absolute', left:'50%', top:'50%',
-          width:pp(20), height:pp(20), transform:'translate(-50%,-50%)', objectFit:'contain',
-          opacity:0.05, pointerEvents:'none' }}/>
-        {/* gold top line */}
-        <div style={{ height:1.2, background:`linear-gradient(90deg,transparent 5%,${gold} 15%,${gold} 85%,transparent 95%)` }}/>
-        {rows.map(([lbl,val],i)=>(
-          <div key={lbl} style={{ display:'flex', alignItems:'center', position:'relative',
-            height:rowH, padding:`0 ${pp(3)}px`,
-            background:i%2===0?color+'08':'transparent',
-            borderBottom:'0.5px solid #e5e7eb', boxSizing:'border-box' }}>
-            <div style={{ width:pp(0.9), height:'55%', flexShrink:0,
-              background:`linear-gradient(180deg,${gold},${color})`, marginRight:pp(1.8), borderRadius:1 }}/>
-            <span style={{ fontSize:pp(2.3), fontWeight:700, color, width:pp(13), flexShrink:0,
-              textTransform:'uppercase', letterSpacing:0.3 }}>{lbl}</span>
-            <span style={{ fontSize:pp(2.5), color:'#c7ccd6', marginRight:pp(1.5), flexShrink:0 }}>:</span>
-            <span style={{ fontSize:pp(2.5), fontWeight:500, color:'#1f2937', flex:1,
-              overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{val||'—'}</span>
+      {/* 5. Info table */}
+      <div style={{ position: 'absolute', top: IY, left: 0, right: 0, height: IH,
+        background: '#fff', overflow: 'hidden',
+        borderTop: '0.5px solid #e0e0e0' }}>
+        {rows.map(([lbl, val], i) => (
+          <div key={lbl} style={{ display: 'flex', alignItems: 'center', height: rowH,
+            padding: `0 ${pp(3)}px`,
+            background: i % 2 === 0 ? '#f5f8ff' : '#fff',
+            borderBottom: '0.5px solid #e0e0e0', boxSizing: 'border-box' }}>
+            <span style={{ fontSize: pp(2.5), fontWeight: 700, color, width: pp(19), flexShrink: 0 }}>{lbl}</span>
+            <span style={{ fontSize: pp(2.5), color: '#1a1a1a', flex: 1,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{val || '—'}</span>
           </div>
         ))}
       </div>
 
-      {/* ── Footer ── */}
-      <div style={{ position:'absolute', bottom:0, left:0, right:0, height:FH,
-        background:`linear-gradient(90deg,${color}f5,${color},${color}f0)`,
-        display:'flex', alignItems:'center', justifyContent:'space-between',
-        padding:`0 ${pp(3)}px` }}>
-        <div style={{ position:'absolute', top:0, left:'6%', right:'6%', height:1.3,
-          background:`linear-gradient(90deg,transparent,${gold},${gold},transparent)` }}/>
-        <div style={{ position:'absolute', left:'50%', top:'22%', bottom:'22%', width:0.8,
-          background:gold+'66' }}/>
-        <span style={{ fontSize:pp(2.4), fontWeight:700, color:'rgba(255,255,255,0.92)' }}>
-          📞 {sPhone}
+      {/* 6. Sign footer */}
+      <div style={{ position: 'absolute', top: SFY, left: 0, right: 0, height: SFH,
+        background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: `0 ${pp(3)}px`, borderTop: '0.5px solid #e0e0e0' }}>
+        <span style={{ fontWeight: 900, fontSize: pp(3), color: '#1a1a1a' }}>
+          Class : {classVal}
         </span>
-        <div style={{ textAlign:'center' }}>
-          <img src={signImage} alt="" style={{ height:pp(5), objectFit:'contain', display:'block', margin:'0 auto' }}
-            onError={e=>{e.target.style.display='none';}}/>
-          <div style={{ height:0.7, width:'80%', margin:`${pp(0.3)}px auto`, background:gold+'88' }}/>
-          <div style={{ fontSize:pp(2.1), color:gold+'ee', fontWeight:700, letterSpacing:0.4 }}>★ Principal ★</div>
+        <div style={{ textAlign: 'center' }}>
+          <img src={signImage} alt="" style={{ height: pp(4.5), objectFit: 'contain', display: 'block', margin: '0 auto' }}
+            onError={e => { e.target.style.display = 'none'; }} />
+          <div style={{ width: pp(18), borderTop: '0.5px solid #333', marginTop: pp(0.5) }} />
+          <div style={{ fontSize: pp(2), color: '#333', marginTop: pp(0.5) }}>Principal Sign.</div>
         </div>
       </div>
+
+      {/* 7. Bottom strip */}
+      {BTSH > 0 && (
+        <div style={{ position: 'absolute', top: FTY, left: 0, right: 0, height: BTSH,
+          background: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: pp(2.2), color: '#fff', fontWeight: 500 }}>
+            If found, please return to school  •  Ph: {sPhone}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
 
-const StudentCard=({student,settings,color='#1a3a6b'})=>(
-  <PremiumCard color={color} logoSrc={getLogoSrc(settings)}
-    sName={settings.schoolName||'D V Convent School'}
-    sAddr={settings.schoolAddress||'Akodha, Rohi, Bhadohi'}
-    sPhone={settings.contactNumber||'—'}
-    label="STUDENT ID CARD"
+const StudentCard = ({ student, settings, color = '#1565c0' }) => (
+  <IDCard
+    color={color}
+    logoSrc={getLogoSrc(settings)}
+    sName={settings.schoolName || 'D V Convent School'}
+    sAddr={settings.schoolAddress || 'Vill-Akodha,Post-Rohi,Dist-Bhadohi,221308'}
+    sPhone={settings.contactNumber || '—'}
     photo={resolvePhoto(student.profileImage)}
-    name={student.name}
-    idLine={`UID : ${student.UID||'—'}`}
+    personName={student.name}
+    idLine={`UID: ${student.UID || '—'}`}
+    classVal={student.class || '—'}
     rows={[
-      ['Name',   student.name||'—'],
-      ['F/Name', student.fatherName||'—'],
-      ['Class',  `Class ${student.class||'—'}`],
-      ['D.O.B',  fmtDate(student.dateOfBirth)],
-      ['Address',student.address||'—'],
+      ["Father's Name", student.fatherName || '—'],
+      ["Mother's Name", student.motherName || '—'],
+      ['D.O.B.',        fmtDate(student.dateOfBirth)],
+      ['Contact No.',   student.fatherMobile || student.motherMobile || student.guardianMobile || '—'],
+      ['Add.',          student.address || '—'],
     ]}
   />
 );
 
-const TeacherCard=({teacher,settings})=>(
-  <PremiumCard color="#7b1d1d" logoSrc={getLogoSrc(settings)}
-    sName={settings.schoolName||'D V Convent School'}
-    sAddr={settings.schoolAddress||'Akodha, Rohi, Bhadohi'}
-    sPhone={settings.contactNumber||'—'}
-    label="STAFF ID CARD"
+const TeacherCard = ({ teacher, settings }) => (
+  <IDCard
+    color="#1565c0"
+    logoSrc={getLogoSrc(settings)}
+    sName={settings.schoolName || 'D V Convent School'}
+    sAddr={settings.schoolAddress || 'Vill-Akodha,Post-Rohi,Dist-Bhadohi,221308'}
+    sPhone={settings.contactNumber || '—'}
     photo={resolvePhoto(teacher.profileImage)}
-    name={teacher.name}
-    idLine={`ID : ${teacher.employeeCode||'—'}`}
+    personName={teacher.name}
+    idLine={`ID: ${teacher.employeeCode || '—'}`}
+    classVal={teacher.designation || 'Teacher'}
     rows={[
-      ['Name',   teacher.name||'—'],
-      ['Desig.', teacher.designation||'Teacher'],
-      ['Phone',  teacher.phone||'—'],
-      ['Addr.',  teacher.address||'—'],
+      ['Designation', teacher.designation || 'Teacher'],
+      ['Phone',       teacher.phone || '—'],
+      ['Address',     teacher.address || '—'],
     ]}
   />
 );
 
-// ── MAIN ──────────────────────────────────────────────────────────────────
-const IDCardGenerator=()=>{
-  const {settings}=useSettings();
-  const [tab,setTab]=useState('student');
-  const [search,setSearch]=useState('');
-  const [classFilter,setClassFilter]=useState('');
-  const [items,setItems]=useState([]);
-  const [loading,setLoading]=useState(false);
-  const [toast,setToast]=useState(null);
-  const [selected,setSelected]=useState(new Set());
-  const [page,setPage]=useState(1);
-  const [pagination,setPagination]=useState({});
-  const [printing,setPrinting]=useState(false);
-  const [progress,setProgress]=useState({current:0,total:0});
-  const [studentColor,setStudentColor]=useState('#1a3a6b');
+// ── MAIN PAGE ─────────────────────────────────────────────────────────────
+const IDCardGenerator = () => {
+  const { settings } = useSettings();
+  const [tab, setTab]                   = useState('student');
+  const [search, setSearch]             = useState('');
+  const [classFilter, setClassFilter]   = useState('');
+  const [items, setItems]               = useState([]);
+  const [loading, setLoading]           = useState(false);
+  const [toast, setToast]               = useState(null);
+  const [selected, setSelected]         = useState(new Set());
+  const [page, setPage]                 = useState(1);
+  const [pagination, setPagination]     = useState({});
+  const [printing, setPrinting]         = useState(false);
+  const [progress, setProgress]         = useState({ current: 0, total: 0 });
+  const [studentColor, setStudentColor] = useState('#1565c0');
 
-  const PRESET=['#1a3a6b','#0f766e','#166534','#4a148c','#9a3412','#9d174d','#374151','#7c3aed'];
-  const CLASSES=['Nursery','LKG','UKG','1','2','3','4','5','6','7','8'];
+  const PRESET = ['#1565c0', '#0d47a1', '#1b5e20', '#4a148c', '#b71c1c', '#e65100', '#37474f', '#880e4f'];
+  const CLASSES = ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8'];
 
-  useEffect(()=>{const t=setTimeout(load,300);return()=>clearTimeout(t);},[tab,search,classFilter,page]);
+  useEffect(() => { const t = setTimeout(load, 300); return () => clearTimeout(t); }, [tab, search, classFilter, page]);
 
-  const load=async()=>{
+  const load = async () => {
     setLoading(true);
-    try{
-      if(tab==='student'){
-        const r=await API.get('/admin/students',{params:{search,studentClass:classFilter,status:'active',page,limit:20}});
+    try {
+      if (tab === 'student') {
+        const r = await API.get('/admin/students', { params: { search, studentClass: classFilter, status: 'active', page, limit: 20 } });
         setItems(r.data.students); setPagination(r.data.pagination);
       } else {
-        const r=await API.get('/admin/teachers',{params:{search,status:'active',page,limit:20}});
+        const r = await API.get('/admin/teachers', { params: { search, status: 'active', page, limit: 20 } });
         setItems(r.data.teachers); setPagination(r.data.pagination);
       }
-    } catch { setToast({message:'Failed to load',type:'error'}); }
-    finally { setLoading(false); }
+    } catch { setToast({ message: 'Failed to load', type: 'error' }); }
+    finally  { setLoading(false); }
   };
 
-  const toggle=(id)=>setSelected(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
-  const toggleAll=()=>selected.size===items.length?setSelected(new Set()):setSelected(new Set(items.map(i=>i._id)));
-  const selItems=items.filter(i=>selected.has(i._id));
+  const toggle    = (id) => setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleAll = () => selected.size === items.length ? setSelected(new Set()) : setSelected(new Set(items.map(i => i._id)));
+  const selItems  = items.filter(i => selected.has(i._id));
 
-  const handleDl=async()=>{
-    if(!selItems.length){setToast({message:'Select at least one card',type:'error'});return;}
-    setPrinting(true); setProgress({current:0,total:selItems.length});
-    setToast({message:selItems.length===1?'Preparing PNG…':'Preparing ZIP…',type:'success'});
-    try{
-      await downloadCards(selItems,tab,settings,schoolLogo,signImage,
-        (c,t)=>setProgress({current:c,total:t}),tab==='student'?studentColor:null);
-      setToast({message:selItems.length===1?'PNG downloaded!':'ZIP downloaded!',type:'success'});
-    } catch(e){setToast({message:'Download failed: '+e.message,type:'error'});}
-    finally{setPrinting(false);setProgress({current:0,total:0});}
+  const handleDl = async () => {
+    if (!selItems.length) { setToast({ message: 'Select at least one card', type: 'error' }); return; }
+    setPrinting(true); setProgress({ current: 0, total: selItems.length });
+    setToast({ message: selItems.length === 1 ? 'Preparing PNG…' : 'Preparing ZIP…', type: 'success' });
+    try {
+      await downloadCards(selItems, tab, settings, schoolLogo, signImage,
+        (c, t) => setProgress({ current: c, total: t }),
+        tab === 'student' ? studentColor : '#1565c0');
+      setToast({ message: selItems.length === 1 ? 'PNG downloaded!' : 'ZIP downloaded!', type: 'success' });
+    } catch (e) { setToast({ message: 'Download failed: ' + e.message, type: 'error' }); }
+    finally { setPrinting(false); setProgress({ current: 0, total: 0 }); }
   };
 
-  const switchTab=(t)=>{setTab(t);setSearch('');setClassFilter('');setSelected(new Set());setPage(1);};
+  const switchTab = (t) => { setTab(t); setSearch(''); setClassFilter(''); setSelected(new Set()); setPage(1); };
 
   return (
     <div className="space-y-5">
-      {toast&&<Toast {...toast} onClose={()=>setToast(null)}/>}
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">ID Card Generator</h1>
-          <p className="text-xs text-gray-500 mt-0.5">57×87mm • 300 DPI • Premium gold-foil finish • 673×1028px export</p>
+          <p className="text-xs text-gray-500 mt-0.5">57×87mm • 300 DPI • Ribbon space at top</p>
         </div>
         <button onClick={handleDl} disabled={printing}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm transition-colors">
-          <Download size={16}/>
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm transition-colors">
+          <Download size={16} />
           {printing
-            ? progress.total>1?`Processing ${progress.current}/${progress.total}…`:'Processing…'
-            : selItems.length>1?`Download ZIP (${selItems.length})`:`Download PNG (${selItems.length||0})`}
+            ? progress.total > 1 ? `Processing ${progress.current}/${progress.total}…` : 'Processing…'
+            : selItems.length > 1 ? `Download ZIP (${selItems.length})` : `Download PNG (${selItems.length || 0})`}
         </button>
       </div>
 
       <div className="flex gap-2 bg-gray-100 p-1 rounded-xl w-fit">
-        {[['student','Students',<Users size={14}/>],['teacher','Teachers',<GraduationCap size={14}/>]].map(([t,lbl,icon])=>(
-          <button key={t} onClick={()=>switchTab(t)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${tab===t?`bg-white ${t==='student'?'text-indigo-700':'text-red-700'} shadow-sm`:'text-gray-500 hover:text-gray-700'}`}>
+        {[['student', 'Students', <Users size={14} />], ['teacher', 'Teachers', <GraduationCap size={14} />]].map(([t, lbl, icon]) => (
+          <button key={t} onClick={() => switchTab(t)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${tab === t ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
             {icon}{lbl}
           </button>
         ))}
@@ -343,72 +265,72 @@ const IDCardGenerator=()=>{
 
       <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-[180px] bg-gray-50 rounded-xl px-3 h-10 border border-gray-100">
-          <Search size={14} className="text-gray-400 shrink-0"/>
+          <Search size={14} className="text-gray-400 shrink-0" />
           <input className="bg-transparent text-sm font-medium outline-none w-full placeholder:text-gray-400"
-            placeholder={tab==='student'?'Search name or UID...':'Search name or code...'}
-            value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}}/>
+            placeholder={tab === 'student' ? 'Search name or UID...' : 'Search name or code...'}
+            value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
         </div>
-        {tab==='student'&&(
+        {tab === 'student' && (
           <select className="h-10 bg-gray-50 border border-gray-100 rounded-xl px-3 text-xs font-bold outline-none"
-            value={classFilter} onChange={e=>{setClassFilter(e.target.value);setPage(1);}}>
+            value={classFilter} onChange={e => { setClassFilter(e.target.value); setPage(1); }}>
             <option value="">All Classes</option>
-            {CLASSES.map(c=><option key={c} value={c}>Class {c}</option>)}
+            {CLASSES.map(c => <option key={c} value={c}>Class {c}</option>)}
           </select>
         )}
-        {tab==='student'&&(
+        {tab === 'student' && (
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-gray-500">Theme:</span>
+            <span className="text-xs font-bold text-gray-500">Color:</span>
             <div className="flex items-center gap-1.5">
-              {PRESET.map(c=>(
-                <button key={c} onClick={()=>setStudentColor(c)}
-                  style={{background:c,width:22,height:22,borderRadius:'50%',flexShrink:0,
-                    border:studentColor===c?'2.5px solid #111':'2.5px solid transparent',
-                    outline:studentColor===c?'2px solid #fff':'none',outlineOffset:'-4px',
-                    boxShadow:studentColor===c?`0 0 0 3px ${c}55`:'none'}}/>
+              {PRESET.map(c => (
+                <button key={c} onClick={() => setStudentColor(c)}
+                  style={{ background: c, width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                    border: studentColor === c ? '2.5px solid #111' : '2.5px solid transparent',
+                    outline: studentColor === c ? '2px solid #fff' : 'none', outlineOffset: '-4px',
+                    boxShadow: studentColor === c ? `0 0 0 3px ${c}55` : 'none' }} />
               ))}
-              <input type="color" value={studentColor} onChange={e=>setStudentColor(e.target.value)}
-                className="w-8 h-8 rounded-full cursor-pointer border-2 border-gray-200" style={{padding:2}}/>
+              <input type="color" value={studentColor} onChange={e => setStudentColor(e.target.value)}
+                className="w-8 h-8 rounded-full cursor-pointer border-2 border-gray-200" style={{ padding: 2 }} />
             </div>
           </div>
         )}
         <button onClick={toggleAll}
-          className="h-10 px-4 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-xl hover:bg-indigo-100 border border-indigo-100 transition-colors">
-          {selected.size===items.length&&items.length>0?'Deselect All':'Select All'}
+          className="h-10 px-4 bg-blue-50 text-blue-700 font-bold text-xs rounded-xl hover:bg-blue-100 border border-blue-100 transition-colors">
+          {selected.size === items.length && items.length > 0 ? 'Deselect All' : 'Select All'}
         </button>
       </div>
 
-      {loading?(
-        <div className="py-20 flex justify-center"><LoadingSpinner size="lg"/></div>
-      ):items.length===0?(
+      {loading ? (
+        <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div>
+      ) : items.length === 0 ? (
         <div className="py-20 text-center text-gray-400">No records found</div>
-      ):(
+      ) : (
         <div className="flex flex-wrap gap-5">
-          {items.map(item=>(
-            <div key={item._id} onClick={()=>toggle(item._id)} style={{cursor:'pointer',position:'relative',flexShrink:0}}>
-              <div style={{position:'absolute',inset:-4,borderRadius:10,
-                border:selected.has(item._id)?'3px solid #4f46e5':'3px solid transparent',
-                transition:'border-color 0.15s',pointerEvents:'none',zIndex:10}}/>
-              {selected.has(item._id)&&(
-                <div style={{position:'absolute',top:-7,right:-7,width:20,height:20,
-                  borderRadius:'50%',background:'#4f46e5',color:'#fff',
-                  display:'flex',alignItems:'center',justifyContent:'center',
-                  fontSize:11,fontWeight:900,zIndex:20,boxShadow:'0 2px 8px rgba(79,70,229,0.45)'}}>✔</div>
+          {items.map(item => (
+            <div key={item._id} onClick={() => toggle(item._id)} style={{ cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
+              <div style={{ position: 'absolute', inset: -4, borderRadius: 10,
+                border: selected.has(item._id) ? '3px solid #1565c0' : '3px solid transparent',
+                transition: 'border-color 0.15s', pointerEvents: 'none', zIndex: 10 }} />
+              {selected.has(item._id) && (
+                <div style={{ position: 'absolute', top: -7, right: -7, width: 20, height: 20,
+                  borderRadius: '50%', background: '#1565c0', color: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 11, fontWeight: 900, zIndex: 20, boxShadow: '0 2px 8px rgba(21,101,192,0.45)' }}>✔</div>
               )}
-              {tab==='student'
-                ?<StudentCard student={item} settings={settings} color={studentColor}/>
-                :<TeacherCard teacher={item} settings={settings}/>}
+              {tab === 'student'
+                ? <StudentCard student={item} settings={settings} color={studentColor} />
+                : <TeacherCard teacher={item} settings={settings} />}
             </div>
           ))}
         </div>
       )}
 
-      {pagination.totalPages>1&&(
+      {pagination.totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
-          <button disabled={page===1} onClick={()=>setPage(p=>p-1)}
-            className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-30 shadow-sm"><ChevronLeft size={18}/></button>
+          <button disabled={page === 1} onClick={() => setPage(p => p - 1)}
+            className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-30 shadow-sm"><ChevronLeft size={18} /></button>
           <span className="text-xs font-black text-gray-600 uppercase tracking-widest">Page {page} / {pagination.totalPages}</span>
-          <button disabled={page===pagination.totalPages} onClick={()=>setPage(p=>p+1)}
-            className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-30 shadow-sm"><ChevronRight size={18}/></button>
+          <button disabled={page === pagination.totalPages} onClick={() => setPage(p => p + 1)}
+            className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-30 shadow-sm"><ChevronRight size={18} /></button>
         </div>
       )}
     </div>
