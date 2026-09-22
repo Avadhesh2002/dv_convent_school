@@ -82,6 +82,10 @@ const drawCard = async (canvas, settings, assets, opts) => {
   // white base
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, CW, CH);
 
+  // ── RIBBON — blue (same as bottom strip) ─────────────────────────────
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, CW, RH);
+
   // ── HEADER ──────────────────────────────────────────────────────────────
   const hg = ctx.createLinearGradient(0, HY, 0, HY + HH);
   hg.addColorStop(0, '#1565c0'); hg.addColorStop(1, '#1976d2');
@@ -121,7 +125,8 @@ const drawCard = async (canvas, settings, assets, opts) => {
   ctx.fillStyle = '#fff'; ctx.fillRect(0, PZY, CW, PZH);
 
   const PW2 = p(18), PHGT = p(22);
-  const PX = (CW - PW2) / 2, PY = PZY + (PZH - PHGT) / 2;
+  // photo starts right at top of photo zone with small padding
+  const PX = (CW - PW2) / 2, PY = PZY + p(1);
 
   ctx.strokeStyle = color; ctx.lineWidth = p(0.6);
   ctx.strokeRect(PX - p(0.6), PY - p(0.6), PW2 + p(1.2), PHGT + p(1.2));

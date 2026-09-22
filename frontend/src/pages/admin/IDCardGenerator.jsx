@@ -28,7 +28,7 @@ const getLogoSrc = (s) => s.schoolLogo
 const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, personName, idLine, rows, classVal }) => {
   const RH=pp(5), HH=pp(18), PZH=pp(18), NUH=pp(8), IH=pp(21), SFH=pp(9), BSH=pp(8);
   const HY=RH, PZY=HY+HH, NUY=PZY+PZH, IY=NUY+NUH, SFY=IY+IH, BTSY=SFY+SFH;
-  const PW2=pp(18), PHGT=pp(22), PX=(PW-PW2)/2, PYY=PZY+(PZH-PHGT)/2;
+  const PW2=pp(18), PHGT=pp(22), PX=(PW-PW2)/2, PYY=PZY+pp(1);
   const rowH=IH/rows.length;
 
   return (
@@ -36,8 +36,9 @@ const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, perso
       background: '#fff', borderRadius: 5, overflow: 'hidden', flexShrink: 0,
       boxShadow: '0 6px 24px rgba(0,0,0,0.2)' }}>
 
-      {/* 1. Ribbon — plain white */}
-      {/* intentionally empty */}
+      {/* 1. Ribbon — blue (same as bottom) */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: RH,
+        background: color }} />
 
       {/* 2. Header */}
       <div style={{ position: 'absolute', top: HY, left: 0, right: 0, height: HH,
