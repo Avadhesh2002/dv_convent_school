@@ -1,12 +1,9 @@
 /**
- * printAdmissionForm
- * Opens a new window with a fully formatted Admission Form and triggers print.
- * @param {Object} student  — student document from MongoDB
- * @param {Object} settings — school settings (optional, for school name/address etc.)
+ * printAdmissionForm — Strict single-page A4 admission form
  */
 
 const fmtDate = (d) =>
-    d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+    d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const docLabel = (key) => ({
     transferCertificate:  'Transfer Certificate',
@@ -14,11 +11,12 @@ const docLabel = (key) => ({
     characterCertificate: 'Character Certificate',
     casteCertificate:     'Caste Certificate',
     birthCertificate:     'Birth Certificate',
-    markSheet:            'Previous Class Result',
-    fivePhotos:           '5 Photograph (Passport Size)',
+    markSheet:            'Prev. Class Result',
+    fivePhotos:           '5 Photographs (Passport)',
     studentAadhar:        'Student Aadhar Copy',
     fatherAadhar:         'Father Aadhar Copy',
     motherAadhar:         'Mother Aadhar Copy',
+    aadharPhotoCopy:      'Aadhar Photo Copy',
 }[key] || key);
 
 export const printAdmissionForm = (student, settings = {}) => {
@@ -34,21 +32,43 @@ export const printAdmissionForm = (student, settings = {}) => {
     const affiliationNo = settings.affiliationNumber || '';
     const logoSrc       = settings.schoolLogo
         ? (settings.schoolLogo.startsWith('data:') ? settings.schoolLogo : `data:image/png;base64,${settings.schoolLogo}`)
-        : '/src/assets/school_logo.png';
+        : '';
 
     const photoSrc = student.profileImage || null;
 
-    // Documents received
-    const docs = student.documents || {};
-    const docRows = Object.entries(docs)
-        .map(([key, val]) => `
-            <tr>
-                <td class="doc-label">${docLabel(key)}</td>
-                <td class="doc-check">${val ? '&#10003;' : '&#9744;'}</td>
-            </tr>`).join('');
+    // Documents — split into 2 columns
+    const docs     = student.documents || {};
+    const docKeys  = Object.keys(docs);
+    const half     = Math.ceil(docKeys.length / 2);
+    const leftDocs = docKeys.slice(0, half);
+    const rightDocs= docKeys.slice(half);
 
-    const admDate = fmtDate(student.admissionDate);
+    const docPairs = [];
+    for (let i = 0; i < half; i++) {
+        docPairs.push({ left: leftDocs[i], right: rightDocs[i] });
+    }
+
+    const docRows = docPairs.map(({ left, right }) => `
+        <tr>
+            <td class="doc-label">${docLabel(left)}</td>
+            <td class="doc-check">${docs[left] ? '&#10003;' : '&#9744;'}</td>
+            <td class="doc-sep"></td>
+            ${right
+                ? `<td class="doc-label">${docLabel(right)}</td>
+                   <td class="doc-check">${docs[right] ? '&#10003;' : '&#9744;'}</td>`
+                : `<td class="doc-label"></td><td class="doc-check"></td>`
+            }
+        </tr>`).join('');
+
     const dob     = fmtDate(student.dateOfBirth);
+    const admDate = fmtDate(student.admissionDate);
+
+    const metaBadges = [
+        udiseCode     ? `UDISE: ${udiseCode}`            : '',
+        schoolCode    ? `Code: ${schoolCode}`            : '',
+        affiliation   ? affiliation                      : '',
+        affiliationNo ? `Affil: ${affiliationNo}`        : '',
+    ].filter(Boolean).map(t => `<span class="badge">${t}</span>`).join('');
 
     const html = `<!DOCTYPE html>
 <html>
@@ -58,215 +78,241 @@ export const printAdmissionForm = (student, settings = {}) => {
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 
-@page { size: A4 portrait; margin: 0; }
+@page {
+    size: A4 portrait;
+    margin: 0;
+}
 
-body {
+html, body {
+    width: 210mm;
+    height: 297mm;
+    overflow: hidden;
     font-family: 'Times New Roman', Times, serif;
-    font-size: 10pt;
+    font-size: 9pt;
     background: #fff;
     color: #111;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
 
+/* ── Page shell — exactly A4, no overflow ── */
 .page {
     width: 210mm;
-    min-height: 297mm;
-    padding: 10mm 14mm 10mm;
+    height: 297mm;
     position: relative;
+    overflow: hidden;
     background: #fff;
-    margin: 0 auto;
 }
 
-/* Border */
 .outer-border {
     position: absolute;
-    inset: 6mm;
-    border: 3px double #1a3a6b;
+    inset: 5mm;
+    border: 2.5px double #1a3a6b;
     pointer-events: none;
+    z-index: 0;
 }
 .inner-border {
     position: absolute;
-    inset: 8.5mm;
+    inset: 7.5mm;
     border: 1px solid #1a3a6b;
     pointer-events: none;
+    z-index: 0;
 }
 
-.content { position: relative; z-index: 1; padding: 4mm 6mm; }
+/* ── Content box — stays inside borders ── */
+.content {
+    position: absolute;
+    inset: 9mm 10mm 9mm 10mm;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+}
 
-/* Header */
+/* ── Header ── */
 .header {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding-bottom: 8px;
-    border-bottom: 2.5px solid #1a3a6b;
-    margin-bottom: 8px;
+    gap: 8px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #1a3a6b;
+    margin-bottom: 4px;
+    flex-shrink: 0;
 }
 .logo {
-    width: 80px; height: 80px;
+    width: 58px; height: 58px;
     object-fit: contain;
     border-radius: 50%;
-    border: 3px solid #1a3a6b;
+    border: 2px solid #1a3a6b;
     flex-shrink: 0;
-}
-.logo-placeholder {
-    width: 80px; height: 80px;
-    border-radius: 50%;
-    border: 3px solid #1a3a6b;
-    flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 8pt; color: #1a3a6b; text-align: center;
-    background: #f0f4ff;
 }
 .school-info { flex: 1; text-align: center; }
-.school-name { font-size: 20pt; font-weight: bold; color: #1a3a6b; letter-spacing: 0.5px; }
-.school-meta { font-size: 9pt; color: #333; margin-top: 3px; line-height: 1.6; }
-.affil-badges { margin-top: 4px; }
+.school-name {
+    font-size: 15pt;
+    font-weight: bold;
+    color: #1a3a6b;
+    letter-spacing: 0.3px;
+    line-height: 1.1;
+}
+.school-meta {
+    font-size: 7.5pt;
+    color: #333;
+    margin-top: 2px;
+    line-height: 1.5;
+}
+.affil-badges { margin-top: 2px; }
 .badge {
     display: inline-block;
     background: #1a3a6b; color: #fff;
-    font-size: 7pt; padding: 1px 8px;
+    font-size: 6.5pt; padding: 1px 6px;
     border-radius: 20px; margin: 1px;
 }
-
-/* Photo box */
 .photo-box {
-    width: 75px; height: 90px;
+    width: 58px; height: 72px;
     border: 1.5px solid #1a3a6b;
     flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 7.5pt; color: #888; text-align: center;
-    background: #f9f9f9;
-    overflow: hidden;
+    font-size: 6.5pt; color: #888; text-align: center;
+    background: #f9f9f9; overflow: hidden;
+    line-height: 1.4;
 }
 .photo-box img { width: 100%; height: 100%; object-fit: cover; }
 
-/* Form title */
-.form-title {
+/* ── Form title ── */
+.form-title-wrap {
     text-align: center;
-    font-size: 13pt;
+    margin: 3px 0;
+    flex-shrink: 0;
+}
+.form-title {
+    font-size: 11pt;
     font-weight: bold;
     color: #1a3a6b;
-    letter-spacing: 4px;
+    letter-spacing: 5px;
     text-transform: uppercase;
-    border-bottom: 2px solid #1a3a6b;
-    padding-bottom: 2px;
-    margin-bottom: 8px;
-    display: inline-block;
+    border-bottom: 1.5px solid #1a3a6b;
+    padding-bottom: 1px;
 }
-.form-title-wrap { text-align: center; margin-bottom: 10px; }
 
-/* Meta row */
+/* ── Meta bar ── */
 .meta-row {
     display: flex;
     justify-content: space-between;
-    font-size: 8.5pt;
+    font-size: 7.5pt;
     font-weight: bold;
     color: #1a3a6b;
-    margin-bottom: 8px;
-    padding: 3px 10px;
-    background: #f0f4ff;
+    padding: 2px 8px;
+    background: #eef2ff;
     border: 1px solid #c7d7f5;
-    border-radius: 3px;
+    border-radius: 2px;
+    margin-bottom: 3px;
+    flex-shrink: 0;
 }
 
-/* Section heading */
+/* ── Two-column body layout ── */
+.body-cols {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+.col-left  { flex: 1.1; min-width: 0; overflow: hidden; }
+.col-right { flex: 0.9; min-width: 0; overflow: hidden; }
+
+/* ── Section heading ── */
 .sec-heading {
-    font-size: 8.5pt;
+    font-size: 7.5pt;
     font-weight: bold;
     color: #fff;
     background: #1a3a6b;
-    padding: 3px 8px;
-    margin: 8px 0 4px;
-    letter-spacing: 1px;
+    padding: 2px 6px;
+    margin: 4px 0 2px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
 }
+.sec-heading:first-child { margin-top: 0; }
 
-/* Info grid */
+/* ── Info table ── */
 .info-grid {
     width: 100%;
     border-collapse: collapse;
-    font-size: 9.5pt;
-    margin-bottom: 2px;
+    font-size: 8pt;
 }
 .info-grid td {
-    padding: 3.5px 6px;
+    padding: 2px 4px;
     border-bottom: 1px dashed #dde4f0;
     vertical-align: top;
+    line-height: 1.35;
 }
-.info-grid .lbl {
-    width: 38%;
-    font-weight: bold;
-    color: #1a3a6b;
-}
-.info-grid .colon { width: 3%; color: #888; text-align: center; }
-.info-grid .val { width: 59%; color: #111; }
+.info-grid .lbl { width: 42%; font-weight: bold; color: #1a3a6b; }
+.info-grid .colon { width: 4%; color: #888; text-align: center; }
+.info-grid .val { width: 54%; color: #111; }
 .info-grid tr:nth-child(even) td { background: #f7f9ff; }
 
-/* Documents table */
+/* ── Documents 2-col table ── */
 .doc-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 9pt;
+    font-size: 7.5pt;
 }
 .doc-table td {
-    padding: 2.5px 6px;
+    padding: 1.8px 4px;
     border-bottom: 1px dashed #e0e0e0;
+    line-height: 1.3;
 }
-.doc-label { width: 85%; color: #333; }
-.doc-check {
-    width: 15%;
-    text-align: center;
-    font-size: 11pt;
-    color: #1a3a6b;
-    font-weight: bold;
-}
+.doc-label { width: 38%; color: #333; }
+.doc-check { width: 10%; text-align: center; font-size: 9pt; color: #1a3a6b; font-weight: bold; }
+.doc-sep   { width: 4%;  border-bottom: none !important; }
 
-/* Declaration */
+/* ── Declaration ── */
 .declaration {
-    font-size: 8pt;
+    font-size: 7pt;
     color: #444;
-    line-height: 1.6;
-    padding: 6px 10px;
+    line-height: 1.5;
+    padding: 3px 7px;
     background: #fffbeb;
     border: 1px solid #fde68a;
-    border-radius: 3px;
-    margin: 10px 0 8px;
+    border-radius: 2px;
+    margin: 3px 0 2px;
     font-style: italic;
+    flex-shrink: 0;
 }
 
-/* Signature row */
+/* ── Signatures ── */
 .sig-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-top: 10px;
-    padding-top: 6px;
+    padding-top: 4px;
+    flex-shrink: 0;
 }
 .sig-block { text-align: center; }
 .sig-line {
-    width: 130px;
-    border-bottom: 1.5px solid #1a3a6b;
-    margin: 0 auto 4px;
-    height: 36px;
+    width: 110px;
+    border-bottom: 1px solid #1a3a6b;
+    margin: 0 auto 2px;
+    height: 22px;
 }
-.sig-label { font-size: 8pt; font-weight: bold; color: #1a3a6b; }
-.sig-sub { font-size: 7.5pt; color: #666; margin-top: 1px; }
+.sig-label { font-size: 7pt; font-weight: bold; color: #1a3a6b; }
+.sig-sub   { font-size: 6.5pt; color: #666; }
 
+/* ── Footer ── */
 .footer {
     text-align: center;
-    font-size: 7.5pt;
-    color: #999;
+    font-size: 6.5pt;
+    color: #aaa;
     font-style: italic;
-    margin-top: 10px;
-    padding-top: 6px;
+    padding-top: 3px;
     border-top: 1px dashed #ddd;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 @media print {
-    body { margin: 0; padding: 0; }
-    .page { margin: 0 auto; page-break-after: avoid; }
+    html, body { margin:0; padding:0; overflow:hidden; }
+    .page { page-break-after: avoid; }
 }
 </style>
 </head>
@@ -277,21 +323,20 @@ body {
 
     <div class="content">
 
-        <!-- Header -->
+        <!-- HEADER -->
         <div class="header">
-            <img src="${logoSrc}" class="logo" alt="Logo" onerror="this.style.display='none'" />
+            ${logoSrc
+                ? `<img src="${logoSrc}" class="logo" alt="Logo" onerror="this.style.display='none'" />`
+                : `<div class="logo" style="background:#f0f4ff;display:flex;align-items:center;justify-content:center;font-size:6pt;color:#1a3a6b;text-align:center;">School<br>Logo</div>`
+            }
             <div class="school-info">
                 <div class="school-name">${schoolName}</div>
                 <div class="school-meta">
-                    ${schoolAddress}${schoolPhone ? ' &nbsp;|&nbsp; Ph: ' + schoolPhone : ''}
+                    ${schoolAddress}
+                    ${schoolPhone ? ' &nbsp;|&nbsp; Ph: ' + schoolPhone : ''}
                     ${schoolEmail ? ' &nbsp;|&nbsp; ' + schoolEmail : ''}
                 </div>
-                <div class="affil-badges">
-                    ${udiseCode    ? `<span class="badge">UDISE: ${udiseCode}</span>` : ''}
-                    ${schoolCode   ? `<span class="badge">School Code: ${schoolCode}</span>` : ''}
-                    ${affiliation  ? `<span class="badge">${affiliation}</span>` : ''}
-                    ${affiliationNo? `<span class="badge">Affil. No: ${affiliationNo}</span>` : ''}
-                </div>
+                ${metaBadges ? `<div class="affil-badges">${metaBadges}</div>` : ''}
             </div>
             <div class="photo-box">
                 ${photoSrc
@@ -301,63 +346,69 @@ body {
             </div>
         </div>
 
-        <!-- Form Title -->
+        <!-- FORM TITLE -->
         <div class="form-title-wrap">
             <span class="form-title">Admission Form</span>
         </div>
 
-        <!-- Meta: SR No | UID | Date -->
+        <!-- META BAR -->
         <div class="meta-row">
-            <div>SR No: &nbsp;<span>${student.srNo || '—'}</span></div>
-            <div>UID: &nbsp;<span>${student.UID || '—'}</span></div>
-            <div>Admission Date: &nbsp;<span>${admDate}</span></div>
-            <div>Admission Type: &nbsp;<span>${student.admissionType === 'New' ? 'Fresh Admission' : 'Promoted'}</span></div>
+            <span>SR No: <b>${student.srNo || '—'}</b></span>
+            <span>UID: <b>${student.UID || '—'}</b></span>
+            <span>Adm. Date: <b>${admDate}</b></span>
+            <span>Type: <b>${student.admissionType === 'New' ? 'Fresh Admission' : 'Promoted'}</b></span>
         </div>
 
-        <!-- Student Details -->
-        <div class="sec-heading">&#9654; Student Details</div>
-        <table class="info-grid">
-            <tr><td class="lbl">Full Name</td><td class="colon">:</td><td class="val"><b>${student.name || '—'}</b></td></tr>
-            <tr><td class="lbl">Date of Birth</td><td class="colon">:</td><td class="val">${dob}</td></tr>
-            <tr><td class="lbl">Gender</td><td class="colon">:</td><td class="val">${student.gender || '—'}</td></tr>
-            <tr><td class="lbl">Category</td><td class="colon">:</td><td class="val">${student.category || '—'}</td></tr>
-            <tr><td class="lbl">Class Admitted</td><td class="colon">:</td><td class="val">Class ${student.class || '—'}</td></tr>
-            <tr><td class="lbl">Aadhar Number</td><td class="colon">:</td><td class="val">${student.aadharNumber || '—'}</td></tr>
-            <tr><td class="lbl">PEN Number</td><td class="colon">:</td><td class="val">${student.penNumber || '—'}</td></tr>
-        </table>
+        <!-- TWO-COLUMN BODY -->
+        <div class="body-cols">
 
-        <!-- Parent / Guardian Details -->
-        <div class="sec-heading">&#9654; Parent / Guardian Details</div>
-        <table class="info-grid">
-            <tr><td class="lbl">Father's Name</td><td class="colon">:</td><td class="val">${student.fatherName || '—'}</td></tr>
-            <tr><td class="lbl">Father's Mobile</td><td class="colon">:</td><td class="val">${student.fatherMobile || '—'}</td></tr>
-            <tr><td class="lbl">Mother's Name</td><td class="colon">:</td><td class="val">${student.motherName || '—'}</td></tr>
-            <tr><td class="lbl">Mother's Mobile</td><td class="colon">:</td><td class="val">${student.motherMobile || '—'}</td></tr>
-            ${student.guardianName ? `<tr><td class="lbl">Guardian's Name</td><td class="colon">:</td><td class="val">${student.guardianName}</td></tr>` : ''}
-            ${student.guardianMobile ? `<tr><td class="lbl">Guardian's Mobile</td><td class="colon">:</td><td class="val">${student.guardianMobile}</td></tr>` : ''}
-            <tr><td class="lbl">Parent Email</td><td class="colon">:</td><td class="val">${student.parentEmail || '—'}</td></tr>
-            <tr><td class="lbl">Residential Address</td><td class="colon">:</td><td class="val">${student.address || '—'}${student.pincode ? ', ' + student.pincode : ''}</td></tr>
-        </table>
+            <!-- LEFT: Student + Parent -->
+            <div class="col-left">
+                <div class="sec-heading">&#9654; Student Details</div>
+                <table class="info-grid">
+                    <tr><td class="lbl">Full Name</td><td class="colon">:</td><td class="val"><b>${student.name || '—'}</b></td></tr>
+                    <tr><td class="lbl">Date of Birth</td><td class="colon">:</td><td class="val">${dob}</td></tr>
+                    <tr><td class="lbl">Gender</td><td class="colon">:</td><td class="val">${student.gender || '—'}</td></tr>
+                    <tr><td class="lbl">Category</td><td class="colon">:</td><td class="val">${student.category || '—'}</td></tr>
+                    <tr><td class="lbl">Class Admitted</td><td class="colon">:</td><td class="val">Class ${student.class || '—'}</td></tr>
+                    <tr><td class="lbl">Aadhar No.</td><td class="colon">:</td><td class="val">${student.aadharNumber || '—'}</td></tr>
+                    <tr><td class="lbl">PEN Number</td><td class="colon">:</td><td class="val">${student.penNumber || '—'}</td></tr>
+                </table>
 
-        <!-- Documents Received -->
-        <div class="sec-heading">&#9654; Documents Received</div>
-        <table class="doc-table">
-            ${docRows || '<tr><td class="doc-label" colspan="2">No document information available</td></tr>'}
-        </table>
+                <div class="sec-heading">&#9654; Parent / Guardian</div>
+                <table class="info-grid">
+                    <tr><td class="lbl">Father's Name</td><td class="colon">:</td><td class="val">${student.fatherName || '—'}</td></tr>
+                    <tr><td class="lbl">Father's Mobile</td><td class="colon">:</td><td class="val">${student.fatherMobile || '—'}</td></tr>
+                    <tr><td class="lbl">Mother's Name</td><td class="colon">:</td><td class="val">${student.motherName || '—'}</td></tr>
+                    <tr><td class="lbl">Mother's Mobile</td><td class="colon">:</td><td class="val">${student.motherMobile || '—'}</td></tr>
+                    ${student.guardianName ? `<tr><td class="lbl">Guardian</td><td class="colon">:</td><td class="val">${student.guardianName}</td></tr>` : ''}
+                    ${student.guardianMobile ? `<tr><td class="lbl">Guardian Mobile</td><td class="colon">:</td><td class="val">${student.guardianMobile}</td></tr>` : ''}
+                    <tr><td class="lbl">Parent Email</td><td class="colon">:</td><td class="val">${student.parentEmail || '—'}</td></tr>
+                    <tr><td class="lbl">Address</td><td class="colon">:</td><td class="val">${student.address || '—'}${student.pincode ? ', ' + student.pincode : ''}</td></tr>
+                </table>
+            </div>
 
-        <!-- Declaration -->
+            <!-- RIGHT: Documents -->
+            <div class="col-right">
+                <div class="sec-heading">&#9654; Documents Received</div>
+                <table class="doc-table">
+                    ${docRows || '<tr><td colspan="5" style="color:#999;font-size:7.5pt;padding:4px;">No documents info</td></tr>'}
+                </table>
+            </div>
+        </div>
+
+        <!-- DECLARATION -->
         <div class="declaration">
-            I/We hereby declare that the above information is true and correct to the best of my/our knowledge. I/We agree
-            to abide by the rules and regulations of the school and undertake to pay the fees regularly. I/We understand
-            that in case of any false information, the admission may be cancelled at any time.
+            I/We declare that the above information is true and correct. I/We agree to abide by the school rules
+            and undertake to pay fees regularly. In case of false information, admission may be cancelled.
         </div>
 
-        <!-- Signatures -->
+        <!-- SIGNATURES -->
         <div class="sig-row">
             <div class="sig-block">
                 <div class="sig-line"></div>
-                <div class="sig-label">Parent / Guardian Signature</div>
-                <div class="sig-sub">Date: ________________</div>
+                <div class="sig-label">Parent / Guardian</div>
+                <div class="sig-sub">Date: ____________</div>
             </div>
             <div class="sig-block">
                 <div class="sig-line"></div>
@@ -366,19 +417,19 @@ body {
             </div>
             <div class="sig-block">
                 <div class="sig-line"></div>
-                <div class="sig-label">Principal / Head of School</div>
+                <div class="sig-label">Principal</div>
                 <div class="sig-sub">Signature &amp; Seal</div>
             </div>
         </div>
 
-        <!-- Footer -->
+        <!-- FOOTER -->
         <div class="footer">
             Computer-generated Admission Form &nbsp;|&nbsp; ${schoolName} &nbsp;|&nbsp;
             Printed: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
         </div>
 
-    </div>
-</div>
+    </div><!-- .content -->
+</div><!-- .page -->
 <script>
 window.onload = function() { setTimeout(function(){ window.print(); }, 400); };
 </script>
