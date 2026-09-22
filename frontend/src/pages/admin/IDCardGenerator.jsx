@@ -17,58 +17,48 @@ const resolvePhoto = (p) => {
   if (p.startsWith('data:') || p.startsWith('http')) return p;
   return `${import.meta.env.VITE_API_URL?.replace('/api','') || 'http://localhost:5000'}${p}`;
 };
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+const fmtDate = (d) => d
+  ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})
+  : '—';
 const getLogoSrc = (s) => s.schoolLogo
   ? (s.schoolLogo.startsWith('data:') ? s.schoolLogo : `data:image/png;base64,${s.schoolLogo}`)
   : schoolLogo;
 
-// ── PREVIEW CARD ──────────────────────────────────────────────────────────
-const PremiumCard = ({ color, gold='#c9a94a', logoSrc, sName, sAddr, sPhone, label, photo, name, idLine, rows }) => {
+// ── CARD PREVIEW ──────────────────────────────────────────────────────────
+const PremiumCard = ({ color, gold='#c9a94a', logoSrc, sName, sAddr, sPhone,
+  label, photo, name, idLine, rows }) => {
 
-  // Section heights — match download exactly (÷3.5)
-  const RH = pp(8), HH = pp(26), PZH = pp(30), FH = pp(9);
-  const HY = RH, PZY = RH+HH, IY = PZY+PZH, IH = PH-RH-HH-PZH-FH;
-  const FTY = PH-FH;
-  const PW2 = pp(20), PHGT = pp(24);
-  const PX = (PW-PW2)/2, PYY = PZY+pp(2);
+  const RH=pp(7), HH=pp(24), PZH=pp(29), FH=pp(9);
+  const HY=RH, PZY=RH+HH, IY=PZY+PZH, IH=PH-RH-HH-PZH-FH, FTY=PH-FH;
+  const PW2=pp(20), PHGT=pp(24), PX=(PW-PW2)/2, PYY=PZY+pp(2);
+  const rowH=IH/rows.length;
 
   return (
     <div style={{ width:PW, height:PH, position:'relative', fontFamily:'Arial,sans-serif',
-      background:'#f4f6fb', borderRadius:5, overflow:'hidden', flexShrink:0,
+      background:'#ffffff', borderRadius:5, overflow:'hidden', flexShrink:0,
       boxShadow:'0 8px 28px rgba(0,0,0,0.22)' }}>
 
-      {/* Ribbon */}
-      <div style={{ position:'absolute', top:0, left:0, right:0, height:RH,
-        background:`linear-gradient(180deg,${color}28 0%,#f4f6fb 100%)`,
-        display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <div style={{ width:pp(5.6), height:pp(5.6), borderRadius:'50%',
-          background:`radial-gradient(circle at 38% 38%, #fef3c0, ${gold}, #78500a)`,
-          boxShadow:'0 1px 5px rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{ width:pp(4), height:pp(4), borderRadius:'50%',
-            background:'linear-gradient(135deg,#b8bdd0,#d4d8ea)',
-            boxShadow:'inset 0 1px 3px rgba(0,0,0,0.3)' }}/>
-        </div>
-      </div>
+      {/* ── Ribbon: plain white space, no decoration ── */}
+      {/* intentionally empty */}
 
-      {/* Header */}
+      {/* ── Header ── */}
       <div style={{ position:'absolute', top:HY, left:0, right:0, height:HH,
-        background:`linear-gradient(110deg,${color} 0%,${color}cc 100%)`, overflow:'hidden' }}>
-        {/* diagonal pattern */}
-        <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity:0.15 }}>
+        background:`linear-gradient(110deg,${color} 0%,${color}cc 100%)`,
+        overflow:'hidden' }}>
+        {/* diagonal lines */}
+        <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity:0.14 }}>
           {Array.from({length:16},(_,i)=>(
             <line key={i} x1={i*12-15} y1="0" x2={i*12+20} y2="100%" stroke={gold} strokeWidth="0.6"/>
           ))}
-          <line x1="0" y1="38%" x2="100%" y2="38%" stroke={gold} strokeWidth="0.5" opacity="0.5"/>
-          <line x1="0" y1="72%" x2="100%" y2="72%" stroke={gold} strokeWidth="0.5" opacity="0.4"/>
         </svg>
-        {/* gold borders */}
+        {/* gold top/bottom borders */}
         <div style={{ position:'absolute', top:0, left:'8%', right:'8%', height:1.2,
           background:`linear-gradient(90deg,transparent,${gold},transparent)` }}/>
         <div style={{ position:'absolute', bottom:0, left:'8%', right:'8%', height:1.2,
           background:`linear-gradient(90deg,transparent,${gold},transparent)` }}/>
 
         {/* Logo */}
-        <div style={{ position:'absolute', left:pp(3.5), top:'50%', transform:'translateY(-50%)',
+        <div style={{ position:'absolute', left:pp(3), top:'50%', transform:'translateY(-50%)',
           width:pp(14), height:pp(14), borderRadius:'50%',
           background:`linear-gradient(135deg,#fef3c0,${gold},#78500a)`,
           padding:1.5, boxShadow:`0 0 ${pp(2)} ${gold}88` }}>
@@ -77,59 +67,58 @@ const PremiumCard = ({ color, gold='#c9a94a', logoSrc, sName, sAddr, sPhone, lab
           </div>
         </div>
 
-        {/* Text */}
-        <div style={{ position:'absolute', left:pp(19.5), right:pp(2), top:pp(2.5) }}>
-          {/* school name — single line */}
-          <div style={{ color:'#fff', fontWeight:900, fontSize:pp(3.8), lineHeight:1.2,
+        {/* School text */}
+        <div style={{ position:'absolute', left:pp(19), right:pp(2), top:pp(2) }}>
+          {/* name — 1 line, auto-shrink via CSS */}
+          <div style={{ color:'#fff', fontWeight:900, lineHeight:1.2,
+            fontSize: sName.length > 20 ? pp(3.2) : sName.length > 15 ? pp(3.6) : pp(4),
             overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sName}</div>
-          {/* gold divider */}
           <div style={{ height:1, background:`linear-gradient(90deg,${gold},transparent)`,
-            margin:`${pp(1)}px 0`, width:'78%' }}/>
-          {/* address */}
-          <div style={{ color:'rgba(255,255,255,0.72)', fontSize:pp(2.4),
+            margin:`${pp(0.8)}px 0`, width:'75%' }}/>
+          <div style={{ color:'rgba(255,255,255,0.72)', fontSize:pp(2.3),
             overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sAddr}</div>
-          {/* phone */}
-          <div style={{ color:gold+'ee', fontWeight:700, fontSize:pp(2.6), marginTop:pp(0.8) }}>
+          <div style={{ color:gold+'ee', fontWeight:700, fontSize:pp(2.5), marginTop:pp(0.8) }}>
             Ph: {sPhone}
           </div>
-          {/* badge */}
-          <div style={{ display:'inline-block', marginTop:pp(1.2),
+          {/* small badge */}
+          <div style={{ display:'inline-block', marginTop:pp(1),
             background:`linear-gradient(90deg,${gold},#f5d050)`,
-            color:color, fontWeight:900, fontSize:pp(2.1),
-            padding:`${pp(0.7)}px ${pp(2)}px`, borderRadius:pp(2) }}>
+            color:color, fontWeight:900, fontSize:pp(2),
+            padding:`${pp(0.6)}px ${pp(2)}px`, borderRadius:pp(1.8) }}>
             {label}
           </div>
         </div>
       </div>
 
-      {/* Photo Zone */}
+      {/* ── Photo Zone ── */}
       <div style={{ position:'absolute', top:PZY, left:0, right:0, height:PZH,
-        background:'linear-gradient(180deg,#edf0f8 0%,#f8f9ff 60%,#fff 100%)' }}>
+        background:'linear-gradient(180deg,#eef1f9 0%,#fff 100%)' }}>
 
         {/* gold frame */}
         <div style={{ position:'absolute',
           left:PX-pp(1.8), top:PYY-pp(1.8),
           width:PW2+pp(3.6), height:PHGT+pp(3.6),
-          borderRadius:pp(2.2),
-          background:`linear-gradient(135deg,#fef3c0 0%,${gold} 30%,#fef0a0 60%,${gold} 80%,#78500a 100%)`,
-          boxShadow:`0 ${pp(2)} ${pp(4)} rgba(0,0,0,0.2)` }}/>
+          borderRadius:pp(2),
+          background:`linear-gradient(135deg,#fef3c0 0%,${gold} 28%,#fef0a0 55%,${gold} 80%,#78500a 100%)`,
+          boxShadow:`0 ${pp(1.5)} ${pp(4)} rgba(0,0,0,0.2)` }}/>
 
         {/* photo */}
         {photo
           ? <img src={photo} alt="" style={{
               position:'absolute', left:PX, top:PYY, width:PW2, height:PHGT,
-              objectFit:'cover', objectPosition:'center top', borderRadius:pp(1) }}/>
+              objectFit:'cover', objectPosition:'center top',
+              borderRadius:pp(1) }}/>
           : <div style={{ position:'absolute', left:PX, top:PYY, width:PW2, height:PHGT,
-              borderRadius:pp(1), background:color+'15',
+              borderRadius:pp(1), background:color+'12',
               display:'flex', alignItems:'center', justifyContent:'center',
-              fontSize:pp(11), fontWeight:900, color:color+'55' }}>
+              fontSize:pp(10), fontWeight:900, color:color+'55' }}>
               {name?.charAt(0)?.toUpperCase()}
             </div>}
 
-        {/* Name */}
-        <div style={{ position:'absolute', bottom:pp(7), left:pp(2), right:pp(2),
+        {/* Name — single line, auto-shrink */}
+        <div style={{ position:'absolute', bottom:pp(7.2), left:pp(2), right:pp(2),
           textAlign:'center', fontWeight:900, color:color, lineHeight:1.1,
-          fontSize: name?.length > 18 ? pp(3) : pp(3.6),
+          fontSize: name?.length > 20 ? pp(2.8) : name?.length > 15 ? pp(3.2) : pp(3.6),
           overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
           {name}
         </div>
@@ -137,7 +126,7 @@ const PremiumCard = ({ color, gold='#c9a94a', logoSrc, sName, sAddr, sPhone, lab
         {/* UID pill */}
         <div style={{ position:'absolute', bottom:pp(2), left:'50%', transform:'translateX(-50%)',
           background:`linear-gradient(90deg,${color},${color}bb)`,
-          color:'#fff', fontWeight:800, fontSize:pp(2.5),
+          color:'#fff', fontWeight:800, fontSize:pp(2.4),
           padding:`${pp(0.9)}px ${pp(3.5)}px`, borderRadius:pp(3),
           border:`0.8px solid ${gold}55`, whiteSpace:'nowrap',
           boxShadow:`0 ${pp(0.8)} ${pp(2)} ${color}44` }}>
@@ -145,29 +134,29 @@ const PremiumCard = ({ color, gold='#c9a94a', logoSrc, sName, sAddr, sPhone, lab
         </div>
       </div>
 
-      {/* Info rows */}
+      {/* ── Info rows ── */}
       <div style={{ position:'absolute', top:IY, left:0, right:0, height:IH,
         background:'#fff', overflow:'hidden' }}>
+        {/* gold top line */}
         <div style={{ height:1.2, background:`linear-gradient(90deg,transparent 5%,${gold} 15%,${gold} 85%,transparent 95%)` }}/>
         {rows.map(([lbl,val],i)=>(
           <div key={lbl} style={{ display:'flex', alignItems:'center',
-            padding:`${pp(0.55)}px ${pp(3)}px`,
+            height:rowH, padding:`0 ${pp(3)}px`,
             background:i%2===0?color+'07':'transparent',
-            borderBottom:'0.5px solid #e5e7eb' }}>
-            <div style={{ width:pp(0.85), height:pp(3.2), flexShrink:0,
-              background:`linear-gradient(180deg,${color}cc,${color}33)`,
-              marginRight:pp(1.8), borderRadius:1 }}/>
-            <span style={{ fontSize:pp(2.6), fontWeight:700, color, width:pp(13), flexShrink:0 }}>{lbl}</span>
-            <span style={{ fontSize:pp(2.6), color:'#9ca3af', marginRight:pp(1.5), flexShrink:0 }}>:</span>
-            <span style={{ fontSize:pp(2.6), fontWeight:500, color:'#111827', flex:1,
+            borderBottom:'0.5px solid #e5e7eb', boxSizing:'border-box' }}>
+            <div style={{ width:pp(0.9), height:'55%', flexShrink:0,
+              background:color+'bb', marginRight:pp(1.8), borderRadius:1 }}/>
+            <span style={{ fontSize:pp(2.5), fontWeight:700, color, width:pp(13), flexShrink:0 }}>{lbl}</span>
+            <span style={{ fontSize:pp(2.5), color:'#9ca3af', marginRight:pp(1.5), flexShrink:0 }}>:</span>
+            <span style={{ fontSize:pp(2.5), fontWeight:500, color:'#111827', flex:1,
               overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{val||'—'}</span>
           </div>
         ))}
       </div>
 
-      {/* Footer */}
+      {/* ── Footer ── */}
       <div style={{ position:'absolute', bottom:0, left:0, right:0, height:FH,
-        background:`linear-gradient(90deg,${color}f5,${color})`,
+        background:`linear-gradient(90deg,${color}f0,${color})`,
         display:'flex', alignItems:'center', justifyContent:'space-between',
         padding:`0 ${pp(3)}px` }}>
         <div style={{ position:'absolute', top:0, left:'8%', right:'8%', height:1.2,
@@ -185,7 +174,7 @@ const PremiumCard = ({ color, gold='#c9a94a', logoSrc, sName, sAddr, sPhone, lab
   );
 };
 
-const StudentCard = ({student,settings,color='#1a3a6b'}) => (
+const StudentCard=({student,settings,color='#1a3a6b'})=>(
   <PremiumCard color={color} logoSrc={getLogoSrc(settings)}
     sName={settings.schoolName||'D V Convent School'}
     sAddr={settings.schoolAddress||'Akodha, Rohi, Bhadohi'}
@@ -204,7 +193,7 @@ const StudentCard = ({student,settings,color='#1a3a6b'}) => (
   />
 );
 
-const TeacherCard = ({teacher,settings}) => (
+const TeacherCard=({teacher,settings})=>(
   <PremiumCard color="#7b1d1d" logoSrc={getLogoSrc(settings)}
     sName={settings.schoolName||'D V Convent School'}
     sAddr={settings.schoolAddress||'Akodha, Rohi, Bhadohi'}
@@ -223,20 +212,20 @@ const TeacherCard = ({teacher,settings}) => (
 );
 
 // ── MAIN ──────────────────────────────────────────────────────────────────
-const IDCardGenerator = () => {
-  const {settings} = useSettings();
-  const [tab,setTab]       = useState('student');
-  const [search,setSearch] = useState('');
-  const [classFilter,setClassFilter] = useState('');
-  const [items,setItems]   = useState([]);
-  const [loading,setLoading]  = useState(false);
-  const [toast,setToast]   = useState(null);
-  const [selected,setSelected] = useState(new Set());
-  const [page,setPage]     = useState(1);
-  const [pagination,setPagination] = useState({});
-  const [printing,setPrinting] = useState(false);
-  const [progress,setProgress] = useState({current:0,total:0});
-  const [studentColor,setStudentColor] = useState('#1a3a6b');
+const IDCardGenerator=()=>{
+  const {settings}=useSettings();
+  const [tab,setTab]=useState('student');
+  const [search,setSearch]=useState('');
+  const [classFilter,setClassFilter]=useState('');
+  const [items,setItems]=useState([]);
+  const [loading,setLoading]=useState(false);
+  const [toast,setToast]=useState(null);
+  const [selected,setSelected]=useState(new Set());
+  const [page,setPage]=useState(1);
+  const [pagination,setPagination]=useState({});
+  const [printing,setPrinting]=useState(false);
+  const [progress,setProgress]=useState({current:0,total:0});
+  const [studentColor,setStudentColor]=useState('#1a3a6b');
 
   const PRESET=['#1a3a6b','#0f766e','#166534','#4a148c','#9a3412','#9d174d','#374151','#7c3aed'];
   const CLASSES=['Nursery','LKG','UKG','1','2','3','4','5','6','7','8'];
@@ -282,7 +271,7 @@ const IDCardGenerator = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">ID Card Generator</h1>
-          <p className="text-xs text-gray-500 mt-0.5">57×87mm • 300 DPI • Gold frame • Lanyard hole</p>
+          <p className="text-xs text-gray-500 mt-0.5">57×87mm • 300 DPI • Gold frame • Ribbon space at top</p>
         </div>
         <button onClick={handleDl} disabled={printing}
           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm transition-colors">
@@ -328,7 +317,7 @@ const IDCardGenerator = () => {
                     boxShadow:studentColor===c?`0 0 0 3px ${c}55`:'none'}}/>
               ))}
               <input type="color" value={studentColor} onChange={e=>setStudentColor(e.target.value)}
-                className="w-8 h-8 rounded-full cursor-pointer border-2 border-gray-200" style={{padding:2}} title="Custom"/>
+                className="w-8 h-8 rounded-full cursor-pointer border-2 border-gray-200" style={{padding:2}}/>
             </div>
           </div>
         )}
@@ -341,7 +330,7 @@ const IDCardGenerator = () => {
       {loading?(
         <div className="py-20 flex justify-center"><LoadingSpinner size="lg"/></div>
       ):items.length===0?(
-        <div className="py-20 text-center text-gray-400 font-medium">No records found</div>
+        <div className="py-20 text-center text-gray-400">No records found</div>
       ):(
         <div className="flex flex-wrap gap-5">
           {items.map(item=>(
