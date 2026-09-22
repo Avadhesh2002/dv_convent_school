@@ -26,12 +26,11 @@ const getLogoSrc = (s) => s.schoolLogo
 
 // ── CARD PREVIEW ──────────────────────────────────────────────────────────
 const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, personName, idLine, rows, classVal }) => {
-  const RH = pp(7), HH = pp(22), PZH = pp(29), IH = pp(20), SFH = pp(9);
-  const HY = RH, PZY = HY + HH, IY = PZY + PZH, SFY = IY + IH, FTY = SFY + SFH;
-  const BTSH = PH - FTY;
-  const PW2 = pp(30), PHGT = pp(36);
-  const PX = (PW - PW2) / 2, PYY = PZY + (PZH - PHGT) / 2;
-  const rowH = IH / rows.length;
+  const RH=pp(6), HH=pp(20), PZH=pp(20), NUH=pp(9), IH=pp(23), SFH=pp(9);
+  const HY=RH, PZY=HY+HH, NUY=PZY+PZH, IY=NUY+NUH, SFY=IY+IH, FTY=SFY+SFH;
+  const BTSH=PH-FTY;
+  const PW2=pp(22), PHGT=pp(27), PX=(PW-PW2)/2, PYY=PZY+(PZH-PHGT)/2;
+  const rowH=IH/rows.length;
 
   return (
     <div style={{ width: PW, height: PH, position: 'relative', fontFamily: 'Arial,sans-serif',
@@ -69,46 +68,45 @@ const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, perso
 
       {/* 3. Photo zone */}
       <div style={{ position: 'absolute', top: PZY, left: 0, right: 0, height: PZH, background: '#fff' }}>
-        {/* photo with blue border */}
-        <div style={{ position: 'absolute', left: PX - pp(0.8), top: PYY - pp(0.8),
-          width: PW2 + pp(1.6), height: PHGT + pp(1.6),
-          border: `${pp(0.8)}px solid ${color}`, background: '#dbeafe' }}>
+        <div style={{ position: 'absolute', left: PX - pp(0.7), top: PYY - pp(0.7),
+          width: PW2 + pp(1.4), height: PHGT + pp(1.4),
+          border: `${pp(0.7)}px solid ${color}`, background: '#dbeafe' }}>
           {photo && <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />}
         </div>
         {!photo && (
           <div style={{ position: 'absolute', left: PX, top: PYY, width: PW2, height: PHGT,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: pp(12), fontWeight: 900, color: color + '66' }}>
+            fontSize: pp(9), fontWeight: 900, color: color + '66' }}>
             {personName?.charAt(0)?.toUpperCase()}
           </div>
         )}
       </div>
 
-      {/* 4. Name + UID */}
-      <div style={{ position: 'absolute', top: IY - pp(11), left: pp(3), right: pp(3), textAlign: 'center' }}>
-        <div style={{ fontWeight: 700, color: '#1a1a1a', lineHeight: 1.2,
-          fontSize: (personName?.length || 0) > 18 ? pp(3.2) : pp(4.5),
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      {/* 4. Name + UID — separate zone below photo */}
+      <div style={{ position: 'absolute', top: NUY, left: pp(2), right: pp(2), height: NUH,
+        background: '#fff', textAlign: 'center' }}>
+        <div style={{ fontWeight: 700, color: '#1a1a1a', lineHeight: 1.1,
+          fontSize: (personName?.length||0) > 18 ? pp(3) : pp(3.6),
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: pp(0.5) }}>
           {personName}
         </div>
-        <div style={{ display: 'inline-block', marginTop: pp(1),
-          background: color, color: '#fff', fontWeight: 800, fontSize: pp(2.8),
-          padding: `${pp(0.8)}px ${pp(3.5)}px`, borderRadius: pp(3) }}>
+        <div style={{ display: 'inline-block', marginTop: pp(0.8),
+          background: color, color: '#fff', fontWeight: 800, fontSize: pp(2.5),
+          padding: `${pp(0.7)}px ${pp(3)}px`, borderRadius: pp(3) }}>
           {idLine}
         </div>
       </div>
 
       {/* 5. Info table */}
       <div style={{ position: 'absolute', top: IY, left: 0, right: 0, height: IH,
-        background: '#fff', overflow: 'hidden',
-        borderTop: '0.5px solid #e0e0e0' }}>
+        background: '#fff', overflow: 'hidden', borderTop: '0.5px solid #e0e0e0' }}>
         {rows.map(([lbl, val], i) => (
           <div key={lbl} style={{ display: 'flex', alignItems: 'center', height: rowH,
             padding: `0 ${pp(3)}px`,
             background: i % 2 === 0 ? '#f5f8ff' : '#fff',
             borderBottom: '0.5px solid #e0e0e0', boxSizing: 'border-box' }}>
-            <span style={{ fontSize: pp(2.5), fontWeight: 700, color, width: pp(19), flexShrink: 0 }}>{lbl}</span>
-            <span style={{ fontSize: pp(2.5), color: '#1a1a1a', flex: 1,
+            <span style={{ fontSize: pp(2.4), fontWeight: 700, color, width: pp(18), flexShrink: 0 }}>{lbl}</span>
+            <span style={{ fontSize: pp(2.4), color: '#1a1a1a', flex: 1,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{val || '—'}</span>
           </div>
         ))}
