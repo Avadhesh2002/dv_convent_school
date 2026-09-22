@@ -1,74 +1,68 @@
 /**
- * printAdmissionForm — Strict single-page A4 admission form
+ * printAdmissionForm — Single-column A4 layout matching the reference image
  */
 
 const fmtDate = (d) =>
-    d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+    d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
 
-const docLabel = (key) => ({
+const DOC_LABELS = {
     transferCertificate:  'Transfer Certificate',
     migrationCertificate: 'Migration Certificate',
     characterCertificate: 'Character Certificate',
     casteCertificate:     'Caste Certificate',
     birthCertificate:     'Birth Certificate',
-    markSheet:            'Prev. Class Result',
-    fivePhotos:           '5 Photographs (Passport)',
+    markSheet:            'Previous Class Result',
+    fivePhotos:           '5 Photograph (Passport Size)',
     studentAadhar:        'Student Aadhar Copy',
     fatherAadhar:         'Father Aadhar Copy',
     motherAadhar:         'Mother Aadhar Copy',
     aadharPhotoCopy:      'Aadhar Photo Copy',
-}[key] || key);
+};
 
 export const printAdmissionForm = (student, settings = {}) => {
     if (!student) return;
 
-    const schoolName    = settings.schoolName    || 'DV CONVENT SCHOOL';
-    const schoolAddress = settings.schoolAddress || 'Akodha, Rohi, Bhadohi - 221308';
+    const schoolName    = settings.schoolName    || 'DV Convent School';
+    const schoolAddress = settings.schoolAddress || 'Vill-Akodha, Post-Rohi, Dist-Bhadohi';
     const schoolPhone   = settings.contactNumber || '';
     const schoolEmail   = settings.schoolEmail   || '';
     const udiseCode     = settings.udiseCode     || '';
     const schoolCode    = settings.schoolCode    || '';
     const affiliation   = settings.schoolAffiliation || '';
     const affiliationNo = settings.affiliationNumber || '';
-    const logoSrc       = settings.schoolLogo
-        ? (settings.schoolLogo.startsWith('data:') ? settings.schoolLogo : `data:image/png;base64,${settings.schoolLogo}`)
-        : '';
+
+    // Logo — use settings logo (base64) else fallback
+    const logoSrc = settings.schoolLogo
+        ? (settings.schoolLogo.startsWith('data:')
+            ? settings.schoolLogo
+            : `data:image/png;base64,${settings.schoolLogo}`)
+        : null;
 
     const photoSrc = student.profileImage || null;
-
-    // Documents — split into 2 columns
-    const docs     = student.documents || {};
-    const docKeys  = Object.keys(docs);
-    const half     = Math.ceil(docKeys.length / 2);
-    const leftDocs = docKeys.slice(0, half);
-    const rightDocs= docKeys.slice(half);
-
-    const docPairs = [];
-    for (let i = 0; i < half; i++) {
-        docPairs.push({ left: leftDocs[i], right: rightDocs[i] });
-    }
-
-    const docRows = docPairs.map(({ left, right }) => `
-        <tr>
-            <td class="doc-label">${docLabel(left)}</td>
-            <td class="doc-check">${docs[left] ? '&#10003;' : '&#9744;'}</td>
-            <td class="doc-sep"></td>
-            ${right
-                ? `<td class="doc-label">${docLabel(right)}</td>
-                   <td class="doc-check">${docs[right] ? '&#10003;' : '&#9744;'}</td>`
-                : `<td class="doc-label"></td><td class="doc-check"></td>`
-            }
-        </tr>`).join('');
 
     const dob     = fmtDate(student.dateOfBirth);
     const admDate = fmtDate(student.admissionDate);
 
-    const metaBadges = [
-        udiseCode     ? `UDISE: ${udiseCode}`            : '',
-        schoolCode    ? `Code: ${schoolCode}`            : '',
-        affiliation   ? affiliation                      : '',
-        affiliationNo ? `Affil: ${affiliationNo}`        : '',
-    ].filter(Boolean).map(t => `<span class="badge">${t}</span>`).join('');
+    // Documents rows — single column as in image
+    const docs    = student.documents || {};
+    const docRows = Object.entries(DOC_LABELS).map(([key, label]) => {
+        const received = docs[key] === true;
+        return `<tr>
+            <td class="doc-name">${label}</td>
+            <td class="doc-tick">${received ? '&#10003;' : '&#9744;'}</td>
+        </tr>`;
+    }).join('');
+
+    // Extra badge line for school identity
+    const identityParts = [
+        udiseCode     ? `UDISE: ${udiseCode}`        : '',
+        schoolCode    ? `School Code: ${schoolCode}` : '',
+        affiliation   ? affiliation                  : '',
+        affiliationNo ? `Affil. No: ${affiliationNo}`: '',
+    ].filter(Boolean);
+    const identityLine = identityParts.length
+        ? `<div class="school-identity">${identityParts.map(p => `<span class="id-badge">${p}</span>`).join('')}</div>`
+        : '';
 
     const html = `<!DOCTYPE html>
 <html>
@@ -78,24 +72,20 @@ export const printAdmissionForm = (student, settings = {}) => {
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 
-@page {
-    size: A4 portrait;
-    margin: 0;
-}
+@page { size: A4 portrait; margin: 0; }
 
 html, body {
     width: 210mm;
     height: 297mm;
     overflow: hidden;
     font-family: 'Times New Roman', Times, serif;
-    font-size: 9pt;
     background: #fff;
     color: #111;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
 
-/* ── Page shell — exactly A4, no overflow ── */
+/* ── Strict A4 page ── */
 .page {
     width: 210mm;
     height: 297mm;
@@ -104,14 +94,15 @@ html, body {
     background: #fff;
 }
 
-.outer-border {
+/* ── Decorative borders (matching image) ── */
+.border-outer {
     position: absolute;
     inset: 5mm;
     border: 2.5px double #1a3a6b;
     pointer-events: none;
     z-index: 0;
 }
-.inner-border {
+.border-inner {
     position: absolute;
     inset: 7.5mm;
     border: 1px solid #1a3a6b;
@@ -119,70 +110,91 @@ html, body {
     z-index: 0;
 }
 
-/* ── Content box — stays inside borders ── */
+/* ── Content area strictly inside borders ── */
 .content {
     position: absolute;
-    inset: 9mm 10mm 9mm 10mm;
+    top: 9mm; bottom: 8mm;
+    left: 10mm; right: 10mm;
     z-index: 1;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 0;
-    overflow: hidden;
 }
 
-/* ── Header ── */
+/* ══════════════════════════════════
+   HEADER
+══════════════════════════════════ */
 .header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding-bottom: 5px;
+    gap: 10px;
     border-bottom: 2px solid #1a3a6b;
+    padding-bottom: 5px;
     margin-bottom: 4px;
     flex-shrink: 0;
 }
-.logo {
-    width: 58px; height: 58px;
-    object-fit: contain;
-    border-radius: 50%;
-    border: 2px solid #1a3a6b;
+.logo-wrap {
+    width: 62px; height: 62px;
     flex-shrink: 0;
 }
-.school-info { flex: 1; text-align: center; }
+.logo-wrap img {
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    border: 2px solid #1a3a6b;
+    object-fit: contain;
+}
+.logo-wrap .no-logo {
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    border: 2px solid #1a3a6b;
+    background: #f0f4ff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 6pt; color: #1a3a6b; text-align: center;
+}
+.school-center {
+    flex: 1;
+    text-align: center;
+}
 .school-name {
-    font-size: 15pt;
+    font-size: 17pt;
     font-weight: bold;
     color: #1a3a6b;
-    letter-spacing: 0.3px;
     line-height: 1.1;
 }
-.school-meta {
+.school-addr {
     font-size: 7.5pt;
-    color: #333;
+    color: #444;
     margin-top: 2px;
-    line-height: 1.5;
 }
-.affil-badges { margin-top: 2px; }
-.badge {
+.school-identity {
+    margin-top: 3px;
+}
+.id-badge {
     display: inline-block;
-    background: #1a3a6b; color: #fff;
-    font-size: 6.5pt; padding: 1px 6px;
-    border-radius: 20px; margin: 1px;
+    background: #1a3a6b;
+    color: #fff;
+    font-size: 6.5pt;
+    padding: 1px 7px;
+    border-radius: 20px;
+    margin: 1px 2px;
 }
 .photo-box {
-    width: 58px; height: 72px;
+    width: 62px; height: 76px;
     border: 1.5px solid #1a3a6b;
     flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 6.5pt; color: #888; text-align: center;
+    font-size: 7pt; color: #888; text-align: center;
     background: #f9f9f9; overflow: hidden;
-    line-height: 1.4;
+    line-height: 1.5;
 }
 .photo-box img { width: 100%; height: 100%; object-fit: cover; }
 
-/* ── Form title ── */
-.form-title-wrap {
+/* ══════════════════════════════════
+   FORM TITLE
+══════════════════════════════════ */
+.title-wrap {
     text-align: center;
-    margin: 3px 0;
+    margin: 3px 0 3px;
     flex-shrink: 0;
 }
 .form-title {
@@ -195,241 +207,238 @@ html, body {
     padding-bottom: 1px;
 }
 
-/* ── Meta bar ── */
-.meta-row {
+/* ══════════════════════════════════
+   META BAR (SR No | UID | Date | Type)
+══════════════════════════════════ */
+.meta-bar {
     display: flex;
     justify-content: space-between;
-    font-size: 7.5pt;
-    font-weight: bold;
-    color: #1a3a6b;
-    padding: 2px 8px;
     background: #eef2ff;
     border: 1px solid #c7d7f5;
     border-radius: 2px;
+    padding: 2.5px 10px;
+    font-size: 7.5pt;
+    font-weight: bold;
+    color: #1a3a6b;
     margin-bottom: 3px;
     flex-shrink: 0;
 }
 
-/* ── Two-column body layout ── */
-.body-cols {
-    display: flex;
-    gap: 6px;
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-}
-.col-left  { flex: 1.1; min-width: 0; overflow: hidden; }
-.col-right { flex: 0.9; min-width: 0; overflow: hidden; }
-
-/* ── Section heading ── */
-.sec-heading {
+/* ══════════════════════════════════
+   SECTION HEADING (dark blue bar as in image)
+══════════════════════════════════ */
+.sec-head {
+    background: #1a3a6b;
+    color: #fff;
     font-size: 7.5pt;
     font-weight: bold;
-    color: #fff;
-    background: #1a3a6b;
-    padding: 2px 6px;
-    margin: 4px 0 2px;
-    letter-spacing: 0.8px;
+    padding: 2.5px 7px;
+    letter-spacing: 1px;
     text-transform: uppercase;
+    margin-top: 3px;
+    margin-bottom: 0;
 }
-.sec-heading:first-child { margin-top: 0; }
 
-/* ── Info table ── */
-.info-grid {
+/* ══════════════════════════════════
+   INFO TABLE (label : value — full width)
+══════════════════════════════════ */
+.info-tbl {
     width: 100%;
     border-collapse: collapse;
     font-size: 8pt;
 }
-.info-grid td {
-    padding: 2px 4px;
-    border-bottom: 1px dashed #dde4f0;
-    vertical-align: top;
-    line-height: 1.35;
-}
-.info-grid .lbl { width: 42%; font-weight: bold; color: #1a3a6b; }
-.info-grid .colon { width: 4%; color: #888; text-align: center; }
-.info-grid .val { width: 54%; color: #111; }
-.info-grid tr:nth-child(even) td { background: #f7f9ff; }
+.info-tbl tr { border-bottom: 1px dashed #dde4f0; }
+.info-tbl tr:nth-child(even) td { background: #f7f9ff; }
+.info-tbl td { padding: 2.2px 6px; vertical-align: top; line-height: 1.35; }
+.info-tbl .lbl  { width: 35%; font-weight: bold; color: #1a3a6b; }
+.info-tbl .col  { width: 3%;  color: #888; text-align: center; }
+.info-tbl .val  { width: 62%; color: #111; }
 
-/* ── Documents 2-col table ── */
-.doc-table {
+/* ══════════════════════════════════
+   DOCUMENTS TABLE — single column as in image
+══════════════════════════════════ */
+.doc-tbl {
     width: 100%;
     border-collapse: collapse;
-    font-size: 7.5pt;
+    font-size: 8pt;
 }
-.doc-table td {
-    padding: 1.8px 4px;
-    border-bottom: 1px dashed #e0e0e0;
-    line-height: 1.3;
+.doc-tbl tr { border-bottom: 1px dashed #e0e0e0; }
+.doc-tbl td { padding: 2px 6px; line-height: 1.3; vertical-align: middle; }
+.doc-name { color: #333; }
+.doc-tick {
+    width: 30px;
+    text-align: center;
+    font-size: 9.5pt;
+    color: #1a3a6b;
+    font-weight: bold;
 }
-.doc-label { width: 38%; color: #333; }
-.doc-check { width: 10%; text-align: center; font-size: 9pt; color: #1a3a6b; font-weight: bold; }
-.doc-sep   { width: 4%;  border-bottom: none !important; }
 
-/* ── Declaration ── */
+/* ══════════════════════════════════
+   DECLARATION
+══════════════════════════════════ */
 .declaration {
     font-size: 7pt;
+    font-style: italic;
     color: #444;
-    line-height: 1.5;
-    padding: 3px 7px;
+    line-height: 1.55;
+    padding: 4px 8px;
     background: #fffbeb;
     border: 1px solid #fde68a;
     border-radius: 2px;
-    margin: 3px 0 2px;
-    font-style: italic;
+    margin-top: 4px;
     flex-shrink: 0;
 }
 
-/* ── Signatures ── */
+/* ══════════════════════════════════
+   SIGNATURES
+══════════════════════════════════ */
 .sig-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding-top: 4px;
+    margin-top: 5px;
     flex-shrink: 0;
 }
 .sig-block { text-align: center; }
 .sig-line {
-    width: 110px;
+    width: 120px;
     border-bottom: 1px solid #1a3a6b;
+    height: 24px;
     margin: 0 auto 2px;
-    height: 22px;
 }
-.sig-label { font-size: 7pt; font-weight: bold; color: #1a3a6b; }
-.sig-sub   { font-size: 6.5pt; color: #666; }
+.sig-lbl { font-size: 7.5pt; font-weight: bold; color: #1a3a6b; }
+.sig-sub { font-size: 6.5pt; color: #666; margin-top: 1px; }
 
-/* ── Footer ── */
+/* ══════════════════════════════════
+   FOOTER
+══════════════════════════════════ */
 .footer {
     text-align: center;
     font-size: 6.5pt;
     color: #aaa;
     font-style: italic;
+    border-top: 1px dashed #ccc;
     padding-top: 3px;
-    border-top: 1px dashed #ddd;
+    margin-top: 4px;
     flex-shrink: 0;
-    margin-top: 2px;
 }
 
 @media print {
-    html, body { margin:0; padding:0; overflow:hidden; }
+    html, body { overflow: hidden; }
     .page { page-break-after: avoid; }
 }
 </style>
 </head>
 <body>
 <div class="page">
-    <div class="outer-border"></div>
-    <div class="inner-border"></div>
+    <div class="border-outer"></div>
+    <div class="border-inner"></div>
 
     <div class="content">
 
-        <!-- HEADER -->
+        <!-- ── HEADER ── -->
         <div class="header">
-            ${logoSrc
-                ? `<img src="${logoSrc}" class="logo" alt="Logo" onerror="this.style.display='none'" />`
-                : `<div class="logo" style="background:#f0f4ff;display:flex;align-items:center;justify-content:center;font-size:6pt;color:#1a3a6b;text-align:center;">School<br>Logo</div>`
-            }
-            <div class="school-info">
-                <div class="school-name">${schoolName}</div>
-                <div class="school-meta">
-                    ${schoolAddress}
-                    ${schoolPhone ? ' &nbsp;|&nbsp; Ph: ' + schoolPhone : ''}
-                    ${schoolEmail ? ' &nbsp;|&nbsp; ' + schoolEmail : ''}
-                </div>
-                ${metaBadges ? `<div class="affil-badges">${metaBadges}</div>` : ''}
+            <div class="logo-wrap">
+                ${logoSrc
+                    ? `<img src="${logoSrc}" alt="School Logo" onerror="this.style.display='none'" />`
+                    : `<div class="no-logo">School<br/>Logo</div>`
+                }
             </div>
+
+            <div class="school-center">
+                <div class="school-name">${schoolName}</div>
+                <div class="school-addr">
+                    ${schoolAddress}${schoolPhone ? ' &nbsp;|&nbsp; Ph: ' + schoolPhone : ''}${schoolEmail ? ' &nbsp;|&nbsp; ' + schoolEmail : ''}
+                </div>
+                ${identityLine}
+            </div>
+
             <div class="photo-box">
                 ${photoSrc
-                    ? `<img src="${photoSrc}" alt="Photo" />`
+                    ? `<img src="${photoSrc}" alt="Student Photo" />`
                     : 'Paste<br/>Photo<br/>Here'
                 }
             </div>
         </div>
 
-        <!-- FORM TITLE -->
-        <div class="form-title-wrap">
+        <!-- ── ADMISSION FORM TITLE ── -->
+        <div class="title-wrap">
             <span class="form-title">Admission Form</span>
         </div>
 
-        <!-- META BAR -->
-        <div class="meta-row">
-            <span>SR No: <b>${student.srNo || '—'}</b></span>
-            <span>UID: <b>${student.UID || '—'}</b></span>
-            <span>Adm. Date: <b>${admDate}</b></span>
-            <span>Type: <b>${student.admissionType === 'New' ? 'Fresh Admission' : 'Promoted'}</b></span>
+        <!-- ── META BAR ── -->
+        <div class="meta-bar">
+            <span>SR No: ${student.srNo || '—'}</span>
+            <span>UID: ${student.UID || '—'}</span>
+            <span>Admission Date: ${admDate}</span>
+            <span>Admission Type: ${student.admissionType === 'New' ? 'Fresh Admission' : 'Promoted'}</span>
         </div>
 
-        <!-- TWO-COLUMN BODY -->
-        <div class="body-cols">
+        <!-- ── STUDENT DETAILS ── -->
+        <div class="sec-head">&#9658; Student Details</div>
+        <table class="info-tbl">
+            <tr><td class="lbl">Full Name</td>        <td class="col">:</td><td class="val"><b>${student.name || '—'}</b></td></tr>
+            <tr><td class="lbl">Date of Birth</td>    <td class="col">:</td><td class="val">${dob}</td></tr>
+            <tr><td class="lbl">Gender</td>           <td class="col">:</td><td class="val">${student.gender || '—'}</td></tr>
+            <tr><td class="lbl">Category</td>         <td class="col">:</td><td class="val">${student.category || '—'}</td></tr>
+            <tr><td class="lbl">Class Admitted</td>   <td class="col">:</td><td class="val">Class ${student.class || '—'}</td></tr>
+            <tr><td class="lbl">Aadhar Number</td>    <td class="col">:</td><td class="val">${student.aadharNumber || '—'}</td></tr>
+            <tr><td class="lbl">PEN Number</td>       <td class="col">:</td><td class="val">${student.penNumber || '—'}</td></tr>
+        </table>
 
-            <!-- LEFT: Student + Parent -->
-            <div class="col-left">
-                <div class="sec-heading">&#9654; Student Details</div>
-                <table class="info-grid">
-                    <tr><td class="lbl">Full Name</td><td class="colon">:</td><td class="val"><b>${student.name || '—'}</b></td></tr>
-                    <tr><td class="lbl">Date of Birth</td><td class="colon">:</td><td class="val">${dob}</td></tr>
-                    <tr><td class="lbl">Gender</td><td class="colon">:</td><td class="val">${student.gender || '—'}</td></tr>
-                    <tr><td class="lbl">Category</td><td class="colon">:</td><td class="val">${student.category || '—'}</td></tr>
-                    <tr><td class="lbl">Class Admitted</td><td class="colon">:</td><td class="val">Class ${student.class || '—'}</td></tr>
-                    <tr><td class="lbl">Aadhar No.</td><td class="colon">:</td><td class="val">${student.aadharNumber || '—'}</td></tr>
-                    <tr><td class="lbl">PEN Number</td><td class="colon">:</td><td class="val">${student.penNumber || '—'}</td></tr>
-                </table>
+        <!-- ── PARENT / GUARDIAN DETAILS ── -->
+        <div class="sec-head">&#9658; Parent / Guardian Details</div>
+        <table class="info-tbl">
+            <tr><td class="lbl">Father's Name</td>    <td class="col">:</td><td class="val">${student.fatherName || '—'}</td></tr>
+            <tr><td class="lbl">Father's Mobile</td>  <td class="col">:</td><td class="val">${student.fatherMobile || '—'}</td></tr>
+            <tr><td class="lbl">Mother's Name</td>    <td class="col">:</td><td class="val">${student.motherName || '—'}</td></tr>
+            <tr><td class="lbl">Mother's Mobile</td>  <td class="col">:</td><td class="val">${student.motherMobile || '—'}</td></tr>
+            ${student.guardianName   ? `<tr><td class="lbl">Guardian's Name</td>  <td class="col">:</td><td class="val">${student.guardianName}</td></tr>` : ''}
+            ${student.guardianMobile ? `<tr><td class="lbl">Guardian's Mobile</td><td class="col">:</td><td class="val">${student.guardianMobile}</td></tr>` : ''}
+            <tr><td class="lbl">Parent Email</td>     <td class="col">:</td><td class="val">${student.parentEmail || '—'}</td></tr>
+            <tr><td class="lbl">Residential Address</td><td class="col">:</td><td class="val">${student.address || '—'}${student.pincode ? ', ' + student.pincode : ''}</td></tr>
+        </table>
 
-                <div class="sec-heading">&#9654; Parent / Guardian</div>
-                <table class="info-grid">
-                    <tr><td class="lbl">Father's Name</td><td class="colon">:</td><td class="val">${student.fatherName || '—'}</td></tr>
-                    <tr><td class="lbl">Father's Mobile</td><td class="colon">:</td><td class="val">${student.fatherMobile || '—'}</td></tr>
-                    <tr><td class="lbl">Mother's Name</td><td class="colon">:</td><td class="val">${student.motherName || '—'}</td></tr>
-                    <tr><td class="lbl">Mother's Mobile</td><td class="colon">:</td><td class="val">${student.motherMobile || '—'}</td></tr>
-                    ${student.guardianName ? `<tr><td class="lbl">Guardian</td><td class="colon">:</td><td class="val">${student.guardianName}</td></tr>` : ''}
-                    ${student.guardianMobile ? `<tr><td class="lbl">Guardian Mobile</td><td class="colon">:</td><td class="val">${student.guardianMobile}</td></tr>` : ''}
-                    <tr><td class="lbl">Parent Email</td><td class="colon">:</td><td class="val">${student.parentEmail || '—'}</td></tr>
-                    <tr><td class="lbl">Address</td><td class="colon">:</td><td class="val">${student.address || '—'}${student.pincode ? ', ' + student.pincode : ''}</td></tr>
-                </table>
-            </div>
+        <!-- ── DOCUMENTS RECEIVED ── -->
+        <div class="sec-head">&#9658; Documents Received</div>
+        <table class="doc-tbl">
+            ${docRows}
+        </table>
 
-            <!-- RIGHT: Documents -->
-            <div class="col-right">
-                <div class="sec-heading">&#9654; Documents Received</div>
-                <table class="doc-table">
-                    ${docRows || '<tr><td colspan="5" style="color:#999;font-size:7.5pt;padding:4px;">No documents info</td></tr>'}
-                </table>
-            </div>
-        </div>
-
-        <!-- DECLARATION -->
+        <!-- ── DECLARATION ── -->
         <div class="declaration">
-            I/We declare that the above information is true and correct. I/We agree to abide by the school rules
-            and undertake to pay fees regularly. In case of false information, admission may be cancelled.
+            I/We hereby declare that the above information is true and correct to the best of my/our knowledge.
+            I/We agree to abide by the rules and regulations of the school and undertake to pay the fees regularly.
+            I/We understand that in case of any false information, the admission may be cancelled at any time.
         </div>
 
-        <!-- SIGNATURES -->
+        <!-- ── SIGNATURES ── -->
         <div class="sig-row">
             <div class="sig-block">
                 <div class="sig-line"></div>
-                <div class="sig-label">Parent / Guardian</div>
-                <div class="sig-sub">Date: ____________</div>
+                <div class="sig-lbl">Parent / Guardian Signature</div>
+                <div class="sig-sub">Date: ________________</div>
             </div>
             <div class="sig-block">
                 <div class="sig-line"></div>
-                <div class="sig-label">Class Teacher</div>
+                <div class="sig-lbl">Class Teacher</div>
                 <div class="sig-sub">Signature &amp; Stamp</div>
             </div>
             <div class="sig-block">
                 <div class="sig-line"></div>
-                <div class="sig-label">Principal</div>
+                <div class="sig-lbl">Principal / Head of School</div>
                 <div class="sig-sub">Signature &amp; Seal</div>
             </div>
         </div>
 
-        <!-- FOOTER -->
+        <!-- ── FOOTER ── -->
         <div class="footer">
             Computer-generated Admission Form &nbsp;|&nbsp; ${schoolName} &nbsp;|&nbsp;
             Printed: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
         </div>
 
-    </div><!-- .content -->
-</div><!-- .page -->
+    </div>
+</div>
 <script>
 window.onload = function() { setTimeout(function(){ window.print(); }, 400); };
 </script>
