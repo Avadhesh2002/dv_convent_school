@@ -16,7 +16,6 @@ const DOC_LABELS = {
     studentAadhar:        'Student Aadhar Copy',
     fatherAadhar:         'Father Aadhar Copy',
     motherAadhar:         'Mother Aadhar Copy',
-    aadharPhotoCopy:      'Aadhar Photo Copy',
 };
 
 export const printAdmissionForm = (student, settings = {}) => {
