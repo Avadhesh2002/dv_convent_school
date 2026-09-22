@@ -32,8 +32,9 @@ router.delete('/teachers/:id', protect, authorize('admin'), deleteTeacher);
 
 // Student Management (Active Students)
 router.get('/students', protect, authorize('admin'), getAllStudents);
-router.put('/students/:id', protect, authorize('admin'), updateStudent);
+// ⚠️ Specific routes MUST come before generic /:id routes
 router.put('/students/:id/issue-tc', protect, authorize('admin'), issueTc);
+router.put('/students/:id', protect, authorize('admin'), updateStudent);
 router.delete('/students/:id', protect, authorize('admin'), deleteStudent);
 
 
