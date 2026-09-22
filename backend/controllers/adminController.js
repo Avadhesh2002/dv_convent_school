@@ -3,7 +3,6 @@ const Teacher = require('../models/Teacher');
 const bcrypt = require('bcryptjs');
 const Settings = require('../models/Settings');
 const Notification = require('../models/Notification');
-const Student = require('../models/Student');
 
 
 const PROMOTION_MAP = {
