@@ -20,7 +20,7 @@ const Modal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop (Click to close) */}
       <div 
         className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200"
