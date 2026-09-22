@@ -26,110 +26,118 @@ const getLogoSrc = (s) => s.schoolLogo
 
 // ── CARD PREVIEW ──────────────────────────────────────────────────────────
 const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, personName, idLine, rows, classVal }) => {
-  const RH=pp(5), HH=pp(18), PZH=pp(18), NUH=pp(8), IH=pp(21), SFH=pp(9), BSH=pp(8);
-  const HY=RH, PZY=HY+HH, NUY=PZY+PZH, IY=NUY+NUH, SFY=IY+IH, BTSY=SFY+SFH;
-  const PW2=pp(18), PHGT=pp(22), PX=(PW-PW2)/2, PYY=PZY+pp(1);
-  const rowH=IH/rows.length;
+  const RH=pp(5), HH=pp(22), SFH=pp(9), BSH=pp(8);
+  const BY=RH+HH, BH=PH-RH-HH-SFH-BSH;
+  const SFY=BY+BH, BTSY=SFY+SFH;
+  const LSZ=pp(12), LX=(PW-LSZ)/2, LY=RH+pp(2);
+
+  // photo — left, full body height
+  const photoPad=pp(2);
+  const PW2=pp(23), PHGT=BH-photoPad*2;
+  const PX=photoPad, PYY=BY+photoPad;
+
+  // right column
+  const RX=PX+PW2+pp(3), RW=PW-RX-pp(2);
+  const rowH=( BH - pp(2.5) - pp(3.2) - pp(1.5) - pp(3.2) - pp(2) ) / rows.length;
 
   return (
-    <div style={{ width: PW, height: PH, position: 'relative', fontFamily: 'Arial,sans-serif',
-      background: '#fff', borderRadius: 5, overflow: 'hidden', flexShrink: 0,
-      boxShadow: '0 6px 24px rgba(0,0,0,0.2)' }}>
+    <div style={{ width:PW, height:PH, position:'relative', fontFamily:'Arial,sans-serif',
+      background:'#fff', borderRadius:5, overflow:'hidden', flexShrink:0,
+      boxShadow:'0 6px 24px rgba(0,0,0,0.2)' }}>
 
-      {/* 1. Ribbon — blue (same as bottom) */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: RH,
-        background: color }} />
+      {/* 1. Top ribbon — blue */}
+      <div style={{ position:'absolute', top:0, left:0, right:0, height:RH, background:color }}/>
 
-      {/* 2. Header */}
-      <div style={{ position: 'absolute', top: HY, left: 0, right: 0, height: HH,
-        background: `linear-gradient(180deg, #1565c0 0%, #1976d2 100%)` }}>
-        {/* Logo */}
-        <div style={{ position: 'absolute', left: pp(2.5), top: '50%', transform: 'translateY(-50%)',
-          width: pp(11), height: pp(11), borderRadius: '50%',
-          overflow: 'hidden', background: '#fff' }}>
-          <img src={logoSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      {/* 2. Header — centered */}
+      <div style={{ position:'absolute', top:RH, left:0, right:0, height:HH,
+        background:'linear-gradient(180deg,#1565c0 0%,#1976d2 100%)',
+        display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-start',
+        paddingTop:pp(1.5) }}>
+        {/* Logo centered top */}
+        <div style={{ width:LSZ, height:LSZ, borderRadius:'50%', overflow:'hidden',
+          background:'#fff', boxShadow:'0 0 0 2px rgba(255,255,255,0.3)', flexShrink:0 }}>
+          <img src={logoSrc} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
         </div>
-        {/* Text */}
-        <div style={{ position: 'absolute', left: pp(15.5), right: pp(2), top: pp(1) }}>
-          <div style={{ color: '#fff', fontWeight: 900, lineHeight: 1.2,
-            fontSize: sName.length > 20 ? pp(2.8) : sName.length > 14 ? pp(3.2) : pp(3.8),
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sName}</div>
-          <div style={{ color: 'rgba(255,255,255,0.88)', fontSize: pp(1.9), marginTop: pp(0.4) }}>
-            (Govt. Recognised)
+        {/* school name */}
+        <div style={{ color:'#fff', fontWeight:900, lineHeight:1.15, marginTop:pp(1),
+          fontSize: sName.length>20?pp(2.8):sName.length>14?pp(3.2):pp(3.8),
+          overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+          maxWidth:PW-pp(4), textAlign:'center' }}>{sName}</div>
+        {/* Govt Recognised center italic */}
+        <div style={{ color:'rgba(255,255,255,0.88)', fontSize:pp(2), fontStyle:'italic',
+          marginTop:pp(0.3), textAlign:'center' }}>(Govt. Recognised)</div>
+        {/* address center */}
+        <div style={{ color:'rgba(255,255,255,0.8)', fontSize:pp(1.85), marginTop:pp(0.2),
+          overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+          maxWidth:PW-pp(4), textAlign:'center' }}>{sAddr}</div>
+        {/* phone bold center */}
+        <div style={{ color:'#fff', fontWeight:800, fontSize:pp(2.2), marginTop:pp(0.5),
+          textAlign:'center' }}>Phone No.: {sPhone}</div>
+      </div>
+
+      {/* 3. Body — left photo | right info */}
+      <div style={{ position:'absolute', top:BY, left:0, right:0, height:BH, background:'#fff' }}>
+
+        {/* Photo — left, full height */}
+        <div style={{ position:'absolute', left:PX-pp(0.6), top:PYY-pp(0.6),
+          width:PW2+pp(1.2), height:PHGT+pp(1.2),
+          border:`${pp(0.6)}px solid ${color}`, background:'#dbeafe', overflow:'hidden' }}>
+          {photo
+            ? <img src={photo} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center top', display:'block' }}/>
+            : <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center',
+                fontSize:pp(10), fontWeight:900, color:color+'55' }}>
+                {personName?.charAt(0)?.toUpperCase()}
+              </div>}
+        </div>
+
+        {/* Right: name + uid + rows */}
+        <div style={{ position:'absolute', left:RX, top:photoPad, right:pp(2) }}>
+          {/* name */}
+          <div style={{ fontWeight:700, color:'#1a1a1a', lineHeight:1.1,
+            fontSize:(personName?.length||0)>16?pp(2.6):pp(3.2),
+            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+            {personName}
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: pp(1.9), marginTop: pp(0.2),
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sAddr}</div>
-          <div style={{ color: '#fff', fontWeight: 800, fontSize: pp(2.2), marginTop: pp(0.6) }}>
-            Phone No.: {sPhone}
+          {/* UID pill */}
+          <div style={{ display:'inline-block', marginTop:pp(0.8),
+            background:color, color:'#fff', fontWeight:800, fontSize:pp(2),
+            padding:`${pp(0.5)}px ${pp(2.5)}px`, borderRadius:pp(2.5) }}>
+            {idLine}
+          </div>
+          {/* rows */}
+          <div style={{ marginTop:pp(1.5) }}>
+            {rows.map(([lbl,val],i)=>(
+              <div key={lbl} style={{ display:'flex', flexDirection:'column',
+                padding:`${pp(0.4)}px 0`,
+                background:i%2===0?'#f0f5ff':'transparent',
+                borderBottom:'0.4px solid #e0e0e0' }}>
+                <span style={{ fontSize:pp(1.9), fontWeight:700, color, lineHeight:1.1 }}>{lbl}</span>
+                <span style={{ fontSize:pp(1.9), color:'#1a1a1a', lineHeight:1.2,
+                  overflow:'hidden', textOverflow:'ellipsis',
+                  display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>{val||'—'}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* 3. Photo zone */}
-      <div style={{ position: 'absolute', top: PZY, left: 0, right: 0, height: PZH, background: '#fff' }}>
-        <div style={{ position: 'absolute', left: PX - pp(0.6), top: PYY - pp(0.6),
-          width: PW2 + pp(1.2), height: PHGT + pp(1.2),
-          border: `${pp(0.6)}px solid ${color}`, background: '#dbeafe' }}>
-          {photo && <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />}
-        </div>
-        {!photo && (
-          <div style={{ position: 'absolute', left: PX, top: PYY, width: PW2, height: PHGT,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: pp(8), fontWeight: 900, color: color + '66' }}>
-            {personName?.charAt(0)?.toUpperCase()}
-          </div>
-        )}
-      </div>
-
-      {/* 4. Name + UID */}
-      <div style={{ position: 'absolute', top: NUY, left: pp(2), right: pp(2), height: NUH,
-        background: '#fff', textAlign: 'center' }}>
-        <div style={{ fontWeight: 700, color: '#1a1a1a', lineHeight: 1.1,
-          fontSize: (personName?.length||0) > 18 ? pp(2.8) : pp(3.2),
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: pp(0.4) }}>
-          {personName}
-        </div>
-        <div style={{ display: 'inline-block', marginTop: pp(0.7),
-          background: color, color: '#fff', fontWeight: 800, fontSize: pp(2.2),
-          padding: `${pp(0.6)}px ${pp(3)}px`, borderRadius: pp(3) }}>
-          {idLine}
+      {/* 4. Sign footer */}
+      <div style={{ position:'absolute', top:SFY, left:0, right:0, height:SFH,
+        background:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between',
+        padding:`0 ${pp(3)}px`, borderTop:'0.5px solid #e0e0e0' }}>
+        <span style={{ fontWeight:900, fontSize:pp(3), color:'#1a1a1a' }}>Class : {classVal}</span>
+        <div style={{ textAlign:'center' }}>
+          <img src={signImage} alt="" style={{ height:pp(4.5), objectFit:'contain', display:'block', margin:'0 auto' }}
+            onError={e=>{e.target.style.display='none';}}/>
+          <div style={{ width:pp(18), borderTop:'0.5px solid #333', margin:'0 auto', marginTop:pp(0.4) }}/>
+          <div style={{ fontSize:pp(1.9), color:'#555', marginTop:pp(0.3) }}>Principal Sign.</div>
         </div>
       </div>
 
-      {/* 5. Info table */}
-      <div style={{ position: 'absolute', top: IY, left: 0, right: 0, height: IH,
-        background: '#fff', overflow: 'hidden', borderTop: '0.5px solid #e0e0e0' }}>
-        {rows.map(([lbl, val], i) => (
-          <div key={lbl} style={{ display: 'flex', alignItems: 'center', height: rowH,
-            padding: `0 ${pp(3)}px`,
-            background: i % 2 === 0 ? '#f5f8ff' : '#fff',
-            borderBottom: '0.5px solid #e0e0e0', boxSizing: 'border-box' }}>
-            <span style={{ fontSize: pp(2.2), fontWeight: 700, color, width: pp(17), flexShrink: 0 }}>{lbl}</span>
-            <span style={{ fontSize: pp(2.2), color: '#1a1a1a', flex: 1,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{val || '—'}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* 6. Sign footer */}
-      <div style={{ position: 'absolute', top: SFY, left: 0, right: 0, height: SFH,
-        background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: `0 ${pp(3)}px`, borderTop: '0.5px solid #e0e0e0' }}>
-        <span style={{ fontWeight: 900, fontSize: pp(3), color: '#1a1a1a' }}>
-          Class : {classVal}
-        </span>
-        <div style={{ textAlign: 'center' }}>
-          <img src={signImage} alt="" style={{ height: pp(4.5), objectFit: 'contain', display: 'block', margin: '0 auto' }}
-            onError={e => { e.target.style.display = 'none'; }} />
-          <div style={{ width: pp(18), borderTop: '0.5px solid #333', marginTop: pp(0.5) }} />
-          <div style={{ fontSize: pp(2), color: '#333', marginTop: pp(0.5) }}>Principal Sign.</div>
-        </div>
-      </div>
-
-      {/* 7. Bottom strip */}
-      <div style={{ position: 'absolute', top: BTSY, left: 0, right: 0, height: BSH,
-        background: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: pp(2), color: '#fff', fontWeight: 500 }}>
+      {/* 5. Bottom strip */}
+      <div style={{ position:'absolute', top:BTSY, left:0, right:0, height:BSH,
+        background:color, display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <span style={{ fontSize:pp(2), color:'#fff', fontWeight:500 }}>
           If found, please return to school  •  Ph: {sPhone}
         </span>
       </div>

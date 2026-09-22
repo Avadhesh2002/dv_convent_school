@@ -2,8 +2,8 @@ import JSZip from 'jszip';
 
 // Exact 57 × 87 mm @ 300 DPI
 const MM = 300 / 25.4;
-const CW = Math.round(57 * MM);   // 673px
-const CH = Math.round(87 * MM);   // 1028px
+const CW = Math.round(57 * MM);
+const CH = Math.round(87 * MM);
 const p  = (mm) => Math.round(mm * MM);
 
 const loadImg = (src) => new Promise((res) => {
@@ -47,15 +47,15 @@ const cropDraw = (ctx, img, x, y, w, h) => {
 };
 
 // ══════════════════════════════════════════════════════════════════════════
-// LAYOUT — TOTAL = 87mm exactly
-//  ribbon  =  5mm  (white)
-//  header  = 18mm  (blue)
-//  photo   = 18mm  (white, compact photo)
-//  name+uid=  8mm  
-//  info    = 21mm  (5 rows)
-//  sigfoot =  9mm  (class + sign)
-//  botstrip=  8mm  (blue)
-//  TOTAL   = 87mm ✓
+// LAYOUT  (total = 87mm)
+//  ribbon   =  5mm  blue top strip
+//  header   = 22mm  centered logo + school info
+//  body     = 33mm  left=photo  right=name+uid+rows
+//  sigfoot  =  9mm  class + sign
+//  botstrip =  8mm  blue bottom
+//  TOTAL    = 77mm  +10 buffer ✓ (77mm total, footer fills rest)
+//
+//  Exact: 5+22+33+9+8 = 77  → body grows to fill: 87-5-22-9-8 = 43mm
 // ══════════════════════════════════════════════════════════════════════════
 const drawCard = async (canvas, settings, assets, opts) => {
   const { logoImg, signImg, photoImg } = assets;
@@ -65,69 +65,77 @@ const drawCard = async (canvas, settings, assets, opts) => {
   const ctx = canvas.getContext('2d');
 
   const RH  = p(5);
-  const HH  = p(18);
-  const PZH = p(18);
-  const NUH = p(8);
-  const IH  = p(21);
+  const HH  = p(22);
   const SFH = p(9);
   const BSH = p(8);
-
-  const HY   = RH;
-  const PZY  = HY + HH;
-  const NUY  = PZY + PZH;
-  const IY   = NUY + NUH;
-  const SFY  = IY + IH;
-  const BTSY = SFY + SFH;
+  const BY  = RH + HH;
+  const BH  = CH - RH - HH - SFH - BSH;   // body height ≈ p(43)
+  const SFY = BY + BH;
+  const BTSY= SFY + SFH;
 
   // white base
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, CW, CH);
 
-  // ── RIBBON — blue (same as bottom strip) ─────────────────────────────
-  ctx.fillStyle = color;
-  ctx.fillRect(0, 0, CW, RH);
+  // ── 1. TOP RIBBON — blue ───────────────────────────────────────────────
+  ctx.fillStyle = color; ctx.fillRect(0, 0, CW, RH);
 
-  // ── HEADER ──────────────────────────────────────────────────────────────
-  const hg = ctx.createLinearGradient(0, HY, 0, HY + HH);
+  // ── 2. HEADER — centered layout ──────────────────────────────────────
+  const hg = ctx.createLinearGradient(0, RH, 0, RH + HH);
   hg.addColorStop(0, '#1565c0'); hg.addColorStop(1, '#1976d2');
-  ctx.fillStyle = hg; ctx.fillRect(0, HY, CW, HH);
+  ctx.fillStyle = hg; ctx.fillRect(0, RH, CW, HH);
 
-  // logo
-  const LSZ = p(11), LX = p(2.5), LY = HY + (HH - LSZ) / 2;
+  // Logo — centered top
+  const LSZ = p(12);
+  const LX  = (CW - LSZ) / 2;
+  const LY  = RH + p(2);
+  ctx.save();
+  // white glow ring
+  ctx.shadowColor = 'rgba(255,255,255,0.4)'; ctx.shadowBlur = p(1.5);
+  ctx.beginPath(); ctx.arc(LX + LSZ/2, LY + LSZ/2, LSZ/2 + p(0.7), 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fill(); ctx.restore();
   ctx.save();
   ctx.beginPath(); ctx.arc(LX + LSZ/2, LY + LSZ/2, LSZ/2, 0, Math.PI*2);
   ctx.fillStyle = '#fff'; ctx.fill(); ctx.clip();
   if (logoImg) ctx.drawImage(logoImg, LX, LY, LSZ, LSZ);
   ctx.restore();
 
-  const TX = LX + LSZ + p(2.5), TW = CW - TX - p(2);
-  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  // text — all centered
+  const textX = CW / 2;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
 
-  // school name — auto shrink
-  let nfs = p(3.8);
+  // school name
+  let nfs = p(4);
   ctx.font = `900 ${nfs}px Arial`;
-  while (ctx.measureText(settings.schoolName || 'D V Convent School').width > TW && nfs > p(2.4)) {
+  while (ctx.measureText(settings.schoolName || 'D V Convent School').width > CW - p(4) && nfs > p(2.8)) {
     nfs--; ctx.font = `900 ${nfs}px Arial`;
   }
   ctx.fillStyle = '#fff';
-  ctx.fillText(settings.schoolName || 'D V Convent School', TX, HY + p(1));
+  ctx.fillText(settings.schoolName || 'D V Convent School', textX, LY + LSZ + p(1.5));
 
-  ctx.font = `400 ${p(1.9)}px Arial`; ctx.fillStyle = 'rgba(255,255,255,0.88)';
-  ctx.fillText('(Govt. Recognised)', TX, HY + p(1) + nfs + p(0.5));
+  // Govt. Recognised — italic small centered
+  ctx.font = `italic 400 ${p(2)}px Arial`; ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.fillText('(Govt. Recognised)', textX, LY + LSZ + p(1.5) + nfs + p(0.8));
 
+  // address — centered
   ctx.font = `400 ${p(1.9)}px Arial`; ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.fillText(ell(ctx, settings.schoolAddress || 'Vill-Akodha,Post-Rohi,Dist-Bhadohi,221308', TW),
-    TX, HY + p(1) + nfs + p(3.5));
+  ctx.fillText(ell(ctx, settings.schoolAddress || 'Vill-Akodha,Post-Rohi,Dist-Bhadohi', CW - p(4)),
+    textX, LY + LSZ + p(1.5) + nfs + p(4));
 
-  ctx.font = `700 ${p(2.2)}px Arial`; ctx.fillStyle = '#fff';
-  ctx.fillText(`Phone No.: ${settings.contactNumber || '—'}`, TX, HY + p(1) + nfs + p(6.5));
+  // phone — bold centered
+  ctx.font = `800 ${p(2.3)}px Arial`; ctx.fillStyle = '#fff';
+  ctx.fillText(`Phone No.: ${settings.contactNumber || '—'}`, textX, LY + LSZ + p(1.5) + nfs + p(7));
 
-  // ── PHOTO ZONE ──────────────────────────────────────────────────────────
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, PZY, CW, PZH);
+  // ── 3. BODY — left: photo  |  right: name + uid + rows ────────────────
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, BY, CW, BH);
 
-  const PW2 = p(18), PHGT = p(22);
-  // photo starts right at top of photo zone with small padding
-  const PX = (CW - PW2) / 2, PY = PZY + p(1);
+  // photo — left side, full height of body with padding
+  const photoPad = p(2);
+  const PW2  = p(23);
+  const PHGT = BH - photoPad * 2;
+  const PX   = photoPad;
+  const PY   = BY + photoPad;
 
+  // photo border
   ctx.strokeStyle = color; ctx.lineWidth = p(0.6);
   ctx.strokeRect(PX - p(0.6), PY - p(0.6), PW2 + p(1.2), PHGT + p(1.2));
 
@@ -135,74 +143,74 @@ const drawCard = async (canvas, settings, assets, opts) => {
     cropDraw(ctx, photoImg, PX, PY, PW2, PHGT);
   } else {
     ctx.fillStyle = '#dbeafe'; ctx.fillRect(PX, PY, PW2, PHGT);
-    ctx.font = `900 ${p(8)}px Arial`; ctx.fillStyle = color + '66';
+    ctx.font = `900 ${p(10)}px Arial`; ctx.fillStyle = color + '55';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText((personName || '?').charAt(0).toUpperCase(), PX + PW2/2, PY + PHGT/2);
   }
 
-  // ── NAME + UID ──────────────────────────────────────────────────────────
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, NUY, CW, NUH);
+  // right side — name + uid + rows
+  const RX  = PX + PW2 + p(3);
+  const RW  = CW - RX - p(2);
+  let   curY = BY + p(2.5);
 
+  // name
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   let fnfs = p(3.2);
   ctx.font = `700 ${fnfs}px Arial`;
-  while (ctx.measureText(personName || '').width > CW - p(8) && fnfs > p(2)) {
+  while (ctx.measureText(personName || '').width > RW && fnfs > p(2)) {
     fnfs--; ctx.font = `700 ${fnfs}px Arial`;
   }
-  ctx.fillStyle = '#1a1a1a'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-  ctx.fillText(personName || '', CW / 2, NUY + p(0.5));
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillText(personName || '', RX, curY);
+  curY += fnfs + p(1.5);
 
-  ctx.font = `800 ${p(2.2)}px Arial`;
-  const UW = ctx.measureText(idLine).width + p(6), UH = p(3.5);
-  const UX = (CW - UW) / 2, UY = NUY + fnfs + p(1);
-  ctx.beginPath();
+  // UID pill
+  ctx.font = `800 ${p(2.1)}px Arial`;
+  const UW = ctx.measureText(idLine).width + p(5), UH = p(3.2);
   const ur = UH / 2;
-  ctx.moveTo(UX+ur,UY); ctx.lineTo(UX+UW-ur,UY);
-  ctx.quadraticCurveTo(UX+UW,UY,UX+UW,UY+ur);
-  ctx.lineTo(UX+UW,UY+UH-ur); ctx.quadraticCurveTo(UX+UW,UY+UH,UX+UW-ur,UY+UH);
-  ctx.lineTo(UX+ur,UY+UH); ctx.quadraticCurveTo(UX,UY+UH,UX,UY+UH-ur);
-  ctx.lineTo(UX,UY+ur); ctx.quadraticCurveTo(UX,UY,UX+ur,UY); ctx.closePath();
+  ctx.beginPath();
+  ctx.moveTo(RX+ur,curY); ctx.lineTo(RX+UW-ur,curY);
+  ctx.quadraticCurveTo(RX+UW,curY,RX+UW,curY+ur);
+  ctx.lineTo(RX+UW,curY+UH-ur); ctx.quadraticCurveTo(RX+UW,curY+UH,RX+UW-ur,curY+UH);
+  ctx.lineTo(RX+ur,curY+UH); ctx.quadraticCurveTo(RX,curY+UH,RX,curY+UH-ur);
+  ctx.lineTo(RX,curY+ur); ctx.quadraticCurveTo(RX,curY,RX+ur,curY); ctx.closePath();
   ctx.fillStyle = color; ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(idLine, CW/2, UY + UH/2);
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(idLine, RX + p(2.5), curY + UH/2);
+  curY += UH + p(2);
 
-  // ── INFO TABLE ──────────────────────────────────────────────────────────
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, IY, CW, IH);
-  ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = p(0.3);
-  ctx.beginPath(); ctx.moveTo(0, IY); ctx.lineTo(CW, IY); ctx.stroke();
-
-  const LXI = p(3), VXI = p(19.5), VW = CW - VXI - p(2.5);
+  // info rows — compact, right column
+  const rowsH = BY + BH - p(1) - curY;
   const tc = document.createElement('canvas'); tc.width = CW; tc.height = 10;
-  const mc = tc.getContext('2d'); mc.font = `400 ${p(2.1)}px Arial`;
+  const mc = tc.getContext('2d'); mc.font = `400 ${p(2)}px Arial`;
 
   const rowHeights = rows.map(([, val]) => {
-    const lines = wrapText(mc, val, VW);
-    return lines.length > 1 ? lines.length * p(2.8) + p(1.5) : p(4);
+    const lines = wrapText(mc, val, RW);
+    return lines.length > 1 ? lines.length * p(2.6) + p(1) : p(3.8);
   });
-  const totalRowH = rowHeights.reduce((a, b) => a + b, 0);
-  const scale = Math.min(1, IH / totalRowH);
+  const totalRH = rowHeights.reduce((a, b) => a + b, 0);
+  const rscale  = Math.min(1, rowsH / totalRH);
 
-  let ry = IY;
   rows.forEach(([lbl, val], i) => {
-    const lines = wrapText(mc, val, VW);
-    const rh = Math.round(rowHeights[i] * scale);
+    const lines = wrapText(mc, val, RW);
+    const rh = Math.round(rowHeights[i] * rscale);
 
-    if (i % 2 === 0) { ctx.fillStyle = '#f5f8ff'; ctx.fillRect(0, ry, CW, rh); }
+    if (i % 2 === 0) { ctx.fillStyle = '#f0f5ff'; ctx.fillRect(RX - p(1), curY, RW + p(1), rh); }
 
-    ctx.font = `700 ${p(2.1)}px Arial`; ctx.fillStyle = color;
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText(lbl, LXI, ry + rh / 2);
+    ctx.font = `700 ${p(2)}px Arial`; ctx.fillStyle = color;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(lbl, RX, curY + p(0.5));
 
-    ctx.font = `400 ${p(2.1)}px Arial`; ctx.fillStyle = '#1a1a1a';
-    ctx.textBaseline = 'top';
-    const lnH = p(2.8) * scale;
-    lines.forEach((ln, li) => ctx.fillText(ln, VXI, ry + p(0.7) * scale + li * lnH));
+    ctx.font = `400 ${p(2)}px Arial`; ctx.fillStyle = '#1a1a1a';
+    const lnH = p(2.6) * rscale;
+    lines.forEach((ln, li) => ctx.fillText(ln, RX, curY + p(0.5) + p(2.2) + li * lnH));
 
     ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = p(0.3);
-    ctx.beginPath(); ctx.moveTo(0, ry + rh); ctx.lineTo(CW, ry + rh); ctx.stroke();
-    ry += rh;
+    ctx.beginPath(); ctx.moveTo(RX - p(1), curY + rh); ctx.lineTo(CW - p(2), curY + rh); ctx.stroke();
+    curY += rh;
   });
 
-  // ── SIGN FOOTER ──────────────────────────────────────────────────────────
+  // ── 4. SIGN FOOTER ────────────────────────────────────────────────────
   ctx.fillStyle = '#fff'; ctx.fillRect(0, SFY, CW, SFH);
   ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = p(0.3);
   ctx.beginPath(); ctx.moveTo(0, SFY); ctx.lineTo(CW, SFY); ctx.stroke();
@@ -223,7 +231,7 @@ const drawCard = async (canvas, settings, assets, opts) => {
     ctx.fillText('Principal Sign.', sx + sw/2, sy + sh + p(0.8));
   }
 
-  // ── BOTTOM STRIP ─────────────────────────────────────────────────────────
+  // ── 5. BOTTOM STRIP ──────────────────────────────────────────────────
   ctx.fillStyle = color; ctx.fillRect(0, BTSY, CW, BSH);
   ctx.font = `500 ${p(2)}px Arial`; ctx.fillStyle = '#fff';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
