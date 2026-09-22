@@ -26,10 +26,9 @@ const getLogoSrc = (s) => s.schoolLogo
 
 // ── CARD PREVIEW ──────────────────────────────────────────────────────────
 const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, personName, idLine, rows, classVal }) => {
-  const RH=pp(6), HH=pp(20), PZH=pp(20), NUH=pp(9), IH=pp(23), SFH=pp(9);
-  const HY=RH, PZY=HY+HH, NUY=PZY+PZH, IY=NUY+NUH, SFY=IY+IH, FTY=SFY+SFH;
-  const BTSH=PH-FTY;
-  const PW2=pp(22), PHGT=pp(27), PX=(PW-PW2)/2, PYY=PZY+(PZH-PHGT)/2;
+  const RH=pp(5), HH=pp(18), PZH=pp(18), NUH=pp(8), IH=pp(21), SFH=pp(9), BSH=pp(8);
+  const HY=RH, PZY=HY+HH, NUY=PZY+PZH, IY=NUY+NUH, SFY=IY+IH, BTSY=SFY+SFH;
+  const PW2=pp(18), PHGT=pp(22), PX=(PW-PW2)/2, PYY=PZY+(PZH-PHGT)/2;
   const rowH=IH/rows.length;
 
   return (
@@ -44,23 +43,22 @@ const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, perso
       <div style={{ position: 'absolute', top: HY, left: 0, right: 0, height: HH,
         background: `linear-gradient(180deg, #1565c0 0%, #1976d2 100%)` }}>
         {/* Logo */}
-        <div style={{ position: 'absolute', left: pp(3), top: '50%', transform: 'translateY(-50%)',
-          width: pp(14), height: pp(14), borderRadius: '50%',
-          border: `${pp(0.6)}px solid rgba(255,255,255,0.3)`,
+        <div style={{ position: 'absolute', left: pp(2.5), top: '50%', transform: 'translateY(-50%)',
+          width: pp(11), height: pp(11), borderRadius: '50%',
           overflow: 'hidden', background: '#fff' }}>
           <img src={logoSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
         {/* Text */}
-        <div style={{ position: 'absolute', left: pp(19), right: pp(2), top: pp(2) }}>
+        <div style={{ position: 'absolute', left: pp(15.5), right: pp(2), top: pp(1) }}>
           <div style={{ color: '#fff', fontWeight: 900, lineHeight: 1.2,
-            fontSize: sName.length > 20 ? pp(3.2) : sName.length > 14 ? pp(3.8) : pp(4.5),
+            fontSize: sName.length > 20 ? pp(2.8) : sName.length > 14 ? pp(3.2) : pp(3.8),
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sName}</div>
-          <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: pp(2.3), marginTop: pp(0.5) }}>
+          <div style={{ color: 'rgba(255,255,255,0.88)', fontSize: pp(1.9), marginTop: pp(0.4) }}>
             (Govt. Recognised)
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: pp(2.2), marginTop: pp(0.3),
+          <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: pp(1.9), marginTop: pp(0.2),
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sAddr}</div>
-          <div style={{ color: '#fff', fontWeight: 800, fontSize: pp(2.5), marginTop: pp(0.8) }}>
+          <div style={{ color: '#fff', fontWeight: 800, fontSize: pp(2.2), marginTop: pp(0.6) }}>
             Phone No.: {sPhone}
           </div>
         </div>
@@ -68,31 +66,31 @@ const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, perso
 
       {/* 3. Photo zone */}
       <div style={{ position: 'absolute', top: PZY, left: 0, right: 0, height: PZH, background: '#fff' }}>
-        <div style={{ position: 'absolute', left: PX - pp(0.7), top: PYY - pp(0.7),
-          width: PW2 + pp(1.4), height: PHGT + pp(1.4),
-          border: `${pp(0.7)}px solid ${color}`, background: '#dbeafe' }}>
+        <div style={{ position: 'absolute', left: PX - pp(0.6), top: PYY - pp(0.6),
+          width: PW2 + pp(1.2), height: PHGT + pp(1.2),
+          border: `${pp(0.6)}px solid ${color}`, background: '#dbeafe' }}>
           {photo && <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />}
         </div>
         {!photo && (
           <div style={{ position: 'absolute', left: PX, top: PYY, width: PW2, height: PHGT,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: pp(9), fontWeight: 900, color: color + '66' }}>
+            fontSize: pp(8), fontWeight: 900, color: color + '66' }}>
             {personName?.charAt(0)?.toUpperCase()}
           </div>
         )}
       </div>
 
-      {/* 4. Name + UID — separate zone below photo */}
+      {/* 4. Name + UID */}
       <div style={{ position: 'absolute', top: NUY, left: pp(2), right: pp(2), height: NUH,
         background: '#fff', textAlign: 'center' }}>
         <div style={{ fontWeight: 700, color: '#1a1a1a', lineHeight: 1.1,
-          fontSize: (personName?.length||0) > 18 ? pp(3) : pp(3.6),
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: pp(0.5) }}>
+          fontSize: (personName?.length||0) > 18 ? pp(2.8) : pp(3.2),
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: pp(0.4) }}>
           {personName}
         </div>
-        <div style={{ display: 'inline-block', marginTop: pp(0.8),
-          background: color, color: '#fff', fontWeight: 800, fontSize: pp(2.5),
-          padding: `${pp(0.7)}px ${pp(3)}px`, borderRadius: pp(3) }}>
+        <div style={{ display: 'inline-block', marginTop: pp(0.7),
+          background: color, color: '#fff', fontWeight: 800, fontSize: pp(2.2),
+          padding: `${pp(0.6)}px ${pp(3)}px`, borderRadius: pp(3) }}>
           {idLine}
         </div>
       </div>
@@ -105,8 +103,8 @@ const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, perso
             padding: `0 ${pp(3)}px`,
             background: i % 2 === 0 ? '#f5f8ff' : '#fff',
             borderBottom: '0.5px solid #e0e0e0', boxSizing: 'border-box' }}>
-            <span style={{ fontSize: pp(2.4), fontWeight: 700, color, width: pp(18), flexShrink: 0 }}>{lbl}</span>
-            <span style={{ fontSize: pp(2.4), color: '#1a1a1a', flex: 1,
+            <span style={{ fontSize: pp(2.2), fontWeight: 700, color, width: pp(17), flexShrink: 0 }}>{lbl}</span>
+            <span style={{ fontSize: pp(2.2), color: '#1a1a1a', flex: 1,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{val || '—'}</span>
           </div>
         ))}
@@ -128,14 +126,12 @@ const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, perso
       </div>
 
       {/* 7. Bottom strip */}
-      {BTSH > 0 && (
-        <div style={{ position: 'absolute', top: FTY, left: 0, right: 0, height: BTSH,
-          background: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: pp(2.2), color: '#fff', fontWeight: 500 }}>
-            If found, please return to school  •  Ph: {sPhone}
-          </span>
-        </div>
-      )}
+      <div style={{ position: 'absolute', top: BTSY, left: 0, right: 0, height: BSH,
+        background: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: pp(2), color: '#fff', fontWeight: 500 }}>
+          If found, please return to school  •  Ph: {sPhone}
+        </span>
+      </div>
     </div>
   );
 };
