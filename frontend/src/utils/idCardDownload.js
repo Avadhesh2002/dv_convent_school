@@ -59,7 +59,7 @@ const drawCard = async (canvas, settings, assets, opts) => {
   canvas.width=CW; canvas.height=CH;
   const ctx=canvas.getContext('2d');
 
-  const RH =p(5), HH=p(20), SFH=p(9), BSH=p(8);
+  const RH =p(5), HH=p(17), SFH=p(9), BSH=p(8);
   const BY =RH+HH;
   const BH =CH-RH-HH-SFH-BSH;
   const SFY=BY+BH;
@@ -76,8 +76,8 @@ const drawCard = async (canvas, settings, assets, opts) => {
   hg.addColorStop(0,'#1565c0'); hg.addColorStop(1,'#1976d2');
   ctx.fillStyle=hg; ctx.fillRect(0,RH,CW,HH);
 
-  // Logo — left, vertically centered in header
-  const LSZ=p(13), LX=p(3), LY=RH+(HH-LSZ)/2;
+  // Logo — smaller
+  const LSZ=p(10), LX=p(2.5), LY=RH+(HH-LSZ)/2;
   ctx.save();
   ctx.beginPath(); ctx.arc(LX+LSZ/2,LY+LSZ/2,LSZ/2,0,Math.PI*2);
   ctx.fillStyle='#fff'; ctx.fill(); ctx.clip();
@@ -85,30 +85,30 @@ const drawCard = async (canvas, settings, assets, opts) => {
   ctx.restore();
 
   // School info — right of logo, compact
-  const TX=LX+LSZ+p(2.5), TW=CW-TX-p(2);
+  const TX=LX+LSZ+p(2), TW=CW-TX-p(2);
   ctx.textAlign='left'; ctx.textBaseline='top';
 
-  // school name — auto-shrink to fit 1 line
-  let nfs=p(3.5);
+  // school name — smaller, auto-shrink
+  let nfs=p(3);
   ctx.font=`900 ${nfs}px Arial`;
-  while(ctx.measureText(settings.schoolName||'D V Convent School').width>TW && nfs>p(2.2)){
+  while(ctx.measureText(settings.schoolName||'D V Convent School').width>TW && nfs>p(2)){
     nfs--; ctx.font=`900 ${nfs}px Arial`;
   }
   ctx.fillStyle='#fff';
-  ctx.fillText(settings.schoolName||'D V Convent School', TX, RH+p(1.5));
+  ctx.fillText(settings.schoolName||'D V Convent School', TX, RH+p(1.2));
 
   // Govt Recognised
-  ctx.font=`italic 400 ${p(1.9)}px Arial`; ctx.fillStyle='rgba(255,255,255,0.88)';
-  ctx.fillText('(Govt. Recognised)', TX, RH+p(1.5)+nfs+p(0.5));
+  ctx.font=`italic 400 ${p(1.8)}px Arial`; ctx.fillStyle='rgba(255,255,255,0.88)';
+  ctx.fillText('(Govt. Recognised)', TX, RH+p(1.2)+nfs+p(0.4));
 
   // address — 1 line ellipsis
-  ctx.font=`400 ${p(1.85)}px Arial`; ctx.fillStyle='rgba(255,255,255,0.8)';
+  ctx.font=`400 ${p(1.75)}px Arial`; ctx.fillStyle='rgba(255,255,255,0.8)';
   ctx.fillText(ell(ctx,settings.schoolAddress||'Vill-Akodha,Post-Rohi,Bhadohi',TW),
-    TX, RH+p(1.5)+nfs+p(3.5));
+    TX, RH+p(1.2)+nfs+p(3));
 
   // phone bold
-  ctx.font=`700 ${p(2.1)}px Arial`; ctx.fillStyle='#fff';
-  ctx.fillText(`Ph: ${settings.contactNumber||'—'}`, TX, RH+p(1.5)+nfs+p(6.5));
+  ctx.font=`700 ${p(2)}px Arial`; ctx.fillStyle='#fff';
+  ctx.fillText(`Ph: ${settings.contactNumber||'—'}`, TX, RH+p(1.2)+nfs+p(5.8));
 
   // ── 3. BODY ─────────────────────────────────────────────
   ctx.fillStyle='#fff'; ctx.fillRect(0,BY,CW,BH);
@@ -161,31 +161,39 @@ const drawCard = async (canvas, settings, assets, opts) => {
   ctx.fillText(idLine,RX+p(3),curY+UH/2);
   curY+=UH+p(2);
 
-  // rows — label on own line, value on next line (no overlap)
+  // rows — label on own line, value wraps if needed
   const rowsAvail=BY+BH-p(1.5)-curY;
   const tc=document.createElement('canvas'); tc.width=CW; tc.height=10;
   const mc=tc.getContext('2d'); mc.font=`400 ${p(2)}px Arial`;
 
-  const RH2=p(2.2); // label height
-  const VH =p(2.2); // value height (single line)
-  const SEP=p(0.8); // gap between rows
-  const rowH=RH2+VH+SEP;
-  const scale=Math.min(1, rowsAvail/(rows.length*rowH));
+  const LBH=p(2.2); // label line height
+  const VLH=p(2.2); // value line height
+  const SEP=p(0.6);
 
-  rows.forEach(([lbl,val],i)=>{
-    const rh=Math.round(rowH*scale);
-    if(i%2===0){ ctx.fillStyle=color+'0d'; ctx.fillRect(RX-p(1),curY,RW+p(1),rh); }
+  // pre-measure
+  const rowDefs=rows.map(([lbl,val])=>{
+    const lines=wrapText(mc,val,RW);
+    const rh=LBH+lines.length*VLH+SEP;
+    return {lbl,val,lines,rh};
+  });
+  const totalNeed=rowDefs.reduce((a,r)=>a+r.rh,0);
+  const rscale=Math.min(1,rowsAvail/totalNeed);
+
+  rowDefs.forEach(({lbl,val,lines,rh},i)=>{
+    const actualRH=Math.round(rh*rscale);
+    if(i%2===0){ ctx.fillStyle=color+'0d'; ctx.fillRect(RX-p(1),curY,RW+p(1),actualRH); }
     // label
     ctx.font=`700 ${p(2)}px Arial`; ctx.fillStyle=color;
     ctx.textAlign='left'; ctx.textBaseline='top';
     ctx.fillText(lbl,RX,curY+p(0.3));
-    // value — single line ellipsis
+    // value lines
     ctx.font=`400 ${p(2)}px Arial`; ctx.fillStyle='#1a1a1a';
-    ctx.fillText(ell(ctx,val,RW),RX,curY+Math.round(RH2*scale)+p(0.3));
+    const scaledVLH=VLH*rscale;
+    lines.forEach((ln,li)=>ctx.fillText(ln,RX,curY+LBH*rscale+p(0.3)+li*scaledVLH));
     // divider
     ctx.strokeStyle='#e0e0e0'; ctx.lineWidth=p(0.3);
-    ctx.beginPath(); ctx.moveTo(RX-p(1),curY+rh); ctx.lineTo(CW-p(2),curY+rh); ctx.stroke();
-    curY+=rh;
+    ctx.beginPath(); ctx.moveTo(RX-p(1),curY+actualRH); ctx.lineTo(CW-p(2),curY+actualRH); ctx.stroke();
+    curY+=actualRH;
   });
 
   // ── 4. SIGN FOOTER ──────────────────────────────────────

@@ -26,7 +26,7 @@ const getLogoSrc = (s) => s.schoolLogo
 
 // ── CARD PREVIEW ──────────────────────────────────────────────────────────
 const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, personName, idLine, rows, classVal }) => {
-  const RH=pp(5), HH=pp(20), SFH=pp(9), BSH=pp(8);
+  const RH=pp(5), HH=pp(17), SFH=pp(9), BSH=pp(8);
   const BY=RH+HH, BH=PH-RH-HH-SFH-BSH;
   const SFY=BY+BH, BTSY=SFY+SFH;
 
@@ -51,22 +51,22 @@ const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, perso
       <div style={{ position:'absolute', top:RH, left:0, right:0, height:HH,
         background:'linear-gradient(180deg,#1565c0 0%,#1976d2 100%)',
         display:'flex', alignItems:'center', padding:`0 ${pp(3)}px`, gap:pp(2.5) }}>
-        {/* Logo small left */}
-        <div style={{ width:pp(13), height:pp(13), borderRadius:'50%',
+        {/* Logo smaller */}
+        <div style={{ width:pp(10), height:pp(10), borderRadius:'50%',
           overflow:'hidden', background:'#fff', flexShrink:0 }}>
           <img src={logoSrc} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
         </div>
         {/* School info compact */}
         <div style={{ flex:1, overflow:'hidden' }}>
           <div style={{ color:'#fff', fontWeight:900, lineHeight:1.2,
-            fontSize:sName.length>20?pp(2.6):sName.length>14?pp(3):pp(3.5),
+            fontSize:sName.length>20?pp(2.3):sName.length>14?pp(2.7):pp(3),
             overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sName}</div>
-          <div style={{ color:'rgba(255,255,255,0.88)', fontSize:pp(1.85), fontStyle:'italic' }}>
+          <div style={{ color:'rgba(255,255,255,0.88)', fontSize:pp(1.8), fontStyle:'italic' }}>
             (Govt. Recognised)
           </div>
-          <div style={{ color:'rgba(255,255,255,0.8)', fontSize:pp(1.8),
+          <div style={{ color:'rgba(255,255,255,0.8)', fontSize:pp(1.75),
             overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{sAddr}</div>
-          <div style={{ color:'#fff', fontWeight:800, fontSize:pp(2.1) }}>
+          <div style={{ color:'#fff', fontWeight:800, fontSize:pp(2) }}>
             Ph: {sPhone}
           </div>
         </div>
@@ -99,15 +99,15 @@ const IDCard = ({ color = '#1565c0', logoSrc, sName, sAddr, sPhone, photo, perso
             padding:`${pp(0.5)}px ${pp(2.5)}px`, borderRadius:pp(2.5) }}>
             {idLine}
           </div>
-          {/* rows — label then value, no overlap */}
+          {/* rows — label then value, wraps if long */}
           <div style={{ marginTop:pp(1.5) }}>
             {rows.map(([lbl,val],i)=>(
               <div key={lbl} style={{ padding:`${pp(0.3)}px 0`,
                 background:i%2===0?color+'0d':'transparent',
                 borderBottom:`0.4px solid #e0e0e0` }}>
                 <div style={{ fontSize:pp(1.9), fontWeight:700, color, lineHeight:1.15 }}>{lbl}</div>
-                <div style={{ fontSize:pp(1.9), color:'#1a1a1a', lineHeight:1.2,
-                  overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{val||'—'}</div>
+                <div style={{ fontSize:pp(1.9), color:'#1a1a1a', lineHeight:1.25,
+                  wordBreak:'break-word' }}>{val||'—'}</div>
               </div>
             ))}
           </div>
