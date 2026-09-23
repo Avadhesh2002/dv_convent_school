@@ -1,8 +1,8 @@
 import JSZip from 'jszip';
 
 const MM = 300 / 25.4;
-const CW = Math.round(57 * MM);
-const CH = Math.round(87 * MM);
+const CW = Math.round(57 * MM);   // 673px
+const CH = Math.round(87 * MM);   // 1028px
 const p  = (mm) => Math.round(mm * MM);
 
 const loadImg = (src) => new Promise((res) => {
@@ -23,8 +23,8 @@ const wrapText = (ctx, txt, maxW) => {
   const words = String(txt).replace(/,(\S)/g,', $1').replace(/\s+/g,' ').trim().split(' ');
   const lines=[]; let line='';
   for(const w of words){
-    const test=line?`${line} ${w}`:w;
-    if(ctx.measureText(test).width>maxW&&line){lines.push(line);line=w;}else line=test;
+    const t=line?`${line} ${w}`:w;
+    if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=w;}else line=t;
   }
   if(line)lines.push(line);
   return lines.length?lines:['—'];
@@ -44,248 +44,272 @@ const cropDraw = (ctx, img, x, y, w, h) => {
   ctx.restore();
 };
 
-// ══════════════════════════════════════════════════════════
-// LAYOUT  57×87mm
-//  ribbon  = 5mm  blue
-//  header  = 20mm  blue — logo small left, school info right (compact)
-//  body    = ?mm   white — left: photo centered | right: name+uid+rows
-//  sigfoot = 9mm   white — class + sign
-//  bottom  = 8mm   blue
-// ══════════════════════════════════════════════════════════
-const drawCard = async (canvas, settings, assets, opts) => {
+// ═══════════════════════════════════════════════════════════════
+// DRAW CARD — single function used for BOTH preview and download
+// Layout (mm, total=87):
+//   ribbon  = 5   blue
+//   header  = 19  blue — logo top-center, school name, addr, ph
+//   body    = 46  white — left photo | right name+uid+rows
+//   sigfoot = 9   white — class + sign
+//   bottom  = 8   blue
+// ═══════════════════════════════════════════════════════════════
+export const drawCardToCanvas = async (canvas, settings, assets, opts) => {
   const { logoImg, signImg, photoImg } = assets;
   const { color, personName, idLine, rows, classVal } = opts;
 
-  canvas.width=CW; canvas.height=CH;
-  const ctx=canvas.getContext('2d');
+  canvas.width  = CW;
+  canvas.height = CH;
+  const ctx = canvas.getContext('2d');
 
-  const RH =p(5), HH=p(17), SFH=p(9), BSH=p(8);
-  const BY =RH+HH;
-  const BH =CH-RH-HH-SFH-BSH;
-  const SFY=BY+BH;
-  const BTSY=SFY+SFH;
+  const RH  = p(5);
+  const HH  = p(19);
+  const SFH = p(9);
+  const BSH = p(8);
+  const BY  = RH + HH;
+  const BH  = CH - RH - HH - SFH - BSH;   // 46mm
+  const SFY = BY + BH;
+  const BTSY = SFY + SFH;
 
-  // white base
-  ctx.fillStyle='#fff'; ctx.fillRect(0,0,CW,CH);
+  // ── Base white ────────────────────────────────────────────
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, CW, CH);
 
-  // ── 1. RIBBON ───────────────────────────────────────────
-  ctx.fillStyle=color; ctx.fillRect(0,0,CW,RH);
+  // ── 1. Ribbon ─────────────────────────────────────────────
+  ctx.fillStyle = color; ctx.fillRect(0, 0, CW, RH);
 
-  // ── 2. HEADER — logo LEFT small + text RIGHT compact ────
-  const hg=ctx.createLinearGradient(0,RH,0,RH+HH);
-  hg.addColorStop(0,'#1565c0'); hg.addColorStop(1,'#1976d2');
-  ctx.fillStyle=hg; ctx.fillRect(0,RH,CW,HH);
+  // ── 2. Header ─────────────────────────────────────────────
+  ctx.fillStyle = '#1565c0'; ctx.fillRect(0, RH, CW, HH);
 
-  // Logo — smaller
-  const LSZ=p(10), LX=p(2.5), LY=RH+(HH-LSZ)/2;
+  // header layout: logo on left (vertically centered), text on right
+  const LSZ = p(14);                      // logo size
+  const LX  = p(3);                       // logo left margin
+  const LY  = RH + (HH - LSZ) / 2;       // logo vertically centered
+
+  // logo circle
   ctx.save();
-  ctx.beginPath(); ctx.arc(LX+LSZ/2,LY+LSZ/2,LSZ/2,0,Math.PI*2);
-  ctx.fillStyle='#fff'; ctx.fill(); ctx.clip();
-  if(logoImg) ctx.drawImage(logoImg,LX,LY,LSZ,LSZ);
+  ctx.beginPath(); ctx.arc(LX+LSZ/2, LY+LSZ/2, LSZ/2, 0, Math.PI*2);
+  ctx.fillStyle = '#fff'; ctx.fill(); ctx.clip();
+  if (logoImg) ctx.drawImage(logoImg, LX, LY, LSZ, LSZ);
   ctx.restore();
 
-  // School info — right of logo, compact
-  const TX=LX+LSZ+p(2), TW=CW-TX-p(2);
-  ctx.textAlign='left'; ctx.textBaseline='top';
+  // right text block — centered vertically
+  const TX  = LX + LSZ + p(3);
+  const TW  = CW - TX - p(2);
+  const TY0 = RH + p(2);
 
-  // school name — smaller, auto-shrink
-  let nfs=p(3);
-  ctx.font=`900 ${nfs}px Arial`;
-  while(ctx.measureText(settings.schoolName||'D V Convent School').width>TW && nfs>p(2)){
-    nfs--; ctx.font=`900 ${nfs}px Arial`;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillStyle = '#fff';
+
+  // school name — font size fits in 1 line
+  let nfs = p(3.4);
+  ctx.font = `900 ${nfs}px Arial`;
+  while (ctx.measureText(settings.schoolName||'D V Convent School').width > TW && nfs > p(2.2)) {
+    nfs -= 1; ctx.font = `900 ${nfs}px Arial`;
   }
-  ctx.fillStyle='#fff';
-  ctx.fillText(settings.schoolName||'D V Convent School', TX, RH+p(1.2));
+  ctx.fillText(settings.schoolName||'D V Convent School', TX, TY0);
 
-  // Govt Recognised
-  ctx.font=`italic 400 ${p(1.8)}px Arial`; ctx.fillStyle='rgba(255,255,255,0.88)';
-  ctx.fillText('(Govt. Recognised)', TX, RH+p(1.2)+nfs+p(0.4));
+  // (Govt. Recognised) italic
+  ctx.font = `italic 400 ${p(2)}px Arial`;
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillText('(Govt. Recognised)', TX, TY0 + nfs + p(0.8));
 
-  // address — 1 line ellipsis
-  ctx.font=`400 ${p(1.75)}px Arial`; ctx.fillStyle='rgba(255,255,255,0.8)';
-  ctx.fillText(ell(ctx,settings.schoolAddress||'Vill-Akodha,Post-Rohi,Bhadohi',TW),
-    TX, RH+p(1.2)+nfs+p(3));
+  // address
+  ctx.font = `400 ${p(2)}px Arial`;
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText(ell(ctx, settings.schoolAddress||'Vill-Akodha,Post-Rohi,Dist-Bhadohi', TW),
+    TX, TY0 + nfs + p(4.2));
 
-  // phone bold
-  ctx.font=`700 ${p(2)}px Arial`; ctx.fillStyle='#fff';
-  ctx.fillText(`Ph: ${settings.contactNumber||'—'}`, TX, RH+p(1.2)+nfs+p(5.8));
+  // phone — bold white
+  ctx.font = `700 ${p(2.3)}px Arial`; ctx.fillStyle = '#fff';
+  ctx.fillText(`Ph: ${settings.contactNumber||'—'}`, TX, TY0 + nfs + p(7.5));
 
-  // ── 3. BODY ─────────────────────────────────────────────
-  ctx.fillStyle='#fff'; ctx.fillRect(0,BY,CW,BH);
+  // ── 3. Body ───────────────────────────────────────────────
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, BY, CW, BH);
 
-  // LEFT — photo centered vertically
-  const photoPad=p(2.5);
-  const PW2=p(22), PHGT=Math.round(PW2*4/3);  // 3:4 ratio
-  const PX=photoPad;
-  const PY=BY+(BH-PHGT)/2;  // vertically centered
+  // --- Photo LEFT, vertically centered ---
+  const pad    = p(3);
+  const PW2    = p(23);
+  const PHGT   = Math.round(PW2 * 4 / 3);  // 3:4
+  const PX     = pad;
+  const PY     = BY + Math.round((BH - PHGT) / 2);
 
-  // border
-  ctx.strokeStyle=color; ctx.lineWidth=p(0.7);
-  ctx.strokeRect(PX-p(0.7),PY-p(0.7),PW2+p(1.4),PHGT+p(1.4));
+  ctx.strokeStyle = color; ctx.lineWidth = p(0.8);
+  ctx.strokeRect(PX - p(0.8), PY - p(0.8), PW2 + p(1.6), PHGT + p(1.6));
 
-  if(photoImg){
-    cropDraw(ctx,photoImg,PX,PY,PW2,PHGT);
+  if (photoImg) {
+    cropDraw(ctx, photoImg, PX, PY, PW2, PHGT);
   } else {
-    ctx.fillStyle='#dbeafe'; ctx.fillRect(PX,PY,PW2,PHGT);
-    ctx.font=`900 ${p(10)}px Arial`; ctx.fillStyle=color+'55';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText((personName||'?').charAt(0).toUpperCase(),PX+PW2/2,PY+PHGT/2);
+    ctx.fillStyle = '#dbeafe'; ctx.fillRect(PX, PY, PW2, PHGT);
+    ctx.font = `900 ${p(10)}px Arial`; ctx.fillStyle = color+'55';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText((personName||'?').charAt(0).toUpperCase(), PX+PW2/2, PY+PHGT/2);
   }
 
-  // RIGHT — name + uid + rows
-  const RX=PX+PW2+p(3), RW=CW-RX-p(2);
-  let curY=BY+p(2);
+  // --- Right: name + UID + rows ---
+  const RX  = PX + PW2 + p(3.5);
+  const RW  = CW - RX - p(2);
+  let   curY = BY + p(2.5);
 
   // name
-  ctx.textAlign='left'; ctx.textBaseline='top';
-  let fnfs=p(3.4);
-  ctx.font=`700 ${fnfs}px Arial`;
-  while(ctx.measureText(personName||'').width>RW && fnfs>p(2)){
-    fnfs--; ctx.font=`700 ${fnfs}px Arial`;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  let fnfs = p(3.8);
+  ctx.font = `700 ${fnfs}px Arial`; ctx.fillStyle = '#111';
+  while (ctx.measureText(personName||'').width > RW && fnfs > p(2.2)) {
+    fnfs -= 1; ctx.font = `700 ${fnfs}px Arial`;
   }
-  ctx.fillStyle='#1a1a1a';
-  ctx.fillText(personName||'',RX,curY);
-  curY+=fnfs+p(1.5);
+  ctx.fillText(personName||'', RX, curY);
+  curY += fnfs + p(1.8);
 
   // UID pill
-  ctx.font=`800 ${p(2.2)}px Arial`;
-  const UW=ctx.measureText(idLine).width+p(6), UH=p(3.5), ur=UH/2;
+  ctx.font = `800 ${p(2.4)}px Arial`;
+  const uw = ctx.measureText(idLine).width + p(7), uh = p(4);
+  const ur = uh / 2;
   ctx.beginPath();
-  ctx.moveTo(RX+ur,curY); ctx.lineTo(RX+UW-ur,curY);
-  ctx.quadraticCurveTo(RX+UW,curY,RX+UW,curY+ur);
-  ctx.lineTo(RX+UW,curY+UH-ur); ctx.quadraticCurveTo(RX+UW,curY+UH,RX+UW-ur,curY+UH);
-  ctx.lineTo(RX+ur,curY+UH); ctx.quadraticCurveTo(RX,curY+UH,RX,curY+UH-ur);
+  ctx.moveTo(RX+ur,curY); ctx.lineTo(RX+uw-ur,curY);
+  ctx.quadraticCurveTo(RX+uw,curY,RX+uw,curY+ur);
+  ctx.lineTo(RX+uw,curY+uh-ur); ctx.quadraticCurveTo(RX+uw,curY+uh,RX+uw-ur,curY+uh);
+  ctx.lineTo(RX+ur,curY+uh); ctx.quadraticCurveTo(RX,curY+uh,RX,curY+uh-ur);
   ctx.lineTo(RX,curY+ur); ctx.quadraticCurveTo(RX,curY,RX+ur,curY); ctx.closePath();
-  ctx.fillStyle=color; ctx.fill();
-  ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.textBaseline='middle';
-  ctx.fillText(idLine,RX+p(3),curY+UH/2);
-  curY+=UH+p(2);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(idLine, RX + p(3.5), curY + uh/2);
+  curY += uh + p(2.5);
 
-  // rows — label on own line, value wraps if needed
-  const rowsAvail=BY+BH-p(1.5)-curY;
-  const tc=document.createElement('canvas'); tc.width=CW; tc.height=10;
-  const mc=tc.getContext('2d'); mc.font=`400 ${p(2)}px Arial`;
+  // rows — label + value (value wraps if needed)
+  const rowsH  = BY + BH - p(2) - curY;
+  const lblSz  = p(2.2), valSz = p(2.2);
+  const lblH   = lblSz + p(0.5);
+  const valLH  = valSz + p(0.8);
 
-  const LBH=p(2.2); // label line height
-  const VLH=p(2.2); // value line height
-  const SEP=p(0.6);
+  const tc = document.createElement('canvas'); tc.width=CW; tc.height=10;
+  const mc = tc.getContext('2d'); mc.font=`400 ${valSz}px Arial`;
 
-  // pre-measure
-  const rowDefs=rows.map(([lbl,val])=>{
-    const lines=wrapText(mc,val,RW);
-    const rh=LBH+lines.length*VLH+SEP;
-    return {lbl,val,lines,rh};
+  const rDefs = rows.map(([lbl,val]) => {
+    const lines = wrapText(mc, val, RW);
+    return { lbl, val, lines, rh: lblH + lines.length * valLH + p(1) };
   });
-  const totalNeed=rowDefs.reduce((a,r)=>a+r.rh,0);
-  const rscale=Math.min(1,rowsAvail/totalNeed);
+  const totalH = rDefs.reduce((a,r) => a+r.rh, 0);
+  const sc     = Math.min(1, rowsH / totalH);
 
-  rowDefs.forEach(({lbl,val,lines,rh},i)=>{
-    const actualRH=Math.round(rh*rscale);
-    if(i%2===0){ ctx.fillStyle=color+'0d'; ctx.fillRect(RX-p(1),curY,RW+p(1),actualRH); }
+  rDefs.forEach(({ lbl, lines, rh }, i) => {
+    const ah = Math.round(rh * sc);
+    if (i%2===0) { ctx.fillStyle=color+'10'; ctx.fillRect(RX-p(1), curY, RW+p(1), ah); }
     // label
-    ctx.font=`700 ${p(2)}px Arial`; ctx.fillStyle=color;
+    ctx.font=`700 ${lblSz}px Arial`; ctx.fillStyle=color;
     ctx.textAlign='left'; ctx.textBaseline='top';
-    ctx.fillText(lbl,RX,curY+p(0.3));
-    // value lines
-    ctx.font=`400 ${p(2)}px Arial`; ctx.fillStyle='#1a1a1a';
-    const scaledVLH=VLH*rscale;
-    lines.forEach((ln,li)=>ctx.fillText(ln,RX,curY+LBH*rscale+p(0.3)+li*scaledVLH));
+    ctx.fillText(lbl, RX, curY + p(0.5));
+    // value
+    ctx.font=`400 ${valSz}px Arial`; ctx.fillStyle='#111';
+    const scaledLH = valLH * sc;
+    lines.forEach((ln,li) =>
+      ctx.fillText(ln, RX, curY + (lblH + p(0.5)) * sc + li * scaledLH)
+    );
     // divider
     ctx.strokeStyle='#e0e0e0'; ctx.lineWidth=p(0.3);
-    ctx.beginPath(); ctx.moveTo(RX-p(1),curY+actualRH); ctx.lineTo(CW-p(2),curY+actualRH); ctx.stroke();
-    curY+=actualRH;
+    ctx.beginPath(); ctx.moveTo(RX-p(1),curY+ah); ctx.lineTo(CW-p(2),curY+ah); ctx.stroke();
+    curY += ah;
   });
 
-  // ── 4. SIGN FOOTER ──────────────────────────────────────
-  ctx.fillStyle='#fff'; ctx.fillRect(0,SFY,CW,SFH);
-  ctx.strokeStyle='#e0e0e0'; ctx.lineWidth=p(0.3);
+  // ── 4. Sign footer ────────────────────────────────────────
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, SFY, CW, SFH);
+  ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = p(0.3);
   ctx.beginPath(); ctx.moveTo(0,SFY); ctx.lineTo(CW,SFY); ctx.stroke();
 
-  ctx.font=`900 ${p(3.2)}px Arial`; ctx.fillStyle='#1a1a1a';
-  ctx.textAlign='left'; ctx.textBaseline='middle';
-  ctx.fillText(`Class : ${classVal||'—'}`,p(3.5),SFY+SFH/2);
+  ctx.font = `900 ${p(3.4)}px Arial`; ctx.fillStyle = '#111';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(`Class : ${classVal||'—'}`, p(4), SFY + SFH/2);
 
-  if(signImg){
-    const sh=Math.min(p(5.5),SFH-p(1.5));
-    const sw=sh*(signImg.width/signImg.height);
-    const sx=CW-sw-p(3.5), sy=SFY+p(0.8);
-    ctx.drawImage(signImg,sx,sy,sw,sh);
-    ctx.strokeStyle='#555'; ctx.lineWidth=p(0.4);
-    ctx.beginPath(); ctx.moveTo(sx,sy+sh+p(0.5)); ctx.lineTo(sx+sw,sy+sh+p(0.5)); ctx.stroke();
-    ctx.font=`400 ${p(1.8)}px Arial`; ctx.fillStyle='#555';
-    ctx.textAlign='center'; ctx.textBaseline='top';
-    ctx.fillText('Principal Sign.',sx+sw/2,sy+sh+p(0.8));
+  if (signImg) {
+    const sh = Math.min(p(5.5), SFH - p(1.5));
+    const sw = sh * (signImg.width / signImg.height);
+    const sx = CW - sw - p(4), sy = SFY + p(1);
+    ctx.drawImage(signImg, sx, sy, sw, sh);
+    ctx.strokeStyle = '#555'; ctx.lineWidth = p(0.4);
+    ctx.beginPath(); ctx.moveTo(sx,sy+sh+p(0.6)); ctx.lineTo(sx+sw,sy+sh+p(0.6)); ctx.stroke();
+    ctx.font = `400 ${p(2)}px Arial`; ctx.fillStyle = '#555';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('Principal Sign.', sx+sw/2, sy+sh+p(1));
   }
 
-  // ── 5. BOTTOM STRIP ─────────────────────────────────────
-  ctx.fillStyle=color; ctx.fillRect(0,BTSY,CW,BSH);
-  ctx.font=`500 ${p(2)}px Arial`; ctx.fillStyle='#fff';
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(`If found, please return to school  •  Ph: ${settings.contactNumber||'—'}`,CW/2,BTSY+BSH/2);
+  // ── 5. Bottom strip ───────────────────────────────────────
+  ctx.fillStyle = color; ctx.fillRect(0, BTSY, CW, BSH);
+  ctx.font = `500 ${p(2.2)}px Arial`; ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(
+    `If found, please return to school  •  Ph: ${settings.contactNumber||'—'}`,
+    CW/2, BTSY + BSH/2
+  );
 };
 
-const drawStudent=async(canvas,student,settings,assets,color='#1565c0')=>{
-  await drawCard(canvas,settings,assets,{
-    color, personName:student.name||'',
-    idLine:`UID: ${student.UID||'—'}`,
-    classVal:student.class||'—',
-    rows:[
-      ["Father's Name",student.fatherName||'—'],
-      ["Mother's Name",student.motherName||'—'],
-      ['D.O.B.',       fmtDate(student.dateOfBirth)],
-      ['Contact No.',  student.fatherMobile||student.motherMobile||student.guardianMobile||'—'],
-      ['Add.',         student.address||'—'],
-    ],
-  });
-};
+// ─── Student / Teacher wrappers ───────────────────────────────
+export const buildStudentOpts = (student) => ({
+  color:      '#1565c0',
+  personName: student.name || '',
+  idLine:     `UID: ${student.UID || '—'}`,
+  classVal:   student.class || '—',
+  rows: [
+    ["Father's Name", student.fatherName  || '—'],
+    ["Mother's Name", student.motherName  || '—'],
+    ['D.O.B.',        fmtDate(student.dateOfBirth)],
+    ['Contact No.',   student.fatherMobile || student.motherMobile || student.guardianMobile || '—'],
+    ['Add.',          student.address      || '—'],
+  ],
+});
 
-const drawTeacher=async(canvas,teacher,settings,assets)=>{
-  await drawCard(canvas,settings,assets,{
-    color:'#1565c0', personName:teacher.name||'',
-    idLine:`ID: ${teacher.employeeCode||'—'}`,
-    classVal:teacher.designation||'Teacher',
-    rows:[
-      ['Designation',teacher.designation||'Teacher'],
-      ['Phone',      teacher.phone||'—'],
-      ['Address',    teacher.address||'—'],
-    ],
-  });
-};
+export const buildTeacherOpts = (teacher) => ({
+  color:      '#1565c0',
+  personName: teacher.name || '',
+  idLine:     `ID: ${teacher.employeeCode || '—'}`,
+  classVal:   teacher.designation || 'Teacher',
+  rows: [
+    ['Designation', teacher.designation || 'Teacher'],
+    ['Phone',       teacher.phone       || '—'],
+    ['Address',     teacher.address     || '—'],
+  ],
+});
 
-const rpu=(pp)=>{
-  if(!pp)return null;
-  if(pp.startsWith('data:')||pp.startsWith('http'))return pp;
+// ─── Download helpers ─────────────────────────────────────────
+const rpu = (pp) => {
+  if (!pp) return null;
+  if (pp.startsWith('data:') || pp.startsWith('http')) return pp;
   return `${import.meta.env?.VITE_API_URL?.replace('/api','')||'http://localhost:5000'}${pp}`;
 };
 
-const toBlob=(item,type,settings,shared,sc)=>new Promise(async(res,rej)=>{
-  const photoImg=await loadImg(rpu(item.profileImage));
-  const canvas=document.createElement('canvas');
-  if(type==='student')await drawStudent(canvas,item,settings,{...shared,photoImg},sc);
-  else await drawTeacher(canvas,item,settings,{...shared,photoImg});
-  canvas.toBlob(b=>b?res(b):rej(new Error('toBlob failed')),'image/png',1.0);
-});
+const toBlob = (item, type, settings, shared, sc) =>
+  new Promise(async (res, rej) => {
+    const photoImg = await loadImg(rpu(item.profileImage));
+    const canvas   = document.createElement('canvas');
+    const opts     = type === 'student'
+      ? { ...buildStudentOpts(item), color: sc || '#1565c0' }
+      : buildTeacherOpts(item);
+    await drawCardToCanvas(canvas, settings, { ...shared, photoImg }, opts);
+    canvas.toBlob(b => b ? res(b) : rej(new Error('toBlob failed')), 'image/png', 1.0);
+  });
 
-const dl=(blob,name)=>{
-  const url=URL.createObjectURL(blob);
-  Object.assign(document.createElement('a'),{href:url,download:name}).click();
-  setTimeout(()=>URL.revokeObjectURL(url),2000);
+const dl = (blob, name) => {
+  const url = URL.createObjectURL(blob);
+  Object.assign(document.createElement('a'), { href: url, download: name }).click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 };
 
-export const downloadCards=async(items,type,settings,logoSrc,signSrc,onProgress,sc='#1565c0')=>{
-  if(!items?.length)throw new Error('No items');
-  const label=type==='student'?'student':'teacher';
-  const shared={logoImg:await loadImg(settings.schoolLogo||logoSrc),signImg:await loadImg(signSrc)};
-  if(items.length===1){
-    onProgress?.(0,1);
-    dl(await toBlob(items[0],type,settings,shared,sc),`${label}-id-card.png`);
-    onProgress?.(1,1);return;
+export const downloadCards = async (items, type, settings, logoSrc, signSrc, onProgress, sc = '#1565c0') => {
+  if (!items?.length) throw new Error('No items');
+  const label  = type === 'student' ? 'student' : 'teacher';
+  const shared = {
+    logoImg: await loadImg(settings.schoolLogo || logoSrc),
+    signImg: await loadImg(signSrc),
+  };
+  if (items.length === 1) {
+    onProgress?.(0, 1);
+    dl(await toBlob(items[0], type, settings, shared, sc), `${label}-id-card.png`);
+    onProgress?.(1, 1); return;
   }
-  const zip=new JSZip(),folder=zip.folder(`${label}-id-cards`);
-  for(let i=0;i<items.length;i++){
-    onProgress?.(i,items.length);
-    folder.file(`${label}-card-${String(i+1).padStart(3,'0')}.png`,await toBlob(items[i],type,settings,shared,sc));
+  const zip = new JSZip(), folder = zip.folder(`${label}-id-cards`);
+  for (let i = 0; i < items.length; i++) {
+    onProgress?.(i, items.length);
+    folder.file(
+      `${label}-card-${String(i+1).padStart(3,'0')}.png`,
+      await toBlob(items[i], type, settings, shared, sc)
+    );
   }
-  onProgress?.(items.length,items.length);
-  dl(await zip.generateAsync({type:'blob'}),`${label}-id-cards.zip`);
+  onProgress?.(items.length, items.length);
+  dl(await zip.generateAsync({ type: 'blob' }), `${label}-id-cards.zip`);
 };
