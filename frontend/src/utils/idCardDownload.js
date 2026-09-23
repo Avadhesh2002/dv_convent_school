@@ -183,7 +183,9 @@ export const drawCardToCanvas = async (canvas, settings, assets, opts) => {
   const mc = tc.getContext('2d'); mc.font=`400 ${valSz}px Arial`;
 
   const rDefs = rows.map(([lbl,val]) => {
-    const lines = wrapText(mc, val, RW);
+    // Address row — max 2 lines to save space
+    const maxLines = lbl === 'Add.' ? 2 : 3;
+    const lines = wrapText(mc, val, RW).slice(0, maxLines);
     return { lbl, val, lines, rh: lblH + lines.length * valLH + p(1) };
   });
   const totalH = rDefs.reduce((a,r) => a+r.rh, 0);
@@ -240,19 +242,24 @@ export const drawCardToCanvas = async (canvas, settings, assets, opts) => {
 };
 
 // ─── Student / Teacher wrappers ───────────────────────────────
-export const buildStudentOpts = (student) => ({
-  color:      '#1565c0',
-  personName: student.name || '',
-  idLine:     `UID: ${student.UID || '—'}`,
-  classVal:   student.class || '—',
-  rows: [
-    ["Father's Name", student.fatherName  || '—'],
-    ["Mother's Name", student.motherName  || '—'],
-    ['D.O.B.',        fmtDate(student.dateOfBirth)],
-    ['Contact No.',   student.fatherMobile || student.motherMobile || student.guardianMobile || '—'],
-    ['Add.',          student.address      || '—'],
-  ],
-});
+export const buildStudentOpts = (student) => {
+  // Compress address: join parts with comma, fits in 2 lines
+  const addr = student.address || '—';
+
+  return {
+    color:      '#1565c0',
+    personName: student.name || '',
+    idLine:     `UID: ${student.UID || '—'}`,
+    classVal:   student.class || '—',
+    rows: [
+      ["Father's Name", student.fatherName  || '—'],
+      ["Mother's Name", student.motherName  || '—'],
+      ['D.O.B.',        fmtDate(student.dateOfBirth)],
+      ['Contact No.',   student.fatherMobile || student.motherMobile || student.guardianMobile || '—'],
+      ['Add.',          addr],
+    ],
+  };
+};
 
 export const buildTeacherOpts = (teacher) => ({
   color:      '#1565c0',
