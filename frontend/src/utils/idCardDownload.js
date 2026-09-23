@@ -220,18 +220,24 @@ export const drawCardToCanvas = async (canvas, settings, assets, opts) => {
 
   ctx.font = `900 ${p(3.4)}px Arial`; ctx.fillStyle = '#111';
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.fillText(`Class : ${classVal||'—'}`, p(4), SFY + SFH/2);
+  // classVal is empty string for teachers — show nothing or designation
+  if (classVal) {
+    ctx.fillText(`Class : ${classVal}`, p(4), SFY + SFH/2);
+  }
 
   if (signImg) {
-    const sh = Math.min(p(5.5), SFH - p(1.5));
+    const sh = Math.min(p(5), SFH - p(3.5));   // ensure space for label below
     const sw = sh * (signImg.width / signImg.height);
-    const sx = CW - sw - p(4), sy = SFY + p(1);
+    const sx = CW - sw - p(4);
+    const sy = SFY + p(0.8);
     ctx.drawImage(signImg, sx, sy, sw, sh);
+    // underline
     ctx.strokeStyle = '#555'; ctx.lineWidth = p(0.4);
-    ctx.beginPath(); ctx.moveTo(sx,sy+sh+p(0.6)); ctx.lineTo(sx+sw,sy+sh+p(0.6)); ctx.stroke();
-    ctx.font = `400 ${p(2)}px Arial`; ctx.fillStyle = '#555';
+    ctx.beginPath(); ctx.moveTo(sx, sy+sh+p(0.4)); ctx.lineTo(sx+sw, sy+sh+p(0.4)); ctx.stroke();
+    // label — guaranteed inside footer
+    ctx.font = `400 ${p(1.9)}px Arial`; ctx.fillStyle = '#555';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('Principal Sign.', sx+sw/2, sy+sh+p(1));
+    ctx.fillText('Principal Sign.', sx + sw/2, sy + sh + p(0.7));
   }
 
   // ── 5. Bottom strip ───────────────────────────────────────
@@ -268,7 +274,7 @@ export const buildTeacherOpts = (teacher) => ({
   color:      '#1565c0',
   personName: teacher.name || '',
   idLine:     `ID: ${teacher.employeeCode || '—'}`,
-  classVal:   teacher.designation || 'Teacher',
+  classVal:   '',   // teachers ke liye "Class :" section nahi dikhana
   rows: [
     ['Designation', teacher.designation || 'Teacher'],
     ['Phone',       teacher.phone       || '—'],
