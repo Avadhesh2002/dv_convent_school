@@ -111,15 +111,18 @@ export const drawCardToCanvas = async (canvas, settings, assets, opts) => {
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.fillText('(Govt. Recognised)', TX, TY0 + nfs + p(0.8));
 
-  // address
-  ctx.font = `400 ${p(2)}px Arial`;
+  // address — 2 lines so full address shows
+  ctx.font = `400 ${p(1.85)}px Arial`;
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.fillText(ell(ctx, settings.schoolAddress||'Vill-Akodha,Post-Rohi,Dist-Bhadohi', TW),
-    TX, TY0 + nfs + p(4.2));
+  const addrLines = wrapText(ctx, settings.schoolAddress||'Vill-Akodha,Post-Rohi,Dist-Bhadohi,221308', TW);
+  addrLines.slice(0, 2).forEach((ln, i) =>
+    ctx.fillText(ln, TX, TY0 + nfs + p(4) + i * p(2.6))
+  );
 
-  // phone — bold white
-  ctx.font = `700 ${p(2.3)}px Arial`; ctx.fillStyle = '#fff';
-  ctx.fillText(`Ph: ${settings.contactNumber||'—'}`, TX, TY0 + nfs + p(7.5));
+  // phone — bold white (after address)
+  ctx.font = `700 ${p(2.1)}px Arial`; ctx.fillStyle = '#fff';
+  ctx.fillText(`Ph: ${settings.contactNumber||'—'}`, TX,
+    TY0 + nfs + p(4) + Math.min(addrLines.length, 2) * p(2.6) + p(0.5));
 
   // ── 3. Body ───────────────────────────────────────────────
   ctx.fillStyle = '#fff'; ctx.fillRect(0, BY, CW, BH);
@@ -175,16 +178,16 @@ export const drawCardToCanvas = async (canvas, settings, assets, opts) => {
 
   // rows — label + value (value wraps if needed)
   const rowsH  = BY + BH - p(2) - curY;
-  const lblSz  = p(2.2), valSz = p(2.2);
-  const lblH   = lblSz + p(0.5);
-  const valLH  = valSz + p(0.8);
+  const lblSz  = p(2), valSz = p(2);
+  const lblH   = lblSz + p(0.3);
+  const valLH  = valSz + p(0.6);
 
   const tc = document.createElement('canvas'); tc.width=CW; tc.height=10;
   const mc = tc.getContext('2d'); mc.font=`400 ${valSz}px Arial`;
 
   const rDefs = rows.map(([lbl,val]) => {
-    // Address row — max 2 lines to save space
-    const maxLines = lbl === 'Add.' ? 2 : 3;
+    // Address row — max 3 lines
+    const maxLines = lbl === 'Add.' ? 3 : 2;
     const lines = wrapText(mc, val, RW).slice(0, maxLines);
     return { lbl, val, lines, rh: lblH + lines.length * valLH + p(1) };
   });
