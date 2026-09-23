@@ -86,6 +86,9 @@ const IDCardGenerator = () => {
   const [printing, setPrinting]         = useState(false);
   const [progress, setProgress]         = useState({ current: 0, total: 0 });
   const [studentColor, setStudentColor] = useState('#1565c0');
+  const [bulkClass, setBulkClass]       = useState('');
+  const [bulkPrinting, setBulkPrinting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
 
   const PRESET  = ['#1565c0','#0d47a1','#1b5e20','#4a148c','#b71c1c','#e65100','#37474f','#880e4f'];
   const CLASSES = ['Nursery','LKG','UKG','1','2','3','4','5','6','7','8'];
@@ -137,6 +140,37 @@ const IDCardGenerator = () => {
     }
   };
 
+  // ── Class-wise bulk download ───────────────────────────────────────────
+  const handleBulkClassDl = async () => {
+    if (!bulkClass) { setToast({ message: 'Pehle class select karo', type: 'error' }); return; }
+    setBulkPrinting(true); setBulkProgress({ current: 0, total: 0 });
+    setToast({ message: `Class ${bulkClass} ke students fetch ho rahe hain…`, type: 'success' });
+    try {
+      // Sab students ek baar mein fetch — no pagination limit
+      const r = await API.get('/admin/students', {
+        params: { studentClass: bulkClass, status: 'active', limit: 9999 },
+      });
+      const allStudents = r.data.students || [];
+      if (!allStudents.length) {
+        setToast({ message: `Class ${bulkClass} mein koi student nahi mila`, type: 'error' });
+        setBulkPrinting(false); return;
+      }
+      setToast({ message: `${allStudents.length} students ka ZIP ban raha hai…`, type: 'success' });
+      setBulkProgress({ current: 0, total: allStudents.length });
+      await downloadCards(
+        allStudents, 'student', settings, schoolLogo, signImage,
+        (c, t) => setBulkProgress({ current: c, total: t }),
+        studentColor,
+        `class-${bulkClass}-id-cards`,
+      );
+      setToast({ message: `Class ${bulkClass} — ${allStudents.length} cards ZIP downloaded!`, type: 'success' });
+    } catch (e) {
+      setToast({ message: 'Bulk download failed: ' + e.message, type: 'error' });
+    } finally {
+      setBulkPrinting(false); setBulkProgress({ current: 0, total: 0 });
+    }
+  };
+
   const switchTab = (t) => {
     setTab(t); setSearch(''); setClassFilter(''); setSelected(new Set()); setPage(1);
   };
@@ -151,13 +185,43 @@ const IDCardGenerator = () => {
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">ID Card Generator</h1>
           <p className="text-xs text-gray-500 mt-0.5">57×87mm • 300 DPI • Preview = Download</p>
         </div>
-        <button onClick={handleDl} disabled={printing}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm transition-colors">
-          <Download size={16} />
-          {printing
-            ? progress.total > 1 ? `Processing ${progress.current}/${progress.total}…` : 'Processing…'
-            : selItems.length > 1 ? `Download ZIP (${selItems.length})` : `Download PNG (${selItems.length || 0})`}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Selected items download */}
+          <button onClick={handleDl} disabled={printing || bulkPrinting}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm transition-colors">
+            <Download size={16} />
+            {printing
+              ? progress.total > 1 ? `Processing ${progress.current}/${progress.total}…` : 'Processing…'
+              : selItems.length > 1 ? `Download ZIP (${selItems.length})` : `Download PNG (${selItems.length || 0})`}
+          </button>
+
+          {/* Class-wise bulk download — only for student tab */}
+          {tab === 'student' && (
+            <div className="flex items-center gap-2">
+              <select
+                value={bulkClass}
+                onChange={e => setBulkClass(e.target.value)}
+                disabled={bulkPrinting}
+                className="h-10 bg-white border border-gray-200 rounded-xl px-3 text-xs font-bold outline-none shadow-sm disabled:opacity-50"
+              >
+                <option value="">Class चुनें</option>
+                {CLASSES.map(c => <option key={c} value={c}>Class {c}</option>)}
+              </select>
+              <button
+                onClick={handleBulkClassDl}
+                disabled={bulkPrinting || printing || !bulkClass}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-sm transition-colors whitespace-nowrap"
+              >
+                <Download size={16} />
+                {bulkPrinting
+                  ? bulkProgress.total > 0
+                    ? `${bulkProgress.current}/${bulkProgress.total} बन रहे…`
+                    : 'Fetch हो रहा…'
+                  : 'पूरी Class Download'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tab */}

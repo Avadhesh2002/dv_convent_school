@@ -306,26 +306,32 @@ const dl = (blob, name) => {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 };
 
-export const downloadCards = async (items, type, settings, logoSrc, signSrc, onProgress, sc = '#1565c0') => {
+// label   - 'student' | 'teacher'
+// zipName - optional custom zip filename (without .zip), e.g. 'class-5-id-cards'
+export const downloadCards = async (items, type, settings, logoSrc, signSrc, onProgress, sc = '#1565c0', zipName = null) => {
   if (!items?.length) throw new Error('No items');
-  const label  = type === 'student' ? 'student' : 'teacher';
+  const label    = type === 'student' ? 'student' : 'teacher';
+  const baseName = zipName || `${label}-id-cards`;
   const shared = {
     logoImg: await loadImg(settings.schoolLogo || logoSrc),
     signImg: await loadImg(signSrc),
   };
   if (items.length === 1) {
     onProgress?.(0, 1);
-    dl(await toBlob(items[0], type, settings, shared, sc), `${label}-id-card.png`);
+    const name = items[0].name
+      ? `${items[0].name.replace(/\s+/g,'-')}-id-card.png`
+      : `${label}-id-card.png`;
+    dl(await toBlob(items[0], type, settings, shared, sc), name);
     onProgress?.(1, 1); return;
   }
-  const zip = new JSZip(), folder = zip.folder(`${label}-id-cards`);
+  const zip = new JSZip(), folder = zip.folder(baseName);
   for (let i = 0; i < items.length; i++) {
     onProgress?.(i, items.length);
-    folder.file(
-      `${label}-card-${String(i+1).padStart(3,'0')}.png`,
-      await toBlob(items[i], type, settings, shared, sc)
-    );
+    const safeName = items[i].name
+      ? `${String(i+1).padStart(3,'0')}-${items[i].name.replace(/\s+/g,'-')}.png`
+      : `${label}-card-${String(i+1).padStart(3,'0')}.png`;
+    folder.file(safeName, await toBlob(items[i], type, settings, shared, sc));
   }
   onProgress?.(items.length, items.length);
-  dl(await zip.generateAsync({ type: 'blob' }), `${label}-id-cards.zip`);
+  dl(await zip.generateAsync({ type: 'blob' }), `${baseName}.zip`);
 };
