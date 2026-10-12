@@ -30,7 +30,7 @@ export const navConfig = {
     { title: 'Fees',         path: '/admin/fees',         icon: DollarSign },
     { title: 'Bus Routes',   path: '/admin/bus',          icon: Bus },
     { title: 'ID Cards',     path: '/admin/id-cards',     icon: CreditCard },
-    { title: 'Exam Name Tags', path: '/admin/exam-name-tags', icon: Tag },
+    { title: 'Name Tags',    path: '/admin/name-tags',    icon: Tag },
     { title: 'Transfer Cert', path: '/admin/transfer-certificate', icon: ScrollText },
     { title: 'Annual Transition', path: '/admin/transition', icon: RefreshCcw },
     { title: 'Settings',         path: '/admin/settings',   icon: Settings },
