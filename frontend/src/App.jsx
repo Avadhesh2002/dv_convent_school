@@ -46,6 +46,7 @@ import AdminSettings from './pages/admin/Settings';
 import AdminProfile from './pages/admin/AdminProfile';
 import AnnualTransition from './pages/admin/AnnualTransition';
 import IDCardGenerator from './pages/admin/IDCardGenerator';
+import ExamNameTagGenerator from './pages/admin/ExamNameTagGenerator';
 import DatesheetBuilder from './pages/admin/DatesheetBuilder';
 import DatesheetView from './pages/shared/DatesheetView';
 import ResultGeneration from './pages/admin/ResultGeneration';
@@ -119,6 +120,7 @@ function App() {
         <Route path="settings" element={<AdminSettings />} />
         <Route path="transition" element={<AnnualTransition />} />
         <Route path="id-cards" element={<IDCardGenerator />} />
+        <Route path="exam-name-tags" element={<ExamNameTagGenerator />} />
         <Route path="transfer-certificate" element={<TransferCertificate />} />
         <Route path="holidays" element={<HolidayCalendar />} />
         <Route path="syllabus" element={<SyllabusManagement />} />
