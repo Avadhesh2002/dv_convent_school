@@ -41,11 +41,54 @@ const gradeBg = (g) => {
 
 const TermMarksheet = ({ student, termKey, termLabel, schoolInfo, academicYear }) => {
   const subjects = student.subjects || [];
+  const isSingle = student.isSingleExam;
+  const examType = student.examType || 'Unit Test';
+
+  // ── Exam type → column label mapping ─────────────────────
+  // For single exams: show marks in the correct column
+  const getExamColLabel = () => {
+    const t = examType;
+    if (t === 'Unit Test')   return 'Unit Test\n(Max)';
+    if (t === 'Mid-term')    return 'Mid Term\n(Max)';
+    if (t === 'Final')       return 'Final Exam\n(Max)';
+    if (t === 'Internal')    return 'Internal\n(Max)';
+    return 'Marks\n(Max)';
+  };
+
+  // ── Build enriched subjects ───────────────────────────────
   const enriched = subjects.map(s => {
+    // Multi-exam combined data (already has term1/term2 structure)
     if (s.term1 && s.term2) return s;
+
+    // Single exam: simple { marksObtained, maxMarks, grade } structure
+    if (isSingle) {
+      const obtained = s.marksObtained ?? 0;
+      const maxM     = s.maxMarks ?? 100;
+      const grade    = s.grade || gradeFromPercent((obtained / maxM) * 100);
+      // Put marks in term1.halfYearlyExam so existing table renders it correctly
+      return {
+        ...s,
+        subjectName: s.subjectName || s.subjectId?.subjectName || '—',
+        term1: {
+          periodicTest: null, noteBooks: null, subEnrichment: null,
+          halfYearlyExam: obtained,
+          total: obtained, maxTotal: maxM, grade,
+        },
+        term2: {
+          periodicTest: null, noteBooks: null, subEnrichment: null,
+          yearlyExam: null, total: 0, maxTotal: maxM, grade: '—',
+        },
+      };
+    }
+
+    // Legacy fallback for old multi-exam data without term structure
     const obtained = s.marksObtained ?? 0;
-    const maxM = s.maxMarks ?? 100;
-    return { ...s, term1: { periodicTest:null,noteBooks:null,subEnrichment:null,halfYearlyExam:null,total:0,maxTotal:maxM,grade:'--' }, term2: { periodicTest:null,noteBooks:null,subEnrichment:null,yearlyExam:obtained,total:obtained,maxTotal:maxM,grade:s.grade||gradeFromPercent((obtained/maxM)*100) } };
+    const maxM     = s.maxMarks ?? 100;
+    return {
+      ...s,
+      term1: { periodicTest:null, noteBooks:null, subEnrichment:null, halfYearlyExam:null, total:0, maxTotal:maxM, grade:'--' },
+      term2: { periodicTest:null, noteBooks:null, subEnrichment:null, yearlyExam:obtained, total:obtained, maxTotal:maxM, grade:s.grade||gradeFromPercent((obtained/maxM)*100) },
+    };
   });
   const grandTotal = enriched.reduce((a,s) => a+(typeof s[termKey]?.total==='number'?s[termKey].total:0),0);
   const grandMax   = enriched.reduce((a,s) => a+(s[termKey]?.maxTotal||0),0);
@@ -169,41 +212,79 @@ const TermMarksheet = ({ student, termKey, termLabel, schoolInfo, academicYear }
           <thead>
             <tr>
               <TH rowSpan={2} style={{width:'130px',fontSize:'12px',letterSpacing:'0.5px'}}>SUBJECTS</TH>
-              <TH style={{background:'#1e4080'}}>{'Periodic\nTest\n(10)'}</TH>
-              <TH style={{background:'#1e4080'}}>{'Note\nBooks\n(5)'}</TH>
-              <TH style={{background:'#1e4080'}}>{'Sub.\nEnrl.\n(5)'}</TH>
-              <TH style={{background:'#1e4080'}}>{isT1?'Half Yearly\nExam\n(80)':'Final\nExam\n(80)'}</TH>
-              <TH style={{background:'#14326e',fontSize:'11px'}}>{'Marks\nObtained\n(100)'}</TH>
-              <TH style={{background:'#14326e'}}>Grade</TH>
+              {isSingle ? (
+                // Single exam: clean 3-column layout
+                <>
+                  <TH style={{background:'#1e4080'}}>{getExamColLabel()}</TH>
+                  <TH style={{background:'#14326e'}}>{'Marks\nObtained'}</TH>
+                  <TH style={{background:'#14326e'}}>Grade</TH>
+                </>
+              ) : (
+                // Multi exam: full term1 breakdown
+                <>
+                  <TH style={{background:'#1e4080'}}>{'Periodic\nTest\n(10)'}</TH>
+                  <TH style={{background:'#1e4080'}}>{'Note\nBooks\n(5)'}</TH>
+                  <TH style={{background:'#1e4080'}}>{'Sub.\nEnrl.\n(5)'}</TH>
+                  <TH style={{background:'#1e4080'}}>{isT1?'Half Yearly\nExam\n(80)':'Final\nExam\n(80)'}</TH>
+                  <TH style={{background:'#14326e',fontSize:'11px'}}>{'Marks\nObtained\n(100)'}</TH>
+                  <TH style={{background:'#14326e'}}>Grade</TH>
+                </>
+              )}
+            </tr>
+            <tr>
+              {/* empty second header row — only for multi (6 cols), not single (3 cols) */}
+              {!isSingle && <></>}
             </tr>
           </thead>
           <tbody>
             {enriched.map((sub,i) => {
-              const t = sub[termKey];
-              const total = typeof t?.total==='number'&&t.total>0?t.total:null;
-              const grade = t?.grade;
-              const failed = total!==null&&(total/(t?.maxTotal||100))*100<PASS_MARK;
+              const t      = sub[termKey];
+              const total  = typeof t?.total==='number' && t.total>0 ? t.total : null;
+              const grade  = t?.grade;
+              const failed = total !== null && (total/(t?.maxTotal||100))*100 < PASS_MARK;
               return (
                 <tr key={i} style={{background:i%2===0?'#f8faff':'#ffffff'}}>
-                  <td style={{border:'1px solid #c7d2e8',padding:rowPad,fontSize:`${fs(11.5)}px`,fontWeight:'700',fontFamily:'Arial,sans-serif',color:'#1f2937',borderLeft:`3px solid ${ACCENT}`}}>{sub.subjectName}</td>
-                  <TD>{t?.periodicTest}</TD>
-                  <TD>{t?.noteBooks}</TD>
-                  <TD>{t?.subEnrichment}</TD>
-                  <TD>{isT1?t?.halfYearlyExam:t?.yearlyExam}</TD>
-                  <TD style={{fontWeight:'800',fontSize:'12px',color:failed?'#dc2626':'#111827',background:failed?'#fef2f2':'transparent'}}>{total??<span style={{color:'#d1d5db'}}>--</span>}</TD>
-                  <TD style={{fontWeight:'900',fontSize:'12px',color:gradeColor(grade),background:grade?gradeBg(grade):'transparent'}}>{grade||<span style={{color:'#d1d5db'}}>--</span>}</TD>
+                  <td style={{border:'1px solid #c7d2e8',padding:rowPad,fontSize:`${fs(11.5)}px`,fontWeight:'700',fontFamily:'Arial,sans-serif',color:'#1f2937',borderLeft:`3px solid ${ACCENT}`}}>
+                    {sub.subjectName || sub.subjectId?.subjectName || '—'}
+                  </td>
+                  {isSingle ? (
+                    // Single exam: show only exam marks | total | grade
+                    <>
+                      <TD>{t?.halfYearlyExam ?? t?.yearlyExam}</TD>
+                      <TD style={{fontWeight:'800',fontSize:'12px',color:failed?'#dc2626':'#111827',background:failed?'#fef2f2':'transparent'}}>
+                        {total ?? <span style={{color:'#d1d5db'}}>--</span>}
+                      </TD>
+                      <TD style={{fontWeight:'900',fontSize:'12px',color:gradeColor(grade),background:grade&&grade!=='—'?gradeBg(grade):'transparent'}}>
+                        {grade || <span style={{color:'#d1d5db'}}>--</span>}
+                      </TD>
+                    </>
+                  ) : (
+                    // Multi exam: full columns
+                    <>
+                      <TD>{t?.periodicTest}</TD>
+                      <TD>{t?.noteBooks}</TD>
+                      <TD>{t?.subEnrichment}</TD>
+                      <TD>{isT1?t?.halfYearlyExam:t?.yearlyExam}</TD>
+                      <TD style={{fontWeight:'800',fontSize:'12px',color:failed?'#dc2626':'#111827',background:failed?'#fef2f2':'transparent'}}>
+                        {total ?? <span style={{color:'#d1d5db'}}>--</span>}
+                      </TD>
+                      <TD style={{fontWeight:'900',fontSize:'12px',color:gradeColor(grade),background:grade?gradeBg(grade):'transparent'}}>
+                        {grade || <span style={{color:'#d1d5db'}}>--</span>}
+                      </TD>
+                    </>
+                  )}
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
             <tr style={{background:'#e8edf7'}}>
-              <td colSpan={5} style={{border:`1px solid ${BLUE}`,padding:'5px 10px',fontWeight:'900',fontSize:'12px',textAlign:'right',fontFamily:'Arial,sans-serif',color:BLUE}}>Grand Total</td>
+              <td colSpan={isSingle?2:5} style={{border:`1px solid ${BLUE}`,padding:'5px 10px',fontWeight:'900',fontSize:'12px',textAlign:'right',fontFamily:'Arial,sans-serif',color:BLUE}}>Grand Total</td>
               <td style={{border:`1px solid ${BLUE}`,padding:'4px 6px',fontWeight:'900',fontSize:'13px',textAlign:'center',color:BLUE}}>{grandTotal}/{grandMax}</td>
               <td style={{border:`1px solid ${BLUE}`}} />
             </tr>
             <tr style={{background:BLUE}}>
-              <td colSpan={4} style={{border:`1px solid ${BLUE}`,padding:'4px 10px',fontWeight:'900',fontSize:'12px',textAlign:'right',color:'white',fontFamily:'Arial,sans-serif'}}>Percentage</td>
+              <td colSpan={isSingle?1:4} style={{border:`1px solid ${BLUE}`,padding:'4px 10px',fontWeight:'900',fontSize:'12px',textAlign:'right',color:'white',fontFamily:'Arial,sans-serif'}}>Percentage</td>
               <td style={{border:`1px solid ${BLUE}`,padding:'4px 8px',fontWeight:'900',fontSize:'14px',textAlign:'center',color:'#fcd34d'}}>{percentage}%</td>
               <td style={{border:`1px solid ${BLUE}`,padding:'4px 6px',fontWeight:'900',fontSize:'14px',textAlign:'center',color:'#fcd34d'}}>{overallGrade}</td>
               <td style={{border:`1px solid ${BLUE}`}} />
@@ -683,15 +764,28 @@ const ResultGeneration = () => {
     if (!examIds.length) return setToast({ message: 'Select at least one exam', type: 'error' });
     setLoading(true); setResults([]);
     try {
+      // Single exam → use sheet API (gives direct marksObtained per subject)
+      // Multiple exams → use final API (combines term1/term2 structure)
+      const isSingle = examIds.length === 1;
       const [resultRes, attendanceRes] = await Promise.all([
-        API.get(`/admin/results/final/${selectedClass}?examIds=${examIds.join(',')}`),
+        isSingle
+          ? API.get(`/admin/results/sheet/${selectedClass}/${examIds[0]}`)
+          : API.get(`/admin/results/final/${selectedClass}?examIds=${examIds.join(',')}`),
         API.get(`/attendance/class-report/${selectedClass}?academicYear=${viewYear}`).catch(() => ({ data: [] })),
       ]);
       const attMap = {};
       (attendanceRes.data || []).forEach(a => {
         attMap[a.UID] = { presentDays: a.presentCount, totalWorkingDays: a.totalCount };
       });
-      const merged = resultRes.data.map(s => ({ ...s, attendance: attMap[s.UID] || s.attendance || {} }));
+      // For single exam, tag each student with isSingleExam flag + examType
+      const selectedExamObj = exams.find(e => e._id === examIds[0]);
+      const merged = resultRes.data.map(s => ({
+        ...s,
+        attendance: attMap[s.UID] || s.attendance || {},
+        isSingleExam: isSingle,
+        examType: isSingle ? (selectedExamObj?.examType || 'Unit Test') : null,
+        examName: isSingle ? (selectedExamObj?.examName || '') : null,
+      }));
       setResults(merged);
       setCurrentIdx(0);
     } catch (err) {
@@ -735,9 +829,13 @@ const ResultGeneration = () => {
     if (mode === 'final') {
       return <CombinedMarksheet key={student.studentId} student={student} schoolInfo={schoolInfo} academicYear={viewYear} />;
     }
+    // Single exam: use exam's own name as the heading label
+    const label = student.isSingleExam
+      ? (student.examName || student.examType || activeMode.termLabel).toUpperCase()
+      : activeMode.termLabel;
     return (
       <TermMarksheet key={student.studentId} student={student}
-        termKey={activeMode.termKey} termLabel={activeMode.termLabel}
+        termKey={activeMode.termKey} termLabel={label}
         schoolInfo={schoolInfo} academicYear={viewYear} />
     );
   };
