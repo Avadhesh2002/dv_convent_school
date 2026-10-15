@@ -40,6 +40,17 @@ const examSchema = new mongoose.Schema({
         default: 'Scheduled' 
     },
 
+    // Admin explicitly publish kare tab tak student ko marks nahi dikhenge
+    resultsPublished: {
+        type: Boolean,
+        default: false
+    },
+
+    publishedAt: {
+        type: Date,
+        default: null
+    },
+
     createdBy: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin'

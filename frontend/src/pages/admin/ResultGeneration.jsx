@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FileBarChart2, Calendar, Printer, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { FileBarChart2, Calendar, Printer, ChevronLeft, ChevronRight, User, AlertCircle } from 'lucide-react';
 import API from '../../api/axios';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Toast from '../../components/common/Toast';
@@ -788,9 +788,23 @@ const ResultGeneration = () => {
               ? <p className="text-sm text-gray-400 col-span-2 py-2 text-center">Loading exams...</p>
               : (() => {
                   const filtered = mode === 'term1' ? exams.filter(e => e.term === 'Term-1' || !e.term) : exams;
-                  return filtered.length === 0
-                    ? <p className="text-sm text-gray-400 col-span-2 py-2 text-center">No exams found for {viewYear}</p>
-                    : filtered.map(e => (
+                  if (filtered.length === 0)
+                    return <p className="text-sm text-gray-400 col-span-2 py-2 text-center">No exams found for {viewYear}</p>;
+
+                  // Completed exams — result generate ho sakta hai
+                  const completedExams = filtered.filter(e => e.status === 'Completed');
+                  // Incomplete exams — sirf info ke liye dikhao
+                  const otherExams    = filtered.filter(e => e.status !== 'Completed');
+
+                  return (
+                    <>
+                      {completedExams.length === 0 && (
+                        <div className="col-span-2 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 font-semibold">
+                          <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                          Koi bhi exam abhi 'Completed' nahi hai. Result generate karne ke liye pehle exam ko Exam Scheduler se close karo.
+                        </div>
+                      )}
+                      {completedExams.map(e => (
                         <button key={e._id} onClick={() => toggleExam(e._id)}
                           className={`flex items-center gap-2 p-3 rounded-xl border-2 text-left transition-all ${
                             selectedExams.includes(e._id) ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 bg-gray-50 hover:border-indigo-200'}`}>
@@ -804,17 +818,38 @@ const ResultGeneration = () => {
                           </div>
                           <div>
                             <p className="text-xs font-black text-gray-800">{e.examName}</p>
-                            <p className="text-[10px] font-bold uppercase"
-                              style={{ color: e.status==='Completed'?'#16a34a':e.status==='Ongoing'?'#d97706':'#6b7280' }}>
-                              {e.term||'Term-1'} · {e.component||e.examType} · {e.status}
+                            <p className="text-[10px] font-bold uppercase text-green-600">
+                              {e.term || e.examType} · ✅ Completed{e.resultsPublished ? ' · Published' : ''}
                             </p>
                           </div>
                         </button>
-                      ));
+                      ))}
+                      {otherExams.length > 0 && (
+                        <div className="col-span-2 pt-1">
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 px-1">
+                            Incomplete Exams (result available nahi)
+                          </p>
+                          {otherExams.map(e => (
+                            <div key={e._id}
+                              className="flex items-center gap-2 p-3 rounded-xl border-2 border-dashed border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed mb-1.5">
+                              <div className="w-4 h-4 rounded border-2 border-gray-300 shrink-0" />
+                              <div>
+                                <p className="text-xs font-black text-gray-600">{e.examName}</p>
+                                <p className="text-[10px] font-bold uppercase"
+                                  style={{ color: e.status === 'Ongoing' ? '#d97706' : '#6b7280' }}>
+                                  {e.status === 'Ongoing' ? '⏳ Ongoing — Marks entry chal rahi hai' : `${e.status} — Close karo pehle`}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  );
                 })()}
           </div>
         </div>
-        <button onClick={handleGenerate} disabled={loading}
+        <button onClick={handleGenerate} disabled={loading || selectedExams.length === 0 || !selectedClass}
           className="w-full h-12 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 transition-all uppercase tracking-tight disabled:opacity-50">
           {loading ? 'Generating...' : 'Generate Marksheets'}
         </button>

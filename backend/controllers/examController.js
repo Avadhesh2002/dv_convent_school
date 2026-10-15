@@ -38,7 +38,7 @@ const createExam = async (req, res) => {
 
 
 
-// @desc    Get all exams (Admin View)
+// @desc    Get all exams (Admin View) — student ke liye sirf published
 // @route   GET /api/admin/exams
 const getAllExams = async (req, res) => {
     try {
@@ -46,8 +46,12 @@ const getAllExams = async (req, res) => {
         let query = {};
         
         if (year) {
-            
             query.academicYear = year; 
+        }
+
+        // Student sirf published results wale exams dekhe
+        if (req.user && req.user.role === 'student') {
+            query.resultsPublished = true;
         }
 
         const exams = await Exam.find(query).sort({ startDate: -1 });
@@ -75,6 +79,52 @@ const updateExamStatus = async (req, res) => {
         );
 
         res.status(200).json({ message: `Exam status updated to ${status}`, exam });
+    } catch (error) {
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
+// @desc    Publish results — students ko marks dikhne lagenge
+// @route   PUT /api/admin/exams/:id/publish
+const publishResults = async (req, res) => {
+    try {
+        const exam = await Exam.findById(req.params.id);
+        if (!exam) return res.status(404).json({ message: "Exam not found." });
+
+        if (exam.status !== 'Completed') {
+            return res.status(400).json({ 
+                message: "Sirf 'Completed' status wale exam ke results publish ho sakte hain. Pehle exam close karo." 
+            });
+        }
+
+        if (exam.resultsPublished) {
+            return res.status(400).json({ message: "Results already published hain." });
+        }
+
+        exam.resultsPublished = true;
+        exam.publishedAt = new Date();
+        await exam.save();
+
+        res.status(200).json({ 
+            message: `"${exam.examName}" ke results publish ho gaye! Students ab marks dekh sakte hain.`,
+            exam 
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
+// @desc    Unpublish results — students ke liye results hide karo
+// @route   PUT /api/admin/exams/:id/unpublish
+const unpublishResults = async (req, res) => {
+    try {
+        const exam = await Exam.findByIdAndUpdate(
+            req.params.id,
+            { resultsPublished: false, publishedAt: null },
+            { new: true }
+        );
+        if (!exam) return res.status(404).json({ message: "Exam not found." });
+        res.status(200).json({ message: "Results unpublish ho gaye.", exam });
     } catch (error) {
         res.status(500).json({ message: "Server Error", error: error.message });
     }
@@ -122,4 +172,4 @@ const getAcademicSessions = async (req, res) => {
 
 
 // Add deleteExam to your exports
-module.exports = { createExam, getAllExams, updateExamStatus, deleteExam, getAcademicSessions };
+module.exports = { createExam, getAllExams, updateExamStatus, publishResults, unpublishResults, deleteExam, getAcademicSessions };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Calendar, Clock, CheckCircle2, Play, Power, Trash2, ArrowRight, ShieldCheck } from 'lucide-react';
+import { FileText, Plus, Calendar, Clock, CheckCircle2, Play, Power, Trash2, ArrowRight, ShieldCheck, Send, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import API from '../../api/axios';
 import Card from '../../components/common/Card';
@@ -76,19 +76,42 @@ const ExamManagement = () => {
   const updateStatus = async (examId, newStatus) => {
     try {
       await API.put(`/admin/exams/${examId}/status`, { status: newStatus });
-      setToast({ message: `Exam is now ${newStatus}`, type: "success" });
+      setToast({ message: `Exam is now ${newStatus}`, type: 'success' });
       fetchExams();
     } catch (err) {
-      setToast({ message: "Status update failed", type: "error" });
+      setToast({ message: 'Status update failed', type: 'error' });
     }
   };
 
-  // Helper: Status Color Map
+  // 4. Publish Results — students ko marks dikhne lagenge
+  const handlePublish = async (examId, examName) => {
+    if (!window.confirm(`"${examName}" ke results publish karne chahte ho? \n\nIs ke baad saare students apne marks dekh payenge.`)) return;
+    try {
+      const res = await API.put(`/admin/exams/${examId}/publish`);
+      setToast({ message: res.data.message, type: 'success' });
+      fetchExams();
+    } catch (err) {
+      setToast({ message: err.response?.data?.message || 'Publish failed', type: 'error' });
+    }
+  };
+
+  // 5. Unpublish Results — students se marks hide karo
+  const handleUnpublish = async (examId, examName) => {
+    if (!window.confirm(`"${examName}" ke results UNPUBLISH karne chahte ho? Students marks nahi dekh payenge.`)) return;
+    try {
+      await API.put(`/admin/exams/${examId}/unpublish`);
+      setToast({ message: 'Results unpublish ho gaye.', type: 'success' });
+      fetchExams();
+    } catch (err) {
+      setToast({ message: 'Unpublish failed', type: 'error' });
+    }
+  };
+
   const statusConfig = {
-    Scheduled: "bg-blue-50 text-blue-600 border-blue-100",
-    Ongoing: "bg-green-50 text-success border-green-100",
-    Completed: "bg-gray-50 text-gray-400 border-gray-100",
-    Cancelled: "bg-red-50 text-danger border-red-100"
+    Scheduled:  'bg-blue-50 text-blue-600 border-blue-100',
+    Ongoing:    'bg-green-50 text-success border-green-100',
+    Completed:  'bg-amber-50 text-amber-600 border-amber-100',
+    Cancelled:  'bg-red-50 text-danger border-red-100',
   };
 
   if (loading && exams.length === 0) return <div className="py-20"><LoadingSpinner size="lg" /></div>;
@@ -126,9 +149,9 @@ const ExamManagement = () => {
           <Trash2 size={16} />
         </button>
 
-        {/* 2. STATUS BADGE (Far Top-Right - ONLY ONE VERSION) */}
+        {/* 2. STATUS BADGE (Far Top-Right) */}
         <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase border z-20 ${statusConfig[exam.status]}`}>
-          {exam.status}
+          {exam.resultsPublished ? '✅ Published' : exam.status}
         </div>
 
         {/* 3. MAIN CONTENT (With top padding to avoid icons) */}
@@ -162,21 +185,59 @@ const ExamManagement = () => {
              </div>
           </div>
 
-                {/* 5. Status Workflow Actions */}
-                <div className="flex gap-2 pt-2">
+                {/* 5. Status Workflow Actions — 3 step: Start → Close → Publish */}
+                <div className="flex flex-col gap-2 pt-2">
+                  {/* Step 1: Scheduled → Ongoing */}
                   {exam.status === 'Scheduled' && (
-                    <Button fullWidth size="sm" icon={Play} onClick={() => updateStatus(exam._id, 'Ongoing')}>
-                      Start Exam
+                    <Button fullWidth size="sm" icon={Play}
+                      onClick={() => updateStatus(exam._id, 'Ongoing')}>
+                      Start Exam (Marks Entry Open)
                     </Button>
                   )}
+
+                  {/* Step 2: Ongoing → Completed */}
                   {exam.status === 'Ongoing' && (
-                    <Button fullWidth variant="success" size="sm" icon={CheckCircle2} onClick={() => updateStatus(exam._id, 'Completed')}>
-                      Close & Finish
-                    </Button>
+                    <button
+                      onClick={() => updateStatus(exam._id, 'Completed')}
+                      className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-lg min-h-[40px] px-4 transition-all active:scale-95"
+                    >
+                      <CheckCircle2 size={16} /> Close Exam (Marks Entry Band)
+                    </button>
                   )}
-                  {exam.status === 'Completed' && (
-                    <div className="flex items-center justify-center w-full gap-2 text-success font-bold text-xs py-2 bg-green-50 rounded-xl">
-                       <ShieldCheck size={16} /> Results Published
+
+                  {/* Step 3: Completed → Publish Results */}
+                  {exam.status === 'Completed' && !exam.resultsPublished && (
+                    <div className="space-y-2">
+                      {/* Info banner */}
+                      <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-xs font-semibold text-amber-700">
+                        <CheckCircle2 size={14} className="shrink-0" />
+                        Exam closed — results abhi students ko nahi dikhenge
+                      </div>
+                      <Button fullWidth variant="success" size="sm" icon={Send}
+                        onClick={() => handlePublish(exam._id, exam.examName)}>
+                        Publish Results (Students ko dikhaao)
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Published state */}
+                  {exam.status === 'Completed' && exam.resultsPublished && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-center w-full gap-2 text-success font-bold text-xs py-2 bg-green-50 rounded-xl border border-green-200">
+                        <ShieldCheck size={16} />
+                        Results Published — Students dekh sakte hain
+                        {exam.publishedAt && (
+                          <span className="text-[10px] text-gray-400 font-normal ml-1">
+                            ({new Date(exam.publishedAt).toLocaleDateString('en-IN')})
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleUnpublish(exam._id, exam.examName)}
+                        className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold text-gray-400 hover:text-red-500 py-1 transition-colors"
+                      >
+                        <EyeOff size={12} /> Unpublish karo
+                      </button>
                     </div>
                   )}
                 </div>

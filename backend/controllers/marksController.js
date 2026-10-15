@@ -41,7 +41,21 @@ const bulkEnterMarks = async (req, res) => {
         const exam = await Exam.findById(examId);
         if (!exam) return res.status(404).json({ message: "Exam not found" });
 
-        // 2. THE LOCK GUARD (7 DAYS)
+        // 2a. EXAM STATUS GUARD — Completed exam mein marks nahi enter ho sakte
+        if (exam.status === 'Completed') {
+            return res.status(403).json({
+                message: "Marks entry band hai: Admin ne yeh exam close kar diya hai. Koi changes allowed nahi."
+            });
+        }
+
+        // 2b. ONGOING GUARD — sirf Ongoing exam mein marks enter ho sakte hain
+        if (exam.status !== 'Ongoing') {
+            return res.status(403).json({
+                message: `Marks entry sirf 'Ongoing' exam mein hoti hai. Current status: ${exam.status}`
+            });
+        }
+
+        // 2c. THE LOCK GUARD (7 DAYS)
         const existingMark = await Mark.findOne({ examId, subjectId, classId });
         if (existingMark) {
             const now = new Date();
@@ -188,6 +202,19 @@ const getClassRankList = async (req, res) => {
 const getStudentReportCard = async (req, res) => {
     try {
         const { studentId, examId } = req.params;
+
+        // resultsPublished check — student sirf published results dekh sakta hai
+        // Admin aur Teacher ko hamesha dikhega
+        if (req.user.role === 'student') {
+            const exam = await Exam.findById(examId).select('resultsPublished status examName');
+            if (!exam) return res.status(404).json({ message: "Exam not found." });
+            if (!exam.resultsPublished) {
+                return res.status(403).json({ 
+                    message: "Results abhi publish nahi hue. Admin ke publish karne ka wait karo.",
+                    notPublished: true
+                });
+            }
+        }
 
         const marks = await Mark.find({ studentId, examId })
             .populate('subjectId', 'subjectName subjectCode')

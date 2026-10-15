@@ -4,7 +4,7 @@ const { getPendingStudents, approveStudent, addTeacher, getAllTeachers, updateTe
     getAllStudents, updateStudent, deleteStudent, bulkUploadStudents, promoteStudents, getSettings, updateSettings,
     massPromote, resetPassword, issueTc } = require('../controllers/adminController');
 
-const { createExam, getAllExams, updateExamStatus, deleteExam, getAcademicSessions } = require('../controllers/examController');
+const { createExam, getAllExams, updateExamStatus, publishResults, unpublishResults, deleteExam, getAcademicSessions } = require('../controllers/examController');
 
 const { protect, authorize } = require('../middlewares/authMiddleware');
 
@@ -102,6 +102,8 @@ router.post('/promote-mass', protect, authorize('admin'), massPromote);
 router.put('/reset-password', protect, authorize('admin'), resetPassword);
 
 router.delete('/exams/:id', protect, authorize('admin'), deleteExam);
+router.put('/exams/:id/publish', protect, authorize('admin'), publishResults);
+router.put('/exams/:id/unpublish', protect, authorize('admin'), unpublishResults);
 
 
 router.get('/exams/sessions', protect, authorize('admin', 'teacher'), getAcademicSessions);
