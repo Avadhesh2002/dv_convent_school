@@ -30,14 +30,32 @@ const gradeFromPercent = (p) => {
   if (p >= 61) return 'B2'; if (p >= 51) return 'C1'; if (p >= 41) return 'C2';
   if (p >= 33) return 'D';  if (p >= 21) return 'E';  return 'F';
 };
-const gradeColor = (g) => {
-  const map = { A1:'#166534',A2:'#15803d',B1:'#1d4ed8',B2:'#2563eb',C1:'#b45309',C2:'#d97706',D:'#ea580c',E:'#dc2626',F:'#991b1b',A:'#15803d',B:'#2563eb',C:'#d97706' };
-  return map[g] || '#374151';
-};
+const gradeColor = (g) => '#ffffff';
 const gradeBg = (g) => {
-  const map = { A1:'#dcfce7',A2:'#d1fae5',B1:'#dbeafe',B2:'#eff6ff',C1:'#fef3c7',C2:'#fffbeb',D:'#ffedd5',E:'#fee2e2',F:'#fce7f3' };
-  return map[g] || 'transparent';
+  const map = {
+    A1: '#166534', A2: '#15803d',
+    B1: '#1d4ed8', B2: '#2563eb',
+    C1: '#b45309', C2: '#d97706',
+    D:  '#ea580c',
+    E:  '#dc2626',
+    F:  '#991b1b',
+    A:  '#15803d', B: '#2563eb', C: '#d97706',
+  };
+  return map[g] || '#6b7280';
 };
+// Grade cell style — solid colored pill, always prints correctly
+const gradeCellStyle = (g, extra = {}) => ({
+  fontWeight: '900',
+  fontSize: '12px',
+  textAlign: 'center',
+  verticalAlign: 'middle',
+  color: '#ffffff',
+  background: g && g !== '—' && g !== '--' ? gradeBg(g) : '#e5e7eb',
+  WebkitPrintColorAdjust: 'exact',
+  printColorAdjust: 'exact',
+  padding: '3px 6px',
+  ...extra,
+});
 
 const TermMarksheet = ({ student, termKey, termLabel, schoolInfo, academicYear }) => {
   const subjects = student.subjects || [];
@@ -248,29 +266,27 @@ const TermMarksheet = ({ student, termKey, termLabel, schoolInfo, academicYear }
                     {sub.subjectName || sub.subjectId?.subjectName || '—'}
                   </td>
                   {isSingle ? (
-                    // Single exam: show only exam marks | total | grade
                     <>
                       <TD>{t?.halfYearlyExam ?? t?.yearlyExam}</TD>
-                      <TD style={{fontWeight:'800',fontSize:'12px',color:failed?'#dc2626':'#111827',background:failed?'#fef2f2':'transparent'}}>
+                      <TD style={{fontWeight:'800',fontSize:'12px',color:failed?'#dc2626':'#111827',background:failed?'#fca5a5':'transparent'}}>
                         {total ?? <span style={{color:'#d1d5db'}}>--</span>}
                       </TD>
-                      <TD style={{fontWeight:'900',fontSize:'12px',color:gradeColor(grade),background:grade&&grade!=='—'?gradeBg(grade):'transparent'}}>
-                        {grade || <span style={{color:'#d1d5db'}}>--</span>}
-                      </TD>
+                      <td style={{border:'1px solid #c7d2e8',...gradeCellStyle(grade)}}>
+                        {grade || <span style={{color:'#9ca3af'}}>--</span>}
+                      </td>
                     </>
                   ) : (
-                    // Multi exam: full columns
                     <>
                       <TD>{t?.periodicTest}</TD>
                       <TD>{t?.noteBooks}</TD>
                       <TD>{t?.subEnrichment}</TD>
                       <TD>{isT1?t?.halfYearlyExam:t?.yearlyExam}</TD>
-                      <TD style={{fontWeight:'800',fontSize:'12px',color:failed?'#dc2626':'#111827',background:failed?'#fef2f2':'transparent'}}>
+                      <TD style={{fontWeight:'800',fontSize:'12px',color:failed?'#dc2626':'#111827',background:failed?'#fca5a5':'transparent'}}>
                         {total ?? <span style={{color:'#d1d5db'}}>--</span>}
                       </TD>
-                      <TD style={{fontWeight:'900',fontSize:'12px',color:gradeColor(grade),background:grade?gradeBg(grade):'transparent'}}>
-                        {grade || <span style={{color:'#d1d5db'}}>--</span>}
-                      </TD>
+                      <td style={{border:'1px solid #c7d2e8',...gradeCellStyle(grade)}}>
+                        {grade || <span style={{color:'#9ca3af'}}>--</span>}
+                      </td>
                     </>
                   )}
                 </tr>
@@ -286,7 +302,7 @@ const TermMarksheet = ({ student, termKey, termLabel, schoolInfo, academicYear }
             <tr style={{background:BLUE}}>
               <td colSpan={isSingle?1:4} style={{border:`1px solid ${BLUE}`,padding:'4px 10px',fontWeight:'900',fontSize:'12px',textAlign:'right',color:'white',fontFamily:'Arial,sans-serif'}}>Percentage</td>
               <td style={{border:`1px solid ${BLUE}`,padding:'4px 8px',fontWeight:'900',fontSize:'14px',textAlign:'center',color:'#fcd34d'}}>{percentage}%</td>
-              <td style={{border:`1px solid ${BLUE}`,padding:'4px 6px',fontWeight:'900',fontSize:'14px',textAlign:'center',color:'#fcd34d'}}>{overallGrade}</td>
+              <td style={{border:`1px solid ${BLUE}`,padding:'4px 6px',fontWeight:'900',fontSize:'14px',textAlign:'center',WebkitPrintColorAdjust:'exact',printColorAdjust:'exact',background:gradeBg(overallGrade),color:'#fff'}}>{overallGrade}</td>
               <td style={{border:`1px solid ${BLUE}`}} />
             </tr>
           </tfoot>
@@ -397,7 +413,7 @@ const TermMarksheet = ({ student, termKey, termLabel, schoolInfo, academicYear }
                 <tr>{[['91-100','A1'],['81-90','A2'],['71-80','B1'],['61-70','B2'],['51-60','C1'],['41-50','C2'],['33-40','D'],['32 & Below','E']].map(([r])=>(<th key={r} style={{border:`1px solid ${BLUE}`,padding:'3px 4px',background:BLUE,color:'white',fontWeight:'800',textAlign:'center'}}>{r}</th>))}</tr>
               </thead>
               <tbody>
-                <tr>{[['91-100','A1'],['81-90','A2'],['71-80','B1'],['61-70','B2'],['51-60','C1'],['41-50','C2'],['33-40','D'],['32 & Below','E']].map(([,g])=>(<td key={g} style={{border:'1px solid #c7d2e8',padding:'3px 4px',textAlign:'center',fontWeight:'900',fontSize:'12px',color:gradeColor(g),background:gradeBg(g)}}>{g}</td>))}</tr>
+                <tr>{[['91-100','A1'],['81-90','A2'],['71-80','B1'],['61-70','B2'],['51-60','C1'],['41-50','C2'],['33-40','D'],['32 & Below','E']].map(([,g])=>(<td key={g} style={{border:'1px solid #c7d2e8',padding:'4px',textAlign:'center',fontWeight:'900',fontSize:'13px',...gradeCellStyle(g)}}>{g}</td>))}</tr>
               </tbody>
             </table>
           </div>
@@ -559,13 +575,13 @@ const CombinedMarksheet = ({ student, schoolInfo, academicYear }) => {
                 <TD>{sub.term1?.subEnrichment}</TD>
                 <TD>{sub.term1?.halfYearlyExam}</TD>
                 <TD style={{fontWeight:'800',background:'#f0f4ff'}}>{typeof sub.term1?.total==='number'&&sub.term1.total>0?sub.term1.total:null}</TD>
-                <TD style={{fontWeight:'900',color:gradeColor(sub.term1?.grade),background:gradeBg(sub.term1?.grade)}}>{sub.term1?.grade}</TD>
+                <td style={{border:'1px solid #c7d2e8',...gradeCellStyle(sub.term1?.grade)}}>{sub.term1?.grade||<span style={{color:'#9ca3af'}}>--</span>}</td>
                 <TD>{sub.term2?.periodicTest}</TD>
                 <TD>{sub.term2?.noteBooks}</TD>
                 <TD>{sub.term2?.subEnrichment}</TD>
                 <TD>{sub.term2?.yearlyExam}</TD>
                 <TD style={{fontWeight:'800',background:'#fff7ed'}}>{typeof sub.term2?.total==='number'&&sub.term2.total>0?sub.term2.total:null}</TD>
-                <TD style={{fontWeight:'900',color:gradeColor(sub.term2?.grade),background:gradeBg(sub.term2?.grade)}}>{sub.term2?.grade}</TD>
+                <td style={{border:'1px solid #c7d2e8',...gradeCellStyle(sub.term2?.grade)}}>{sub.term2?.grade||<span style={{color:'#9ca3af'}}>--</span>}</td>
               </tr>
             ))}
           </tbody>
@@ -691,7 +707,7 @@ const CombinedMarksheet = ({ student, schoolInfo, academicYear }) => {
                 <tr>{[['91-100','A1'],['81-90','A2'],['71-80','B1'],['61-70','B2'],['51-60','C1'],['41-50','C2'],['33-40','D'],['32 & Below','E']].map(([r])=>(<th key={r} style={{border:`1px solid ${BLUE}`,padding:'3px 4px',background:BLUE,color:'white',fontWeight:'800',textAlign:'center'}}>{r}</th>))}</tr>
               </thead>
               <tbody>
-                <tr>{[['91-100','A1'],['81-90','A2'],['71-80','B1'],['61-70','B2'],['51-60','C1'],['41-50','C2'],['33-40','D'],['32 & Below','E']].map(([,g])=>(<td key={g} style={{border:'1px solid #c7d2e8',padding:'3px 4px',textAlign:'center',fontWeight:'900',fontSize:'12px',color:gradeColor(g),background:gradeBg(g)}}>{g}</td>))}</tr>
+                <tr>{[['91-100','A1'],['81-90','A2'],['71-80','B1'],['61-70','B2'],['51-60','C1'],['41-50','C2'],['33-40','D'],['32 & Below','E']].map(([,g])=>(<td key={g} style={{border:'1px solid #c7d2e8',padding:'4px',textAlign:'center',fontWeight:'900',fontSize:'13px',...gradeCellStyle(g)}}>{g}</td>))}</tr>
               </tbody>
             </table>
           </div>
@@ -796,10 +812,11 @@ const ResultGeneration = () => {
   const printHTML = (html) => {
     const style = `<style>
       @page { size: A4; margin: 0; }
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
       body { margin: 0; padding: 0; background: white; }
       .marksheet-page { width:210mm; height:297mm; box-sizing:border-box; page-break-after:always; overflow:hidden; display:flex; flex-direction:column; }
       .marksheet-page:last-child { page-break-after: avoid; }
+      td, th { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     </style>`;
     const win = window.open('', '_blank');
     win.document.write(`<html><head><title>Marksheet</title>${style}</head><body>${html}</body></html>`);
