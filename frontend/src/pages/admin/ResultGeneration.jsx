@@ -780,8 +780,7 @@ const ResultGeneration = () => {
     if (!examIds.length) return setToast({ message: 'Select at least one exam', type: 'error' });
     setLoading(true); setResults([]);
     try {
-      // Single exam → use sheet API (gives direct marksObtained per subject)
-      // Multiple exams → use final API (combines term1/term2 structure)
+      // Single exam → sheet API; multiple → final API
       const isSingle = examIds.length === 1;
       const [resultRes, attendanceRes] = await Promise.all([
         isSingle
@@ -793,7 +792,6 @@ const ResultGeneration = () => {
       (attendanceRes.data || []).forEach(a => {
         attMap[a.UID] = { presentDays: a.presentCount, totalWorkingDays: a.totalCount };
       });
-      // For single exam, tag each student with isSingleExam flag + examType
       const selectedExamObj = exams.find(e => e._id === examIds[0]);
       const merged = resultRes.data.map(s => ({
         ...s,
@@ -801,6 +799,8 @@ const ResultGeneration = () => {
         isSingleExam: isSingle,
         examType: isSingle ? (selectedExamObj?.examType || 'Unit Test') : null,
         examName: isSingle ? (selectedExamObj?.examName || '') : null,
+        // Pass mode so marksheet knows which term label to show
+        resultMode: mode,
       }));
       setResults(merged);
       setCurrentIdx(0);
@@ -848,11 +848,12 @@ const ResultGeneration = () => {
     }
     // Single exam: use exam's own name as the heading label
     const label = student.isSingleExam
-      ? (student.examName || student.examType || activeMode.termLabel).toUpperCase()
-      : activeMode.termLabel;
+      ? (student.examName || student.examType || (mode === 'term2' ? 'TERM-2' : 'TERM-1')).toUpperCase()
+      : (mode === 'term2' ? 'TERM-2' : 'TERM-1');
+    const tKey = mode === 'term2' ? 'term2' : 'term1';
     return (
       <TermMarksheet key={student.studentId} student={student}
-        termKey={activeMode.termKey} termLabel={label}
+        termKey={tKey} termLabel={label}
         schoolInfo={schoolInfo} academicYear={viewYear} />
     );
   };
@@ -879,10 +880,14 @@ const ResultGeneration = () => {
       </div>
 
       <div className="flex gap-2">
-        {MODES.map(m => (
-          <button key={m.key} onClick={() => { setMode(m.key); setResults([]); }}
+        {[
+          { key: 'term1', label: 'Term-1 Result',   color: 'bg-indigo-600' },
+          { key: 'term2', label: 'Term-2 Result',   color: 'bg-orange-500' },
+          { key: 'final', label: 'Final Combined',  color: 'bg-gray-800'   },
+        ].map(m => (
+          <button key={m.key} onClick={() => { setMode(m.key); setResults([]); setSelectedExams([]); }}
             className={`flex-1 py-3 rounded-2xl font-black text-xs uppercase tracking-tight transition-all border-2 ${
-              mode === m.key ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-100 hover:border-indigo-200'}`}>
+              mode === m.key ? `${m.color} text-white border-transparent` : 'bg-white text-gray-500 border-gray-100 hover:border-indigo-200'}`}>
             {m.label}
           </button>
         ))}
@@ -896,72 +901,120 @@ const ResultGeneration = () => {
         </select>
         <div className="space-y-2">
           <p className="text-xs font-black text-gray-400 uppercase ml-1">
-            {mode === 'term1' ? 'Select Term-1 Exams' : 'Select Exams to Combine'}
+            {mode === 'term1' ? 'Term-1 Exams select karo' : mode === 'term2' ? 'Term-2 Exams select karo' : 'Dono Term ke exams select karo (Final Result)'}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
             {examsLoading
-              ? <p className="text-sm text-gray-400 col-span-2 py-2 text-center">Loading exams...</p>
+              ? <p className="text-sm text-gray-400 py-2 text-center">Loading exams...</p>
               : (() => {
-                  const filtered = mode === 'term1' ? exams.filter(e => e.term === 'Term-1' || !e.term) : exams;
-                  if (filtered.length === 0)
-                    return <p className="text-sm text-gray-400 col-span-2 py-2 text-center">No exams found for {viewYear}</p>;
+                  // Filter by current mode
+                  const filtered = mode === 'term1'
+                    ? exams.filter(e => e.term === 'Term-1' || (!e.term && e.examType !== 'Final'))
+                    : mode === 'term2'
+                    ? exams.filter(e => e.term === 'Term-2')
+                    : exams; // final = all
 
-                  // Completed exams — result generate ho sakta hai
+                  if (filtered.length === 0)
+                    return (
+                      <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 font-semibold">
+                        <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                        {mode === 'term2' ? 'Term-2 ke exams nahi hain.' : 'Koi exam nahi mila.'} Pehle Exam Scheduler se banao.
+                      </div>
+                    );
+
                   const completedExams = filtered.filter(e => e.status === 'Completed');
-                  // Incomplete exams — sirf info ke liye dikhao
-                  const otherExams    = filtered.filter(e => e.status !== 'Completed');
+                  const pendingExams   = filtered.filter(e => e.status !== 'Completed');
+
+                  // Group completed by term
+                  const t1Done = completedExams.filter(e => e.term === 'Term-1' || !e.term);
+                  const t2Done = completedExams.filter(e => e.term === 'Term-2');
+
+                  const COMP_ORDER = ['periodicTest','subEnrichment','noteBooks','halfYearlyExam','yearlyExam'];
+                  const sortByComp = arr => [...arr].sort((a,b) => COMP_ORDER.indexOf(a.component) - COMP_ORDER.indexOf(b.component));
+
+                  const COMP_LABEL = {
+                    periodicTest:'Unit Test', subEnrichment:'Sub. Enrichment',
+                    noteBooks:'Note Books', halfYearlyExam:'Half Yearly', yearlyExam:'Final Exam',
+                  };
+
+                  const ExamCheckbox = ({ e }) => (
+                    <button key={e._id} onClick={() => toggleExam(e._id)}
+                      className={`flex items-center gap-2 p-2.5 rounded-xl border-2 text-left w-full transition-all ${
+                        selectedExams.includes(e._id) ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 bg-gray-50 hover:border-indigo-200'}`}>
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${
+                        selectedExams.includes(e._id) ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300'}`}>
+                        {selectedExams.includes(e._id) && (
+                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                            <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-black text-gray-800 truncate">{e.examName}</p>
+                        <p className="text-[10px] font-bold text-green-600">
+                          {e.component ? COMP_LABEL[e.component] : e.examType} · Max {e.maxMarks} · ✅ Completed
+                          {e.resultsPublished ? ' · Published' : ''}
+                        </p>
+                      </div>
+                    </button>
+                  );
 
                   return (
-                    <>
+                    <div className="space-y-3">
                       {completedExams.length === 0 && (
-                        <div className="col-span-2 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 font-semibold">
+                        <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 font-semibold">
                           <AlertCircle size={15} className="shrink-0 mt-0.5" />
-                          Koi bhi exam abhi 'Completed' nahi hai. Result generate karne ke liye pehle exam ko Exam Scheduler se close karo.
+                          Koi Completed exam nahi. Pehle Exam Scheduler se close karo.
                         </div>
                       )}
-                      {completedExams.map(e => (
-                        <button key={e._id} onClick={() => toggleExam(e._id)}
-                          className={`flex items-center gap-2 p-3 rounded-xl border-2 text-left transition-all ${
-                            selectedExams.includes(e._id) ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 bg-gray-50 hover:border-indigo-200'}`}>
-                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${
-                            selectedExams.includes(e._id) ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300'}`}>
-                            {selectedExams.includes(e._id) && (
-                              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                <path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-xs font-black text-gray-800">{e.examName}</p>
-                            <p className="text-[10px] font-bold uppercase text-green-600">
-                              {e.term || e.examType} · ✅ Completed{e.resultsPublished ? ' · Published' : ''}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                      {otherExams.length > 0 && (
-                        <div className="col-span-2 pt-1">
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 px-1">
-                            Incomplete Exams (result available nahi)
-                          </p>
-                          {otherExams.map(e => (
-                            <div key={e._id}
-                              className="flex items-center gap-2 p-3 rounded-xl border-2 border-dashed border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed mb-1.5">
+
+                      {/* Final mode: show both terms grouped */}
+                      {mode === 'final' ? (
+                        <>
+                          {t1Done.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1.5 px-1">Term-1</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                {sortByComp(t1Done).map(e => <ExamCheckbox key={e._id} e={e} />)}
+                              </div>
+                            </div>
+                          )}
+                          {t2Done.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-1.5 px-1">Term-2</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                {sortByComp(t2Done).map(e => <ExamCheckbox key={e._id} e={e} />)}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                          {sortByComp(completedExams).map(e => <ExamCheckbox key={e._id} e={e} />)}
+                        </div>
+                      )}
+
+                      {pendingExams.length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 px-1">Incomplete (select nahi ho sakte)</p>
+                          {pendingExams.map(e => (
+                            <div key={e._id} className="flex items-center gap-2 p-2.5 rounded-xl border-2 border-dashed border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed mb-1">
                               <div className="w-4 h-4 rounded border-2 border-gray-300 shrink-0" />
                               <div>
                                 <p className="text-xs font-black text-gray-600">{e.examName}</p>
-                                <p className="text-[10px] font-bold uppercase"
-                                  style={{ color: e.status === 'Ongoing' ? '#d97706' : '#6b7280' }}>
-                                  {e.status === 'Ongoing' ? '⏳ Ongoing — Marks entry chal rahi hai' : `${e.status} — Close karo pehle`}
+                                <p className="text-[10px] font-bold text-amber-600">
+                                  {e.status === 'Ongoing' ? '⏳ Ongoing' : e.status} — close karo pehle
                                 </p>
                               </div>
                             </div>
                           ))}
                         </div>
                       )}
-                    </>
+                    </div>
                   );
                 })()}
+          </div>
+        </div>
           </div>
         </div>
         <button onClick={handleGenerate} disabled={loading || selectedExams.length === 0 || !selectedClass}

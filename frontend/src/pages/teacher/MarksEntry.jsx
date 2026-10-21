@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, AlertTriangle, Save } from 'lucide-react';
+import { Trophy, AlertTriangle, Save, BookOpen } from 'lucide-react';
 import API from '../../api/axios';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -166,7 +166,6 @@ useEffect(() => {
         className="h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold text-gray-800 outline-none focus:border-primary disabled:opacity-50 transition-all"
         value={selectedExam}
         onChange={(e) => setSelectedExam(e.target.value)}
-        // Disable the dropdown while the system is fetching data
         disabled={loading || !settings?.currentAcademicYear}
       >
         {loading ? (
@@ -177,7 +176,9 @@ useEffect(() => {
           <>
             <option value="">Select Exam Event...</option>
             {exams.map(e => (
-              <option key={e._id} value={e._id}>{e.examName}</option>
+              <option key={e._id} value={e._id}>
+                {e.term ? `[${e.term}] ` : ''}{e.examName} (Max: {e.maxMarks})
+              </option>
             ))}
           </>
         )}
@@ -195,8 +196,26 @@ useEffect(() => {
 
 {roster.length > 0 ? (
   <div className="space-y-4">
-    
-    {/* --- DYNAMIC WARNING BLOCK STARTS HERE --- */}
+
+    {/* Selected exam info */}
+    {(() => {
+      const currentExam = exams.find(e => e._id === selectedExam);
+      if (!currentExam) return null;
+      const termColor = currentExam.term === 'Term-2'
+        ? 'bg-orange-50 border-orange-200 text-orange-700'
+        : 'bg-indigo-50 border-indigo-200 text-indigo-700';
+      return (
+        <div className={`flex items-center gap-3 p-3 rounded-xl border ${termColor}`}>
+          <BookOpen size={16} className="shrink-0" />
+          <div>
+            <p className="text-xs font-black uppercase tracking-wide">{currentExam.examName}</p>
+            <p className="text-[10px] font-semibold opacity-75">
+              {currentExam.term && `${currentExam.term} • `}Max Marks: {currentExam.maxMarks}
+            </p>
+          </div>
+        </div>
+      );
+    })()}
     <div className={`p-4 rounded-2xl border flex items-start gap-3 transition-all duration-500 ${
       lockStatus.isLocked 
         ? 'bg-red-50 border-red-200 text-danger animate-pulse' 

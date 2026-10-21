@@ -6,31 +6,31 @@ const Mark = require('../models/Mark');
 // @access  Private (Admin)
 const createExam = async (req, res) => {
     try {
-        // 1. ADD 'maxMarks' to the extraction list
-        const { examName, examType, academicYear, startDate, endDate, maxMarks } = req.body;
+        const { examName, examType, academicYear, startDate, endDate, maxMarks, term, component } = req.body;
 
-        // 2. Validation
         if (!examName || !examType || !academicYear || !startDate || !endDate || !maxMarks) {
             return res.status(400).json({ message: "Please provide all required fields including Max Marks" });
         }
 
+        // term+component combination must be unique per academic year
         const examExists = await Exam.findOne({ examName, academicYear });
         if (examExists) {
-            return res.status(400).json({ message: "An exam with this name already exists." });
+            return res.status(400).json({ message: "An exam with this name already exists for this session." });
         }
 
-        // 3. Create the exam with the ACTUAL value from the frontend
         const exam = await Exam.create({
             examName,
             examType,
             academicYear,
             startDate,
             endDate,
-            maxMarks: Number(maxMarks), // Ensure it's saved as a number
+            maxMarks: Number(maxMarks),
+            term:      term      || null,
+            component: component || null,
             createdBy: req.user._id
         });
 
-        res.status(201).json({ message: "Global Exam created successfully", exam });
+        res.status(201).json({ message: "Exam created successfully", exam });
     } catch (error) {
         res.status(500).json({ message: "Server Error", error: error.message });
     }

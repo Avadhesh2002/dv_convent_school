@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Calendar, Clock, CheckCircle2, Play, Power, Trash2, ArrowRight, ShieldCheck, Send, EyeOff } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import {
+  FileText, Plus, Calendar, CheckCircle2, Play, Trash2,
+  ArrowRight, ShieldCheck, Send, EyeOff, BookOpen, Layers
+} from 'lucide-react';
 import API from '../../api/axios';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
@@ -10,82 +12,138 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Toast from '../../components/common/Toast';
 import { useSettings } from '../../context/SettingsContext';
 
-const ExamManagement = () => {
-  const [exams, setExams] = useState([]);
-  const { settings } = useSettings();
+// ── CBSE component config ──────────────────────────────────────
+const TERM_COMPONENTS = {
+  'Term-1': [
+    { key: 'periodicTest',  label: 'Unit Test / Periodic Test', marks: 10 },
+    { key: 'subEnrichment', label: 'Subject Enrichment',        marks: 5  },
+    { key: 'noteBooks',     label: 'Note Books',                marks: 5  },
+    { key: 'halfYearlyExam',label: 'Half Yearly Exam',          marks: 80 },
+  ],
+  'Term-2': [
+    { key: 'periodicTest',  label: 'Unit Test / Periodic Test', marks: 10 },
+    { key: 'subEnrichment', label: 'Subject Enrichment',        marks: 5  },
+    { key: 'noteBooks',     label: 'Note Books',                marks: 5  },
+    { key: 'yearlyExam',    label: 'Final / Yearly Exam',       marks: 80 },
+  ],
+};
 
-  const [loading, setLoading] = useState(true);
+const COMPONENT_LABEL = {
+  periodicTest:   'Unit Test',
+  subEnrichment:  'Sub. Enrichment',
+  noteBooks:      'Note Books',
+  halfYearlyExam: 'Half Yearly Exam',
+  yearlyExam:     'Final Exam',
+};
+
+const COMPONENT_COLOR = {
+  periodicTest:   'bg-blue-100 text-blue-700',
+  subEnrichment:  'bg-purple-100 text-purple-700',
+  noteBooks:      'bg-teal-100 text-teal-700',
+  halfYearlyExam: 'bg-indigo-100 text-indigo-700',
+  yearlyExam:     'bg-orange-100 text-orange-700',
+};
+
+const TERM_COLOR = {
+  'Term-1': { bg: 'bg-indigo-600', light: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+  'Term-2': { bg: 'bg-orange-600', light: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+};
+
+// ─────────────────────────────────────────────────────────────
+const ExamManagement = () => {
+  const { settings } = useSettings();
+  const [exams, setExams]           = useState([]);
+  const [loading, setLoading]       = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState(null);
+  const [toast, setToast]           = useState(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  // Form state
+  const [fTerm, setFTerm]           = useState('Term-1');
+  const [fComponent, setFComponent] = useState('periodicTest');
+  const [fName, setFName]           = useState('');
+  const [fStart, setFStart]         = useState('');
+  const [fEnd, setFEnd]             = useState('');
+  const [fMaxMarks, setFMaxMarks]   = useState(10);
 
-  // 1. Fetch Exam List
+  // Auto-set maxMarks when component changes
   useEffect(() => {
-    fetchExams();
-  }, []);
+    const comps = TERM_COMPONENTS[fTerm] || [];
+    const found = comps.find(c => c.key === fComponent);
+    if (found) setFMaxMarks(found.marks);
+  }, [fTerm, fComponent]);
+
+  // Auto-generate exam name
+  useEffect(() => {
+    const compLabel = COMPONENT_LABEL[fComponent] || fComponent;
+    const termNum   = fTerm === 'Term-1' ? '1' : '2';
+    setFName(`${compLabel} - Term ${termNum}`);
+  }, [fTerm, fComponent]);
+
+  useEffect(() => { fetchExams(); }, []);
 
   const fetchExams = async () => {
     setLoading(true);
     try {
       const res = await API.get(`/admin/exams?year=${settings.currentAcademicYear}`);
       setExams(res.data);
-    } catch (err) {
-      setToast({ message: "Failed to load exams", type: "error" });
+    } catch {
+      setToast({ message: 'Failed to load exams', type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id, name) => {
-  // Security Handshake: Always confirm before destructive actions
-  if (!window.confirm(`CRITICAL ACTION: Are you sure you want to delete "${name}"? This will also permanently delete all marks entered for this exam. This cannot be undone.`)) {
-    return;
-  }
+    if (!window.confirm(`"${name}" delete karna chahte ho? Saare marks bhi delete ho jayenge.`)) return;
+    try {
+      await API.delete(`/admin/exams/${id}`);
+      setExams(prev => prev.filter(e => e._id !== id));
+      setToast({ message: 'Exam deleted', type: 'success' });
+    } catch {
+      setToast({ message: 'Delete failed', type: 'error' });
+    }
+  };
 
-  try {
-    await API.delete(`/admin/exams/${id}`);
-    
-    // UI Update: Filter out the deleted exam from state so it disappears instantly
-    setExams(prev => prev.filter(exam => exam._id !== id));
-    
-    setToast({ message: "Exam event removed from records", type: "success" });
-  } catch (err) {
-    setToast({ message: "Failed to delete exam. It might have linked records.", type: "error" });
-  }
-};
-
-  // 2. Create New Exam Event
-  const onCreateExam = async (data) => {
+  const onCreateExam = async (e) => {
+    e.preventDefault();
+    if (!fName || !fStart || !fEnd) {
+      setToast({ message: 'Saare fields fill karo', type: 'error' }); return;
+    }
     setSubmitting(true);
     try {
-      await API.post('/admin/exams', { ...data, academicYear: settings.currentAcademicYear });
-      setToast({ message: "New exam scheduled successfully!", type: "success" });
+      await API.post('/admin/exams', {
+        examName:    fName,
+        examType:    fComponent === 'halfYearlyExam' || fComponent === 'yearlyExam' ? 'Final' : 'Unit Test',
+        academicYear: settings.currentAcademicYear,
+        startDate:   fStart,
+        endDate:     fEnd,
+        maxMarks:    fMaxMarks,
+        term:        fTerm,
+        component:   fComponent,
+      });
+      setToast({ message: 'Exam created!', type: 'success' });
       setIsModalOpen(false);
-      reset();
       fetchExams();
     } catch (err) {
-      setToast({ message: err.response?.data?.message || "Creation failed", type: "error" });
+      setToast({ message: err.response?.data?.message || 'Creation failed', type: 'error' });
     } finally {
       setSubmitting(false);
     }
   };
 
-  // 3. Update Exam Status Handshake
   const updateStatus = async (examId, newStatus) => {
     try {
       await API.put(`/admin/exams/${examId}/status`, { status: newStatus });
-      setToast({ message: `Exam is now ${newStatus}`, type: 'success' });
+      setToast({ message: `Status updated: ${newStatus}`, type: 'success' });
       fetchExams();
-    } catch (err) {
+    } catch {
       setToast({ message: 'Status update failed', type: 'error' });
     }
   };
 
-  // 4. Publish Results — students ko marks dikhne lagenge
   const handlePublish = async (examId, examName) => {
-    if (!window.confirm(`"${examName}" ke results publish karne chahte ho? \n\nIs ke baad saare students apne marks dekh payenge.`)) return;
+    if (!window.confirm(`"${examName}" ke results students ko dikhane chahte ho?`)) return;
     try {
       const res = await API.put(`/admin/exams/${examId}/publish`);
       setToast({ message: res.data.message, type: 'success' });
@@ -95,211 +153,285 @@ const ExamManagement = () => {
     }
   };
 
-  // 5. Unpublish Results — students se marks hide karo
-  const handleUnpublish = async (examId, examName) => {
-    if (!window.confirm(`"${examName}" ke results UNPUBLISH karne chahte ho? Students marks nahi dekh payenge.`)) return;
+  const handleUnpublish = async (examId) => {
     try {
       await API.put(`/admin/exams/${examId}/unpublish`);
-      setToast({ message: 'Results unpublish ho gaye.', type: 'success' });
+      setToast({ message: 'Results unpublish ho gaye', type: 'success' });
       fetchExams();
-    } catch (err) {
+    } catch {
       setToast({ message: 'Unpublish failed', type: 'error' });
     }
   };
 
   const statusConfig = {
-    Scheduled:  'bg-blue-50 text-blue-600 border-blue-100',
-    Ongoing:    'bg-green-50 text-success border-green-100',
-    Completed:  'bg-amber-50 text-amber-600 border-amber-100',
-    Cancelled:  'bg-red-50 text-danger border-red-100',
+    Scheduled: 'bg-blue-50 text-blue-600 border-blue-100',
+    Ongoing:   'bg-green-50 text-green-600 border-green-100',
+    Completed: 'bg-amber-50 text-amber-600 border-amber-100',
+    Cancelled: 'bg-red-50 text-red-500 border-red-100',
   };
 
+  // Group exams by term
+  const term1Exams  = exams.filter(e => e.term === 'Term-1');
+  const term2Exams  = exams.filter(e => e.term === 'Term-2');
+  const otherExams  = exams.filter(e => !e.term);
+
+  // Ordering within term (component order)
+  const COMP_ORDER = ['periodicTest','subEnrichment','noteBooks','halfYearlyExam','yearlyExam'];
+  const sortByComp = (arr) => [...arr].sort((a, b) =>
+    COMP_ORDER.indexOf(a.component) - COMP_ORDER.indexOf(b.component)
+  );
+
   if (loading && exams.length === 0) return <div className="py-20"><LoadingSpinner size="lg" /></div>;
+
+  const ExamCard = ({ exam }) => {
+    const tc = TERM_COLOR[exam.term] || { bg:'bg-gray-600', light:'bg-gray-50', text:'text-gray-600', border:'border-gray-200' };
+    return (
+      <Card className="relative overflow-hidden group">
+        {/* Delete */}
+        <button
+          onClick={() => handleDelete(exam._id, exam.examName)}
+          className="absolute top-3 left-3 w-7 h-7 flex items-center justify-center text-red-400 bg-red-50 hover:bg-red-500 hover:text-white rounded-lg border border-red-100 opacity-0 group-hover:opacity-100 transition-all z-10"
+        >
+          <Trash2 size={13} />
+        </button>
+
+        {/* Status badge */}
+        <div className={`absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border z-10 ${statusConfig[exam.status]}`}>
+          {exam.resultsPublished ? '✅ Published' : exam.status}
+        </div>
+
+        <div className="pt-9 space-y-3">
+          {/* Component pill + marks */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {exam.component && (
+              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide ${COMPONENT_COLOR[exam.component] || 'bg-gray-100 text-gray-600'}`}>
+                {COMPONENT_LABEL[exam.component] || exam.component}
+              </span>
+            )}
+            <span className="text-[10px] font-bold text-gray-400">Max: {exam.maxMarks}</span>
+          </div>
+
+          {/* Name */}
+          <h3 className="font-black text-gray-800 text-sm leading-tight pr-4">{exam.examName}</h3>
+
+          {/* Dates */}
+          <div className="flex items-center gap-2 p-2.5 bg-gray-50 rounded-xl border border-gray-100 text-xs font-bold text-gray-600">
+            <Calendar size={12} className="text-gray-400" />
+            {new Date(exam.startDate).toLocaleDateString('en-GB')}
+            <ArrowRight size={12} className="text-gray-300" />
+            {new Date(exam.endDate).toLocaleDateString('en-GB')}
+          </div>
+
+          {/* Actions */}
+          <div className="space-y-2">
+            {exam.status === 'Scheduled' && (
+              <Button fullWidth size="sm" icon={Play} onClick={() => updateStatus(exam._id, 'Ongoing')}>
+                Start (Marks Entry Open)
+              </Button>
+            )}
+            {exam.status === 'Ongoing' && (
+              <button
+                onClick={() => updateStatus(exam._id, 'Completed')}
+                className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-lg h-9 transition-all"
+              >
+                <CheckCircle2 size={14} /> Close Exam (Marks Band)
+              </button>
+            )}
+            {exam.status === 'Completed' && !exam.resultsPublished && (
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-amber-600 font-semibold text-center">Closed — students ko nahi dikh raha</p>
+                <Button fullWidth variant="success" size="sm" icon={Send}
+                  onClick={() => handlePublish(exam._id, exam.examName)}>
+                  Publish Results
+                </Button>
+              </div>
+            )}
+            {exam.status === 'Completed' && exam.resultsPublished && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-center gap-2 text-green-600 font-bold text-xs py-2 bg-green-50 rounded-xl border border-green-200">
+                  <ShieldCheck size={14} /> Published
+                  {exam.publishedAt && <span className="text-[10px] text-gray-400 font-normal">({new Date(exam.publishedAt).toLocaleDateString('en-IN')})</span>}
+                </div>
+                <button onClick={() => handleUnpublish(exam._id)}
+                  className="w-full text-[10px] text-gray-400 hover:text-red-500 font-bold flex items-center justify-center gap-1 py-1 transition-colors">
+                  <EyeOff size={11} /> Unpublish
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
+  const TermSection = ({ termLabel, termExams }) => {
+    if (!termExams.length) return null;
+    const tc = TERM_COLOR[termLabel];
+    const totalMax = TERM_COMPONENTS[termLabel]?.reduce((s, c) => s + c.marks, 0) || 100;
+    const created  = termExams.length;
+    const total    = TERM_COMPONENTS[termLabel]?.length || 4;
+    return (
+      <div className="space-y-3">
+        {/* Term header */}
+        <div className={`flex items-center gap-3 p-3 ${tc.light} rounded-2xl border ${tc.border}`}>
+          <div className={`w-8 h-8 ${tc.bg} rounded-xl flex items-center justify-center`}>
+            <Layers size={16} className="text-white" />
+          </div>
+          <div className="flex-1">
+            <p className={`font-black text-sm ${tc.text}`}>{termLabel}</p>
+            <p className="text-[10px] text-gray-400 font-semibold">{created}/{total} components • Total marks: {totalMax}</p>
+          </div>
+          {/* Progress dots */}
+          <div className="flex gap-1">
+            {TERM_COMPONENTS[termLabel]?.map((comp, i) => {
+              const done = termExams.some(e => e.component === comp.key);
+              return <div key={i} className={`w-2 h-2 rounded-full ${done ? tc.bg : 'bg-gray-200'}`} />;
+            })}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {sortByComp(termExams).map(exam => <ExamCard key={exam._id} exam={exam} />)}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight text-indigo-700">Exam Scheduler</h1>
-          <p className="text-sm text-secondary font-medium">Global academic examination lifecycle management.</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Exam Scheduler</h1>
+          <p className="text-sm text-gray-500 font-medium">CBSE Term-wise exam aur component management</p>
         </div>
         <Button variant="primary" icon={Plus} onClick={() => setIsModalOpen(true)}>
-          Create Exam Event
+          New Exam Component
         </Button>
       </div>
 
-      {/* 4. Exam Card Stack */}
-{/* 4. Exam Card Stack */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  {exams.length > 0 ? (
-    exams.map((exam) => (
-      <Card key={exam._id} className="relative overflow-hidden group min-h-[160px]">
-        
-        {/* 1. DELETE BUTTON (Far Top-Left) */}
-        <button 
-          onClick={(e) => {
-            e.stopPropagation(); 
-            handleDelete(exam._id, exam.examName);
-          }}
-          className="absolute top-3 left-3 w-8 h-8 flex items-center justify-center text-danger bg-red-50 hover:bg-danger hover:text-white rounded-xl border border-red-100 transition-all opacity-0 group-hover:opacity-100 z-30 shadow-sm active:scale-90"
-          title="Delete Exam Record"
-        >
-          <Trash2 size={16} />
-        </button>
-
-        {/* 2. STATUS BADGE (Far Top-Right) */}
-        <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-black uppercase border z-20 ${statusConfig[exam.status]}`}>
-          {exam.resultsPublished ? '✅ Published' : exam.status}
-        </div>
-
-        {/* 3. MAIN CONTENT (With top padding to avoid icons) */}
-        <div className="pt-10 space-y-5"> 
-          
-          {/* Header Row */}
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-indigo-50 text-primary rounded-2xl flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm">
-              <FileText size={20} />
-            </div>
-            <div className="pr-16"> {/* Right padding prevents text hitting the badge */}
-              <h3 className="font-black text-gray-800 leading-tight text-base">
-                {exam.examName}
-              </h3>
-              <p className="text-[10px] font-bold text-secondary uppercase tracking-widest mt-0.5">
-                {exam.examType}
-              </p>
-            </div>
-          </div>
-
-          {/* Date Info Section */}
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-2xl border border-gray-100/50">
-             <div className="text-center flex-1">
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Starts</p>
-                <p className="text-xs font-bold text-gray-700">{new Date(exam.startDate).toLocaleDateString('en-GB')}</p>
-             </div>
-             <ArrowRight size={14} className="text-gray-300 mx-2" />
-             <div className="text-center flex-1">
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Ends</p>
-                <p className="text-xs font-bold text-gray-700">{new Date(exam.endDate).toLocaleDateString('en-GB')}</p>
-             </div>
-          </div>
-
-                {/* 5. Status Workflow Actions — 3 step: Start → Close → Publish */}
-                <div className="flex flex-col gap-2 pt-2">
-                  {/* Step 1: Scheduled → Ongoing */}
-                  {exam.status === 'Scheduled' && (
-                    <Button fullWidth size="sm" icon={Play}
-                      onClick={() => updateStatus(exam._id, 'Ongoing')}>
-                      Start Exam (Marks Entry Open)
-                    </Button>
-                  )}
-
-                  {/* Step 2: Ongoing → Completed */}
-                  {exam.status === 'Ongoing' && (
-                    <button
-                      onClick={() => updateStatus(exam._id, 'Completed')}
-                      className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-lg min-h-[40px] px-4 transition-all active:scale-95"
-                    >
-                      <CheckCircle2 size={16} /> Close Exam (Marks Entry Band)
-                    </button>
-                  )}
-
-                  {/* Step 3: Completed → Publish Results */}
-                  {exam.status === 'Completed' && !exam.resultsPublished && (
-                    <div className="space-y-2">
-                      {/* Info banner */}
-                      <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-xs font-semibold text-amber-700">
-                        <CheckCircle2 size={14} className="shrink-0" />
-                        Exam closed — results abhi students ko nahi dikhenge
-                      </div>
-                      <Button fullWidth variant="success" size="sm" icon={Send}
-                        onClick={() => handlePublish(exam._id, exam.examName)}>
-                        Publish Results (Students ko dikhaao)
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Published state */}
-                  {exam.status === 'Completed' && exam.resultsPublished && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-center w-full gap-2 text-success font-bold text-xs py-2 bg-green-50 rounded-xl border border-green-200">
-                        <ShieldCheck size={16} />
-                        Results Published — Students dekh sakte hain
-                        {exam.publishedAt && (
-                          <span className="text-[10px] text-gray-400 font-normal ml-1">
-                            ({new Date(exam.publishedAt).toLocaleDateString('en-IN')})
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleUnpublish(exam._id, exam.examName)}
-                        className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold text-gray-400 hover:text-red-500 py-1 transition-colors"
-                      >
-                        <EyeOff size={12} /> Unpublish karo
-                      </button>
-                    </div>
-                  )}
-                </div>
+      {/* CBSE structure info */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {['Term-1','Term-2'].map(term => {
+          const tc = TERM_COLOR[term];
+          return (
+            <div key={term} className={`p-4 ${tc.light} rounded-2xl border ${tc.border}`}>
+              <p className={`font-black text-sm ${tc.text} mb-2`}>{term} — {term === 'Term-1' ? 'Half Yearly' : 'Annual'}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {TERM_COMPONENTS[term].map(c => (
+                  <span key={c.key} className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${COMPONENT_COLOR[c.key] || 'bg-gray-100 text-gray-600'}`}>
+                    {c.label} ({c.marks})
+                  </span>
+                ))}
               </div>
-            </Card>
-          ))
-        ) : (
-          <div className="col-span-full py-20 text-center opacity-30">
-            <Calendar size={64} className="mx-auto mb-4" />
-            <p className="font-bold text-lg">No exams scheduled for this session.</p>
-          </div>
-        )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* 6. Create Exam Modal */}
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="New Exam Event"
-      >
-        <form onSubmit={handleSubmit(onCreateExam)} className="space-y-5">
-          <Input 
-            label="Examination Name" 
-            placeholder="e.g. Second Terminal Exam" 
-            {...register("examName", { required: "Name required" })}
-            error={errors.examName?.message}
-          />
-          
+      {/* Term sections */}
+      {exams.length === 0 && !loading ? (
+        <div className="py-20 text-center opacity-30">
+          <Calendar size={64} className="mx-auto mb-4" />
+          <p className="font-bold text-lg">Koi exam nahi hai. "New Exam Component" se banao.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <TermSection termLabel="Term-1" termExams={term1Exams} />
+          <TermSection termLabel="Term-2" termExams={term2Exams} />
+          {otherExams.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Other / Legacy Exams</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {otherExams.map(e => <ExamCard key={e._id} exam={e} />)}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Create Exam Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="New Exam Component">
+        <form onSubmit={onCreateExam} className="space-y-4">
+
+          {/* Term selector */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-400 uppercase ml-1">Exam Type</label>
-            <select 
-              className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold text-gray-800 outline-none focus:border-primary"
-              {...register("examType", { required: true })}
-            >
-              <option value="Unit Test">Unit Test</option>
-              <option value="Mid-term">Mid-term</option>
-              <option value="Final">Final Examination</option>
-              <option value="Internal">Internal Assessment</option>
-            </select>
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Term</label>
+            <div className="grid grid-cols-2 gap-2">
+              {['Term-1', 'Term-2'].map(t => (
+                <button key={t} type="button"
+                  onClick={() => { setFTerm(t); setFComponent(TERM_COMPONENTS[t][0].key); }}
+                  className={`h-11 rounded-xl font-black text-sm border-2 transition-all ${
+                    fTerm === t
+                      ? t === 'Term-1' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-300'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-             <Input label="Start Date" type="date" {...register("startDate", { required: true })} />
-             <Input label="End Date" type="date" {...register("endDate", { required: true })} />
+          {/* Component selector */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Component</label>
+            <div className="grid grid-cols-1 gap-2">
+              {TERM_COMPONENTS[fTerm].map(comp => (
+                <button key={comp.key} type="button"
+                  onClick={() => setFComponent(comp.key)}
+                  className={`flex items-center justify-between h-11 px-4 rounded-xl border-2 font-bold text-sm transition-all ${
+                    fComponent === comp.key
+                      ? `${COMPONENT_COLOR[comp.key]} border-current`
+                      : 'bg-gray-50 text-gray-600 border-gray-100 hover:border-gray-300'
+                  }`}
+                >
+                  <span>{comp.label}</span>
+                  <span className="text-xs font-black opacity-70">Max: {comp.marks}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          <Input 
-            label="Maximum Marks (Total)" 
-            type="number" 
-            placeholder="e.g. 40 or 100" 
-            {...register("maxMarks", { required: "Total marks are required", min: 1 })}
-            error={errors.maxMarks?.message}
-        />
-
-          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3 text-warning">
-             <Power size={20} className="shrink-0" />
-             <p className="text-[10px] font-bold uppercase leading-relaxed">
-               Logic: Only exams set to "Ongoing" status are visible to teachers for marks entry.
-             </p>
+          {/* Auto-generated name (editable) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Exam Name</label>
+            <input
+              value={fName}
+              onChange={e => setFName(e.target.value)}
+              className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold text-gray-800 outline-none focus:border-indigo-400"
+              placeholder="e.g. Unit Test - Term 1"
+              required
+            />
           </div>
 
-          <Button type="submit" fullWidth isLoading={submitting} icon={Plus}>Create Schedule</Button>
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Start Date</label>
+              <input type="date" value={fStart} onChange={e => setFStart(e.target.value)}
+                className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-indigo-400"
+                required />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">End Date</label>
+              <input type="date" value={fEnd} onChange={e => setFEnd(e.target.value)}
+                className="w-full h-12 bg-white border-2 border-gray-100 rounded-xl px-4 font-bold outline-none focus:border-indigo-400"
+                required />
+            </div>
+          </div>
+
+          {/* Max marks (auto, read-only) */}
+          <div className={`flex items-center justify-between p-3 rounded-xl border-2 ${
+            fTerm === 'Term-1' ? 'bg-indigo-50 border-indigo-200' : 'bg-orange-50 border-orange-200'}`}>
+            <span className="text-sm font-bold text-gray-600">Maximum Marks</span>
+            <span className="text-xl font-black text-gray-800">{fMaxMarks}</span>
+          </div>
+
+          <Button type="submit" fullWidth isLoading={submitting} icon={Plus}>
+            Create {COMPONENT_LABEL[fComponent]}
+          </Button>
         </form>
       </Modal>
     </div>

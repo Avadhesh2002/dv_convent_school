@@ -40,6 +40,21 @@ const examSchema = new mongoose.Schema({
         default: 'Scheduled' 
     },
 
+    // CBSE Term structure
+    term: {
+        type: String,
+        enum: ['Term-1', 'Term-2'],
+        default: null
+    },
+
+    // Which component this exam represents
+    // periodicTest=10, subEnrichment=5, noteBooks=5, halfYearlyExam=80(T1), yearlyExam=80(T2)
+    component: {
+        type: String,
+        enum: ['periodicTest', 'subEnrichment', 'noteBooks', 'halfYearlyExam', 'yearlyExam'],
+        default: null
+    },
+
     // Admin explicitly publish kare tab tak student ko marks nahi dikhenge
     resultsPublished: {
         type: Boolean,
