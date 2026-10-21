@@ -1015,8 +1015,6 @@ const ResultGeneration = () => {
                 })()}
           </div>
         </div>
-          </div>
-        </div>
         <button onClick={handleGenerate} disabled={loading || selectedExams.length === 0 || !selectedClass}
           className="w-full h-12 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 transition-all uppercase tracking-tight disabled:opacity-50">
           {loading ? 'Generating...' : 'Generate Marksheets'}
