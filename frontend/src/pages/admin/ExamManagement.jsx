@@ -422,11 +422,20 @@ const ExamManagement = () => {
             </div>
           </div>
 
-          {/* Max marks (auto, read-only) */}
-          <div className={`flex items-center justify-between p-3 rounded-xl border-2 ${
-            fTerm === 'Term-1' ? 'bg-indigo-50 border-indigo-200' : 'bg-orange-50 border-orange-200'}`}>
-            <span className="text-sm font-bold text-gray-600">Maximum Marks</span>
-            <span className="text-xl font-black text-gray-800">{fMaxMarks}</span>
+          {/* Max marks (auto-fill but editable) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Maximum Marks</label>
+            <input
+              type="number"
+              value={fMaxMarks}
+              onChange={e => setFMaxMarks(Number(e.target.value))}
+              min={1}
+              className={`w-full h-12 border-2 rounded-xl px-4 font-black text-xl outline-none focus:border-indigo-400 ${
+                fTerm === 'Term-1' ? 'bg-indigo-50 border-indigo-200 text-indigo-800' : 'bg-orange-50 border-orange-200 text-orange-800'
+              }`}
+              required
+            />
+            <p className="text-[10px] text-gray-400 ml-1">Default: {TERM_COMPONENTS[fTerm]?.find(c => c.key === fComponent)?.marks} — aap change kar sakte hain</p>
           </div>
 
           <Button type="submit" fullWidth isLoading={submitting} icon={Plus}>
